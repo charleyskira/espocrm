@@ -37,8 +37,6 @@ use PDOStatement;
 
 /**
  * Executes queries by a given Query instances.
- *
- * @todo Add `select` method returning an array of StdClass objects.
  */
 class QueryExecutor
 {
