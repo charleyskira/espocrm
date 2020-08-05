@@ -31,20 +31,16 @@ namespace Espo\ORM;
 
 use Espo\ORM\{
     QueryParams\Query,
-    QueryParams\Select,
-    QueryParams\Update,
-    QueryParams\Delete,
-    QueryParams\Insert,
 };
 
 use PDOStatement;
 
 /**
- * Executes queries by a given RDBSelect instances.
+ * Executes queries by a given Query instances.
  *
  * @todo Add `select` method returning an array of StdClass objects.
  */
-class RDBQueryExecutor
+class QueryExecutor
 {
     protected $entityManager;
 
@@ -53,35 +49,7 @@ class RDBQueryExecutor
         $this->entityManager = $entityManager;
     }
 
-    public function run(Query $params)
-    {
-        $sql = $this->entityManager->getQuery()->create($params);
-
-        return $this->entityManager->runQuery($sql, true);
-    }
-
-    public function update(Update $params) : PDOStatement
-    {
-        $sql = $this->entityManager->getQuery()->create($params);
-
-        return $this->entityManager->runQuery($sql, true);
-    }
-
-    public function delete(Delete $params)
-    {
-        $sql = $this->entityManager->getQuery()->create($params);
-
-        return $this->entityManager->runQuery($sql, true);
-    }
-
-    public function insert(Delete $params) : PDOStatement
-    {
-        $sql = $this->entityManager->getQuery()->create($params);
-
-        return $this->entityManager->runQuery($sql, true);
-    }
-
-    public function select(Select $params) : PDOStatement
+    public function run(Query $params) : PDOStatement
     {
         $sql = $this->entityManager->getQuery()->create($params);
 

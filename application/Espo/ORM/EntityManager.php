@@ -37,7 +37,9 @@ use Espo\ORM\DB\{
 };
 
 use PDO;
+use PDOStatement;
 use Exception;
+use RuntimeException;
 
 /**
  * A central access point to ORM functionality.
@@ -339,17 +341,30 @@ class EntityManager
      *
      * @param $rerunIfDeadlock Query will be re-run if a deadlock occurs.
      */
-    public function runQuery(string $query, bool $rerunIfDeadlock = false)
+    public function runQuery(string $query, bool $rerunIfDeadlock = false) : PDOStatement
     {
+        $pdoStatement = null;
+
         try {
-            return $this->getPDO()->query($query);
+            $pdoStatement = $this->getPDO()->query($query);
         } catch (Exception $e) {
-            if ($rerunIfDeadlock) {
-                if (isset($e->errorInfo) && $e->errorInfo[0] == 40001 && $e->errorInfo[1] == 1213) {
-                    return $this->getPDO()->query($query);
-                }
+            if (!$rerunIfDeadlock) {
+                throw $e;
             }
-            throw $e;
+
+            if (isset($e->errorInfo) && $e->errorInfo[0] == 40001 && $e->errorInfo[1] == 1213) {
+                $pdoStatement = $this->getPDO()->query($query);
+            }
+
+            if (!$pdoStatement) {
+                throw $e;
+            }
         }
+
+        if (!$pdoStatement) {
+            throw new RuntimeException("Query execution failure.");
+        }
+
+        return $pdoStatement;
     }
 }
