@@ -36,7 +36,7 @@ use Espo\ORM\{
 use PDOStatement;
 
 /**
- * Executes queries by a given Query instances.
+ * Executes queries by given query params instances.
  */
 class QueryExecutor
 {
