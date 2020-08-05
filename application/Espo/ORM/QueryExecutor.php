@@ -30,10 +30,14 @@
 namespace Espo\ORM;
 
 use Espo\ORM\{
-    Params\Select,
-    Params\Update,
-    Params\Delete,
+    QueryParams\Query,
+    QueryParams\Select,
+    QueryParams\Update,
+    QueryParams\Delete,
+    QueryParams\Insert,
 };
+
+use PDOStatement;
 
 /**
  * Executes queries by a given RDBSelect instances.
@@ -49,17 +53,38 @@ class RDBQueryExecutor
         $this->entityManager = $entityManager;
     }
 
-    public function update(Update $params)
+    public function run(Query $params)
     {
-        $sql = $this->entityManager->getQuery()->createUpdate($params);
+        $sql = $this->entityManager->getQuery()->create($params);
 
-        $this->entityManager->runQuery($sql, true);
+        return $this->entityManager->runQuery($sql, true);
+    }
+
+    public function update(Update $params) : PDOStatement
+    {
+        $sql = $this->entityManager->getQuery()->create($params);
+
+        return $this->entityManager->runQuery($sql, true);
     }
 
     public function delete(Delete $params)
     {
-        $sql = $this->entityManager->getQuery()->createDelete($params);
+        $sql = $this->entityManager->getQuery()->create($params);
 
-        $this->entityManager->runQuery($sql, true);
+        return $this->entityManager->runQuery($sql, true);
+    }
+
+    public function insert(Delete $params) : PDOStatement
+    {
+        $sql = $this->entityManager->getQuery()->create($params);
+
+        return $this->entityManager->runQuery($sql, true);
+    }
+
+    public function select(Select $params) : PDOStatement
+    {
+        $sql = $this->entityManager->getQuery()->create($params);
+
+        return $this->entityManager->runQuery($sql, true);
     }
 }

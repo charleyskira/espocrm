@@ -30,10 +30,10 @@
 namespace Espo\ORM;
 
 use Espo\ORM\{
-    Params\SelectBuilder,
-    Params\UpdateBuilder,
-    Params\DeleteBuilder,
-    Params\InsertBuilder,
+    QueryParams\SelectBuilder,
+    QueryParams\UpdateBuilder,
+    QueryParams\DeleteBuilder,
+    QueryParams\InsertBuilder,
 };
 
 /**

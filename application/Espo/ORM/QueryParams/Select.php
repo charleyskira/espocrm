@@ -27,15 +27,17 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\ORM\Params;
-
-use RuntimeException;
+namespace Espo\ORM\QueryParams;
 
 /**
- * Insert parameters.
+ * Select parameters.
+ *
+ * @todo Add validation and normalization (from ORM\DB\BaseQuery).
  */
-class Insert implements Selecting
+class Select implements Query
 {
+    use SelectingTrait;
+
     protected $params = [];
 
     /**
@@ -62,28 +64,6 @@ class Insert implements Selecting
 
     protected static function validateRawParams(array $params)
     {
-        $into = $params['into'] ?? null;
-
-        if (!$into || !is_string($into)) {
-            throw new RuntimeException("Bad or missing 'into' parameter.");
-        }
-
-        $columns = $params['columns'] = $params['columns'] ?? [];
-
-        if (!is_array($columns)) {
-            throw new RuntimeException("Bad 'columns' parameter.");
-        }
-
-        $values = $params['values'] = $params['values'] ?? [];
-
-        if (!is_array($values)) {
-            throw new RuntimeException("Bad 'values' parameter.");
-        }
-
-        $updateSet = $params['updateSet'] = $params['updateSet'] ?? null
-
-        if ($updateSet && !is_array($updateSet)) {
-            throw new RuntimeException("Bad 'updateSet' parameter.");
-        }
+        $this->validateRawParamsSelecting();
     }
 }

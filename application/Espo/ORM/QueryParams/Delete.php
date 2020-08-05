@@ -27,14 +27,14 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\ORM\Params;
+namespace Espo\ORM\QueryParams;
+
+use RuntimeException;
 
 /**
- * Select parameters.
- *
- * @todo Add validation and normalization (from ORM\DB\BaseQuery).
+ * Delete parameters.
  */
-class Select implements Selecting
+class Delete implements Query
 {
     use SelectingTrait;
 

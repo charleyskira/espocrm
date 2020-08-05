@@ -224,6 +224,7 @@ class EntityManager
     {
         $entity = $this->getEntity($entityType);
         $entity->set($data);
+
         $this->saveEntity($entity, $options);
 
         return $entity;

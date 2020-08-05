@@ -27,26 +27,9 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\ORM\Params;
+namespace Espo\ORM\QueryParams;
 
-use RuntimeException;
-
-trait Selecting
+interface Query
 {
-    /**
-     * Get an entity type.
-     */
-    public function getFrom() : string
-    {
-        return $this->params['from'];
-    }
 
-    protected static function validateRawParamsSelecting(array $params)
-    {
-        $from = $params['from'] ?? null;
-
-        if (!$from || !is_string($from)) {
-            throw new RuntimeException("Select params: Missing 'from'.");
-        }
-    }
 }

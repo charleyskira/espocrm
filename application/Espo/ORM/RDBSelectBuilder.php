@@ -35,7 +35,7 @@ use Espo\ORM\{
     Repositories\Findable,
     Collection,
     Entity,
-    Params\Select,
+    QueryParams\Select,
 };
 
 /**
@@ -89,6 +89,7 @@ class RDBSelectBuilder implements Findable
         $this->processExecutableCheck();
 
         $params = $this->getMergedParams($params);
+
         return $this->repository->find($params);
     }
 
@@ -97,6 +98,7 @@ class RDBSelectBuilder implements Findable
         $this->processExecutableCheck();
 
         $params = $this->getMergedParams($params);
+
         return $this->repository->findOne($params);
     }
 
@@ -105,6 +107,7 @@ class RDBSelectBuilder implements Findable
         $this->processExecutableCheck();
 
         $params = $this->getMergedParams($params);
+
         return $this->repository->count($params);
     }
 
@@ -113,6 +116,7 @@ class RDBSelectBuilder implements Findable
         $this->processExecutableCheck();
 
         $params = $this->getMergedParams();
+
         return $this->repository->max($attribute, $params);
     }
 
@@ -121,6 +125,7 @@ class RDBSelectBuilder implements Findable
         $this->processExecutableCheck();
 
         $params = $this->getMergedParams();
+
         return $this->repository->min($attribute, $params);
     }
 
@@ -129,6 +134,7 @@ class RDBSelectBuilder implements Findable
         $this->processExecutableCheck();
 
         $params = $this->getMergedParams();
+
         return $this->repository->sum($attribute, $params);
     }
 
