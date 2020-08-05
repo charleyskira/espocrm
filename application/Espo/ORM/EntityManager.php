@@ -95,7 +95,9 @@ class EntityManager
 
         $this->repositoryFactory = $repositoryFactory;
 
-        $this->queryExecutor = new RDBQueryExecutor($this);
+        $this->queryExecutor = new QueryExecutor($this);
+
+        $this->queryBuilder = new QueryBuilder();
     }
 
     /**
@@ -265,10 +267,19 @@ class EntityManager
 
     /**
      * Create a select builder.
+     * @todo remove
      */
     public function createSelectBuilder() : RDBSelectBuilder
     {
         return new RDBSelectBuilder($this);
+    }
+
+    /**
+     * Get a query builder.
+     */
+    public function getQueryBuilder() : QueryBuilder
+    {
+        return $this->queryBuilder;
     }
 
     public function setMetadata(array $data)
@@ -317,7 +328,7 @@ class EntityManager
     /**
      * Get a Query Executor.
      */
-    public function getQueryExecutor() : RDBQueryExecutor
+    public function getQueryExecutor() : QueryExecutor
     {
         return $this->queryExecutor;
     }

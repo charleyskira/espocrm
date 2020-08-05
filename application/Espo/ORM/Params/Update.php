@@ -27,40 +27,49 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\ORM;
+namespace Espo\ORM\Params;
+
+use RuntimeException;
 
 /**
- * Select parameters.
+ * Update parameters.
  */
-class RDBSelect
+class Update implements Selecting
 {
-    protected $entityType;
+    use SelectingTrait;
 
-    protected $params;
-
-    public function __construct(string $entityType, array $params)
-    {
-        $this->entityType = $entityType;
-        $this->params = $params;
-    }
-
-    /**
-     * Get an entity type.
-     */
-    public function getEntityType() : string
-    {
-        return $this->entityType;
-    }
+    protected $params = [];
 
     /**
      * Get parameters in RAW format.
      */
     public function getRawParams() : array
     {
-        $params = $this->params;
+        return $this->params;
+    }
 
-        $params['from'] = $this->entityType
+    /**
+     * Create from RAW params.
+     */
+    public static function fromRaw(array $params) : self
+    {
+        self::validateRawParams($params);
 
-        return $params;
+        $obj = new self();
+
+        $obj->params = $params;
+
+        return $obj;
+    }
+
+    protected static function validateRawParams(array $params)
+    {
+        $this->validateRawParamsSelecting();
+
+        $set = $params['set'] ?? null;
+
+        if (!$set || !is_array($set)) {
+            throw new RuntimeException("Update params: Bad or missing 'set' parameter.");
+        }
     }
 }

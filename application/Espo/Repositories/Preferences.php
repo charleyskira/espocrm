@@ -216,7 +216,7 @@ class Preferences extends Repository implements Removable,
                 'id' => $entity->id,
                 'data' => $dataString,
             ],
-            'update' => [
+            'updateSet' => [
                 'data' => $dataString,
             ],
         ]);

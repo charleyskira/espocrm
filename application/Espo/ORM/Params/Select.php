@@ -27,36 +27,43 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\ORM;
+namespace Espo\ORM\Params;
 
 /**
- * Executes queries by a given RDBSelect instances.
+ * Select parameters.
  *
- * @todo Add `select` method returning an array of StdClass objects.
+ * @todo Add validation and normalization (from ORM\DB\BaseQuery).
  */
-class RDBQueryExecutor
+class Select implements Selecting
 {
-    protected $entityManager;
+    use SelectingTrait;
 
-    public function __construct(EntityManager $entityManager)
+    protected $params = [];
+
+    /**
+     * Get parameters in RAW format.
+     */
+    public function getRawParams() : array
     {
-        $this->entityManager = $entityManager;
+        return $this->params;
     }
 
-    public function update(RDBSelect $select, array $values)
+    /**
+     * Create from RAW params.
+     */
+    public static function fromRaw(array $params) : self
     {
-        $params = $select->getRawParams();
-        $params['update'] = $values;
+        self::validateRawParams($params);
 
-        $sql = $this->entityManager->getQuery()->createUpdateQuery($select->getEntityType(), $params);
+        $obj = new self();
 
-        $this->entityManager->runQuery($sql, true);
+        $obj->params = $params;
+
+        return $obj;
     }
 
-    public function delete(RDBSelect $select)
+    protected static function validateRawParams(array $params)
     {
-        $sql = $this->entityManager->getQuery()->createDeleteQuery($select->getEntityType(), $select->getRawParams());
-
-        $this->entityManager->runQuery($sql, true);
+        $this->validateRawParamsSelecting();
     }
 }

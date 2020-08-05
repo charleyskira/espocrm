@@ -524,7 +524,7 @@ abstract class BaseMapper implements Mapper
 
                 $sql = $this->query->createUpdateQuery($middleName, [
                     'whereClause' => $where,
-                    'update' => $update,
+                    'set' => $update,
                 ]);
 
                 $this->runQuery($sql, true);
@@ -674,7 +674,7 @@ abstract class BaseMapper implements Mapper
                 $sql = $this->query->createInsertQuery($middleName, [
                     'columns' => $columns,
                     'valuesSelectParams' => $params,
-                    'update' => [
+                    'updateSet' => [
                         'deleted' => false,
                     ],
                 ]);
@@ -752,7 +752,7 @@ abstract class BaseMapper implements Mapper
                             $key => $id,
                             'deleted' => false,
                         ],
-                        'update' => [
+                        'set' => [
                             $key => NULL,
                         ],
                     ]);
@@ -765,7 +765,7 @@ abstract class BaseMapper implements Mapper
                         'id' => $entity->id,
                         'deleted' => false,
                     ],
-                    'update' => [
+                    'set' => [
                         $key => $relEntity->id,
                     ],
                 ]);
@@ -783,7 +783,7 @@ abstract class BaseMapper implements Mapper
                         'id' => $entity->id,
                         'deleted' => false,
                     ],
-                    'update' => [
+                    'set' => [
                         $key => $relEntity->id,
                         $typeKey => $relEntity->getEntityType(),
                     ],
@@ -805,7 +805,7 @@ abstract class BaseMapper implements Mapper
                         $foreignKey => $entity->id,
                         'deleted' => false,
                     ],
-                    'update' => [
+                    'set' => [
                         $foreignKey => NULL,
                     ],
                 ]);
@@ -817,7 +817,7 @@ abstract class BaseMapper implements Mapper
                         'id' => $id,
                         'deleted' => false,
                     ],
-                    'update' => [
+                    'set' => [
                         $foreignKey => $entity->id,
                     ],
                 ]);
@@ -849,7 +849,7 @@ abstract class BaseMapper implements Mapper
                         'id' => $id,
                         'deleted' => false,
                     ],
-                    'update' => $set,
+                    'set' => $set,
                 ]);
 
                 $this->runQuery($sql, true);
@@ -909,7 +909,7 @@ abstract class BaseMapper implements Mapper
                     $sql = $this->query->createInsertQuery($middleName, [
                         'columns' => $columns,
                         'values' => $values,
-                        'update' => $update,
+                        'updateSet' => $update,
                     ]);
 
                     $this->runQuery($sql, true);
@@ -927,7 +927,7 @@ abstract class BaseMapper implements Mapper
 
                 $sql = $this->query->createUpdateQuery($middleName, [
                     'whereClause' => $where,
-                    'update' => $update,
+                    'set' => $update,
                 ]);
 
                 $this->runQuery($sql, true);
@@ -1011,7 +1011,7 @@ abstract class BaseMapper implements Mapper
 
                 $sql = $this->query->createUpdateQuery($entityType, [
                     'whereClause' => $where,
-                    'update' => $update,
+                    'set' => $update,
                 ]);
 
                 $this->runQuery($sql, true);
@@ -1045,7 +1045,7 @@ abstract class BaseMapper implements Mapper
 
                 $sql = $this->query->createUpdateQuery($relEntity->getEntityType(), [
                     'whereClause' => $where,
-                    'update' => $update,
+                    'set' => $update,
                 ]);
 
                 $this->runQuery($sql, true);
@@ -1078,7 +1078,7 @@ abstract class BaseMapper implements Mapper
 
                 $sql = $this->query->createUpdateQuery($middleName, [
                     'whereClause' => $where,
-                    'update' => [
+                    'set' => [
                         'deleted' => true,
                     ],
                 ]);
@@ -1120,7 +1120,7 @@ abstract class BaseMapper implements Mapper
         $sql = $this->query->createInsertQuery($entity->getEntityType(), [
             'columns' => $this->getInsertColumnList($entity),
             'values' => $this->getInsertValueMap($entity),
-            'update' => $update,
+            'updateSet' => $update,
         ]);
 
         $this->runQuery($sql, true);
@@ -1226,7 +1226,7 @@ abstract class BaseMapper implements Mapper
                 'id' => $entity->id,
                 'deleted' => false,
             ],
-            'update' => $valueMap,
+            'set' => $valueMap,
         ]);
 
         $this->pdo->query($sql);
@@ -1286,7 +1286,7 @@ abstract class BaseMapper implements Mapper
 
         $sql = $this->query->createUpdateQuery($entityType, [
             'whereClause' => $whereClause,
-            'update' => ['deleted' => false],
+            'set' => ['deleted' => false],
         ]);
 
         $this->runQuery($sql);

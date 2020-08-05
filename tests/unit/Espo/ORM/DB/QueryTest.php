@@ -160,7 +160,7 @@ class QueryTest extends \PHPUnit\Framework\TestCase
             'whereClause' => [
                 'name' => 'test',
             ],
-            'update' => [
+            'set' => [
                 'deleted' => false,
                 'name' => 'hello',
             ],
@@ -181,7 +181,7 @@ class QueryTest extends \PHPUnit\Framework\TestCase
                 'name' => 'test',
             ],
             'joins' => ['post'],
-            'update' => [
+            'set' => [
                 'name:' => 'post.name',
             ],
         ]);
@@ -202,7 +202,7 @@ class QueryTest extends \PHPUnit\Framework\TestCase
                 'name' => 'test',
             ],
             'orderBy' => 'name',
-            'update' => [
+            'set' => [
                 'deleted' => false,
                 'name' => 'hello',
             ]
@@ -225,7 +225,7 @@ class QueryTest extends \PHPUnit\Framework\TestCase
             ],
             'orderBy' => 'name',
             'limit' => 1,
-            'update' => [
+            'set' => [
                 'deleted' => false,
                 'name' => 'hello',
             ],
@@ -287,7 +287,7 @@ class QueryTest extends \PHPUnit\Framework\TestCase
                 'id' => '1',
                 'name' => 'hello',
             ],
-            'update' => [
+            'updateSet' => [
                 'deleted' => false,
                 'name' => 'test'
             ],

@@ -67,7 +67,7 @@ abstract class BaseQuery
         'maxTextColumnsLength',
         'useIndex',
         'withDeleted',
-        'update',
+        'set',
     ];
 
     protected static $sqlOperators = [
@@ -206,7 +206,7 @@ abstract class BaseQuery
 
         $params = $this->normilizeParams(self::UPDATE_METHOD, $params);
 
-        $values = $params['update'];
+        $values = $params['set'];
 
         $entity = $this->getSeed($entityType);
 
@@ -234,7 +234,7 @@ abstract class BaseQuery
 
         $columns = $params['columns'];
         $values = $params['values'];
-        $update = $params['update'];
+        $updateSet = $params['updateSet'];
         $valuesSelectParams = $params['valuesSelectParams'];
 
         $columnsPart = $this->getInsertColumnsPart($columns);
@@ -243,8 +243,8 @@ abstract class BaseQuery
 
         $updatePart = null;
 
-        if ($update) {
-            $updatePart = $this->getInsertUpdatePart($update);
+        if ($updateSet) {
+            $updatePart = $this->getInsertUpdatePart($updateSet);
         }
 
         return $this->composeInsertQuery($this->toDb($entityType), $columnsPart, $valuesPart, $updatePart);
@@ -330,10 +330,10 @@ abstract class BaseQuery
             }
         }
 
-        $update = $params['update'] = $params['update'] ?? null;
+        $updateSet = $params['updateSet'] = $params['updateSet'] ?? null;
 
-        if ($update && !is_array($update)) {
-            throw new RuntimeException("ORM Query: Bad 'update' param.");
+        if ($updateSet && !is_array($updateSet)) {
+            throw new RuntimeException("ORM Query: Bad 'updateSet' param.");
         }
 
         return $params;
@@ -365,13 +365,13 @@ abstract class BaseQuery
         }
 
         if ($method !== self::UPDATE_METHOD) {
-            if (isset($params['update'])) {
-                 throw new RuntimeException("ORM Query: Param 'update' is not allowed for '{$method}'.");
+            if (isset($params['set'])) {
+                throw new RuntimeException("ORM Query: Param 'set' is not allowed for '{$method}'.");
             }
         }
 
-        if (isset($params['update']) && !is_array($params['update'])) {
-            throw new RuntimeException("ORM Query: Param 'update' should be an array.");
+        if (isset($params['set']) && !is_array($params['set'])) {
+            throw new RuntimeException("ORM Query: Param 'set' should be an array.");
         }
 
         return $params;

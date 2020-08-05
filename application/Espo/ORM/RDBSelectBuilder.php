@@ -35,10 +35,11 @@ use Espo\ORM\{
     Repositories\Findable,
     Collection,
     Entity,
+    Params\Select,
 };
 
 /**
- * Builds select parameters for an RDB repository and invokes findable methods.
+ * Builds select parameters for an RDB repository. Contains 'find' methods.
  */
 class RDBSelectBuilder implements Findable
 {
@@ -321,11 +322,15 @@ class RDBSelectBuilder implements Findable
     /**
      * Builds result select parameters.
      */
-    public function build() : RDBSelect
+    public function build() : Select
     {
         $this->processExecutableCheck();
 
-        return new RDBSelect($this->entityType, $this->getMergedParams());
+        $params = $this->getMergedParams();
+
+        $params['from'] = $this->entityType;
+
+        return Select::fromRaw($params);
     }
 
     protected function getMergedParams(array $params = []) : array
