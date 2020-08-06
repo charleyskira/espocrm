@@ -312,7 +312,7 @@ class RDB extends Repository implements Findable, Relatable, Removable
         return (bool) $this->countRelated($entity, $relationName, [
             'whereClause' => [
                 'id' => $id,
-            ]
+            ],
         ]);
     }
 

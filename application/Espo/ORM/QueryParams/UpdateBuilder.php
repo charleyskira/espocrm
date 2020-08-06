@@ -29,19 +29,26 @@
 
 namespace Espo\ORM\QueryParams;
 
-class DeleteBuilder implements Builder
+use LogicException;
+
+class UpdateBuilder implements Builder
 {
     use BaseBuilderTrait;
     use SelectingBuilderTrait;
 
     /**
-     * Build a DELETE query.
+     * Build a UPDATE query.
      */
-    public function build() : Delete
+    public function build() : Update
     {
         $params = $this->getMergedRawParams();
 
-        return Delete::fromRaw($params);
+        return Update::fromRaw($params);
+    }
+
+    public function set(array $set) : self
+    {
+        $this->params['set'] = $set;
     }
 
     /**

@@ -80,38 +80,6 @@ abstract class BaseMapper implements Mapper
     }
 
     /**
-     * Get a single entity from DB by ID.
-     */
-    /*public function selectById(string $entityType, string $id, ?array $params = null) : ?Entity
-    {
-        $entity = $this->entityFactory->create($entityType);
-
-        $params = $params ?? [];
-
-        $params['whereClause'] = $params['whereClause'] ?? [];
-
-        $params['from'] = $entityType;
-        $params['whereClause']['id'] = $id;
-
-        $sql = $this->query->create(Select::fromRaw($params));
-
-        $ps = $this->pdo->query($sql);
-
-        if (!$ps) {
-            return null;
-        }
-
-        foreach ($ps as $row) {
-            $this->populateEntityFromRow($entity, $row);
-            $entity->setAsFetched();
-
-            return $entity;
-        }
-
-        return null;
-    }*/
-
-    /**
      * Get the first entity from DB.
      */
     public function selectOne(Select $select) : ?Entity
@@ -1454,9 +1422,15 @@ abstract class BaseMapper implements Mapper
                         !empty($defs['autoincrement'])
                         ||
                         isset($defs['source']) && $defs['source'] != 'db'
-                    ) continue;
-                    if ($defs['type'] == Entity::FOREIGN) continue;
+                    ) {
+                        continue;
+                    }
+
+                    if ($defs['type'] == Entity::FOREIGN) {
+                        continue;
+                    }
                 }
+
                 $data[$attribute] = $entity->get($attribute);
             }
         }

@@ -29,27 +29,66 @@
 
 namespace Espo\ORM\QueryParams;
 
-class DeleteBuilder implements Builder
+class InsertBuilder implements Builder
 {
     use BaseBuilderTrait;
-    use SelectingBuilderTrait;
+
+    protected $params = [];
 
     /**
-     * Build a DELETE query.
+     * Build a INSERT query.
      */
-    public function build() : Delete
+    public function build() : Insert
     {
-        $params = $this->getMergedRawParams();
-
-        return Delete::fromRaw($params);
+        return Insert::fromRaw($this->params);
     }
 
     /**
-     * Apply LIMIT.
+     * Into what entity type to insert.
      */
-    public function limit(?int $limit = null) : self
+    public function into(string $entityType) : self
     {
-        $this->params['limit'] = $limit;
+        $this->params['into'] = $entityType;
+
+        return $this;
+    }
+
+    /**
+     * What columns to set with values. A list of columns.
+     */
+    public function columns(array $columns) : self
+    {
+        $this->params['columns'] = $columns;
+
+        return $this;
+    }
+
+    /**
+     * What values to insert. A key-value map or a list of key-value maps.
+     */
+    public function values(array $values) : self
+    {
+        $this->params['values'] = $values;
+
+        return $this;
+    }
+
+    /**
+     * Values to set on duplicate key. A key-value map.
+     */
+    public function updateSet(array $updateSet) : self
+    {
+        $this->params['updateSet'] = $updateSet;
+
+        return $this;
+    }
+
+    /**
+     * For a mass insert by a select sub-query.
+     */
+    public function valuesQuery(Select $select) : self
+    {
+        $this->params['valuesSelectParams'] = $select->getRawParams();
 
         return $this;
     }

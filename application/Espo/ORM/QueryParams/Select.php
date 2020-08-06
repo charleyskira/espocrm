@@ -39,6 +39,9 @@ class Select implements Query
     use SelectingTrait;
     use BaseTrait;
 
+    const ORDER_ASC = 'ASC';
+    const ORDER_DESC = 'DESC';
+
     /**
      * @todo Remove?
      */
