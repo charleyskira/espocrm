@@ -44,12 +44,6 @@ use Espo\ORM\{
  */
 class RDBSelectBuilder implements Findable
 {
-    //protected $whereClause = [];
-
-    //protected $havingClause = [];
-
-    //protected $params = [];
-
     protected $entityManager;
 
     protected $builder;
@@ -68,10 +62,6 @@ class RDBSelectBuilder implements Findable
     public function from(string $entityType) : self
     {
         $this->builder->from($entityType);
-
-        /*if ($this->repository) {
-            throw new Error("SelectBuilder: Method 'from' can be called only once.");
-        }*/
 
         $this->entityType = $entityType;
 
@@ -92,7 +82,7 @@ class RDBSelectBuilder implements Findable
         }
     }
 
-    public function find(array $params = []) : Collection
+    public function find(?array $params = null) : Collection
     {
         $this->processExecutableCheck();
 
@@ -101,7 +91,7 @@ class RDBSelectBuilder implements Findable
         return $this->repository->find($params);
     }
 
-    public function findOne(array $params = []) : ?Entity
+    public function findOne(?array $params = null) : ?Entity
     {
         $this->processExecutableCheck();
 
@@ -110,7 +100,7 @@ class RDBSelectBuilder implements Findable
         return $this->repository->findOne($params);
     }
 
-    public function count(array $params = []) : int
+    public function count(?array $params = null) : int
     {
         $this->processExecutableCheck();
 
@@ -168,34 +158,6 @@ class RDBSelectBuilder implements Findable
     {
         $this->builder->join($relationName, $alias, $conditions);
 
-        /*if (empty($this->params['joins'])) {
-            $this->params['joins'] = [];
-        }
-
-        if (is_array($relationName)) {
-            $joinList = $relationName;
-
-            foreach ($joinList as $item) {
-                $this->params['joins'][] = $item;
-            }
-
-            return $this;
-        }
-
-        if (is_null($alias) && is_null($conditions)) {
-            $this->params['joins'][] = $relationName;
-
-            return $this;
-        }
-
-        if (is_null($conditions)) {
-            $this->params['joins'][] = [$relationName, $alias];
-
-            return $this;
-        }
-
-        $this->params['joins'][] = [$relationName, $alias, $conditions];*/
-
         return $this;
     }
 
@@ -210,34 +172,6 @@ class RDBSelectBuilder implements Findable
     {
         $this->builder->leftJoin($relationName, $alias, $conditions);
 
-        /*if (empty($this->params['leftJoins'])) {
-            $this->params['leftJoins'] = [];
-        }
-
-        if (is_array($relationName)) {
-            $joinList = $relationName;
-
-            foreach ($joinList as $item) {
-                $this->params['leftJoins'][] = $item;
-            }
-
-            return $this;
-        }
-
-        if (is_null($alias) && is_null($conditions)) {
-            $this->params['leftJoins'][] = $relationName;
-
-            return $this;
-        }
-
-        if (is_null($conditions)) {
-            $this->params['leftJoins'][] = [$relationName, $alias];
-
-            return $this;
-        }
-
-        $this->params['leftJoins'][] = [$relationName, $alias, $conditions];*/
-
         return $this;
     }
 
@@ -246,8 +180,6 @@ class RDBSelectBuilder implements Findable
      */
     public function distinct() : self
     {
-        //$this->params['distinct'] = true;
-
         $this->builder->distinct();
 
         return $this;
@@ -258,8 +190,6 @@ class RDBSelectBuilder implements Findable
      */
     public function sth() : self
     {
-        //$this->params['returnSthCollection'] = true;
-
         $this->builder->sth();
 
         return $this;
@@ -276,15 +206,6 @@ class RDBSelectBuilder implements Findable
     {
         $this->builder->where($param1, $param2);
 
-        /*if (is_array($param1)) {
-            $this->whereClause = $param1 + $this->whereClause;
-
-        } else {
-            if (!is_null($param2)) {
-                $this->whereClause[] = [$param1 => $param2];
-            }
-        }*/
-
         return $this;
     }
 
@@ -299,14 +220,6 @@ class RDBSelectBuilder implements Findable
     {
         $this->builder->having($param1, $params2);
 
-        /*if (is_array($param1)) {
-            $this->havingClause = $param1 + $this->havingClause;
-        } else {
-            if (!is_null($param2)) {
-                $this->havingClause[] = [$param1 => $param2];
-            }
-        }*/
-
         return $this;
     }
 
@@ -320,9 +233,6 @@ class RDBSelectBuilder implements Findable
     {
         $this->builder->order($orderBy, $direction);
 
-        /*$this->params['orderBy'] = $attribute;
-        $this->params['order'] = $direction;*/
-
         return $this;
     }
 
@@ -332,9 +242,6 @@ class RDBSelectBuilder implements Findable
     public function limit(?int $offset = null, ?int $limit = null) : self
     {
         $this->builder->limit($offset, $limit);
-
-        /*$this->params['offset'] = $offset;
-        $this->params['limit'] = $limit;*/
 
         return $this;
     }
@@ -346,8 +253,6 @@ class RDBSelectBuilder implements Findable
     {
         $this->builder->select($select);
 
-        //$this->params['select'] = $select;
-
         return $this;
     }
 
@@ -357,8 +262,6 @@ class RDBSelectBuilder implements Findable
     public function groupBy(array $groupBy) : self
     {
         $this->builder->groupBy($groupBy);
-
-        //$this->params['groupBy'] = $groupBy;
 
         return $this;
     }
@@ -375,8 +278,10 @@ class RDBSelectBuilder implements Findable
         return Select::fromRaw($params);
     }
 
-    protected function getMergedParams(array $params = []) : array
+    protected function getMergedParams(?array $params = null) : array
     {
+        $params = $params ?? [];
+
         $builtParams = $this->builder->build()->getRawParams();
 
         $whereClause = $builtParams['whereClause'] ?? [];

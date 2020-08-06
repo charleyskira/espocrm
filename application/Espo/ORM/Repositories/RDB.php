@@ -181,8 +181,10 @@ class RDB extends Repository implements Findable, Relatable, Removable
         $this->getMapper()->deleteFromDb($this->entityType, $id, $onlyDeleted);
     }
 
-    public function find(array $params = []) : Collection
+    public function find(?array $params = null) : Collection
     {
+        $params = $params ?? [];
+
         if (empty($params['skipAdditionalSelectParams'])) {
             $this->handleSelectParams($params);
         }
@@ -194,8 +196,10 @@ class RDB extends Repository implements Findable, Relatable, Removable
         return $collection;
     }
 
-    public function findOne(array $params = []) : ?Entity
+    public function findOne(?array $params = null) : ?Entity
     {
+        $params = $params ?? [];
+
         unset($params['returnSthCollection']);
 
         $collection = $this->limit(0, 1)->find($params);
@@ -469,8 +473,10 @@ class RDB extends Repository implements Findable, Relatable, Removable
         $this->afterMassRelate($entity, $relationName, $params, $options);
     }
 
-    public function count(array $params = []) : int
+    public function count(?array $params = null) : int
     {
+        $params = $params ?? [];
+
         if (empty($params['skipAdditionalSelectParams'])) {
             $this->handleSelectParams($params);
         }

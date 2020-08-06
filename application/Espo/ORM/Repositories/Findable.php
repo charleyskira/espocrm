@@ -39,15 +39,15 @@ interface Findable
     /**
      * A number of records matching specific parameters.
      */
-    public function count(array $params) : int;
+    public function count() : int;
 
     /**
      * Find records matching specific parameters.
      */
-    public function find(array $params) : Collection;
+    public function find() : Collection;
 
     /**
      * Find the first record matching specific parameters.
      */
-    public function findOne(array $params) : ?Entity;
+    public function findOne() : ?Entity;
 }
