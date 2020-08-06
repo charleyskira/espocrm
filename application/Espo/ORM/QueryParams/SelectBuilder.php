@@ -151,16 +151,16 @@ class SelectBuilder implements Builder
     /**
      * Apply ORDER.
      *
-     * @param string|array $attribute An attribute to order by or order definitions as an array.
+     * @param string|array $orderBy An attribute to order by or order definitions as an array.
      * @param bool|string $direction 'ASC' or 'DESC'. TRUE for DESC order.
      */
-    public function order($attribute = null, $direction = self::ORDER_ASC) : self
+    public function order($orderBy = null, $direction = self::ORDER_ASC) : self
     {
-        if (!$attribute) {
+        if (!$orderBy) {
             throw BadMethodCallException();
         }
 
-        $this->params['orderBy'] = $attribute;
+        $this->params['orderBy'] = $orderBy;
         $this->params['order'] = $direction;
 
         return $this;

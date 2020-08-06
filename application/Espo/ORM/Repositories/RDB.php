@@ -187,6 +187,8 @@ class RDB extends Repository implements Findable, Relatable, Removable
             $this->handleSelectParams($params);
         }
 
+        $params['from'] = $this->seed->getEntityType();
+
         $collection = $this->getMapper()->select($this->seed, $params);
 
         return $collection;
@@ -612,12 +614,14 @@ class RDB extends Repository implements Findable, Relatable, Removable
     {
         $tableName = $this->getEntityManager()->getQuery()->toDb($this->entityType);
 
+        // @todo Use Query to get SQL.
         $this->getPDO()->query("LOCK TABLES `{$tableName}` WRITE");
         $this->isTableLocked = true;
     }
 
     protected function unlockTable()
     {
+        // @todo Use Query to get SQL.
         $this->getPDO()->query("UNLOCK TABLES");
         $this->isTableLocked = false;
     }

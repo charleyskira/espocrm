@@ -85,6 +85,7 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
         ];
 
         $paramsExpected = [
+            'from' => 'Test',
             'whereClause' => [
                 'name' => 'test',
             ],
@@ -108,6 +109,7 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
         ];
 
         $paramsExpected = [
+            'from' => 'Test',
             'whereClause' => [
                 'name' => 'test',
             ],
@@ -127,6 +129,7 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
     public function testWhere1()
     {
         $paramsExpected = [
+            'from' => 'Test',
             'whereClause' => [
                 'name' => 'test',
             ],
@@ -144,6 +147,7 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
     public function testWhere2()
     {
         $paramsExpected = [
+            'from' => 'Test',
             'whereClause' => [
                 ['name' => 'test'],
             ],
@@ -161,6 +165,7 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
     public function testWhereMerge()
     {
         $paramsExpected = [
+            'from' => 'Test',
             'whereClause' => [
                 'name2' => 'test2',
                 ['name1' => 'test1'],
@@ -183,6 +188,7 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
     public function testWhereFineOne()
     {
         $paramsExpected = [
+            'from' => 'Test',
             'whereClause' => [
                 ['name' => 'test'],
             ],
@@ -202,6 +208,7 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
     public function testJoin1()
     {
         $paramsExpected = [
+            'from' => 'Test',
             'joins' => [
                 'Test',
             ],
@@ -219,6 +226,7 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
     public function testJoin2()
     {
         $paramsExpected = [
+            'from' => 'Test',
             'joins' => [
                 'Test1',
                 'Test2',
@@ -237,6 +245,7 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
     public function testJoin3()
     {
         $paramsExpected = [
+            'from' => 'Test',
             'joins' => [
                 ['Test1', 'test1'],
                 ['Test2', 'test2'],
@@ -255,6 +264,7 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
     public function testJoin4()
     {
         $paramsExpected = [
+            'from' => 'Test',
             'joins' => [
                 ['Test1', 'test1', ['k' => 'v']],
             ],
@@ -272,6 +282,7 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
     public function testLeftJoin1()
     {
         $paramsExpected = [
+            'from' => 'Test',
             'leftJoins' => [
                 'Test',
             ],
@@ -289,6 +300,7 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
     public function testMultipleLeftJoins()
     {
         $paramsExpected = [
+            'from' => 'Test',
             'leftJoins' => [
                 'Test1',
                 ['Test2', 'test2'],
@@ -307,6 +319,7 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
     public function testDistinct()
     {
         $paramsExpected = [
+            'from' => 'Test',
             'distinct' => true,
         ];
 
@@ -322,6 +335,7 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
     public function testSth()
     {
         $paramsExpected = [
+            'from' => 'Test',
             'returnSthCollection' => true,
         ];
 
@@ -337,6 +351,7 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
     public function testOrder1()
     {
         $paramsExpected = [
+            'from' => 'Test',
             'orderBy' => 'name',
             'order' => 'ASC',
         ];
@@ -353,6 +368,7 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
     public function testSelect()
     {
         $paramsExpected = [
+            'from' => 'Test',
             'select' => ['name', 'date'],
         ];
 
