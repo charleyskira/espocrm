@@ -45,8 +45,9 @@ use Espo\Entities\{
     Job,
 };
 
+use PDO;
+
 require_once 'tests/unit/testData/DB/Entities.php';
-require_once 'tests/unit/testData/DB/MockPDO.php';
 require_once 'tests/unit/testData/DB/MockDBResult.php';
 
 class DBMapperTest extends \PHPUnit\Framework\TestCase
@@ -60,7 +61,7 @@ class DBMapperTest extends \PHPUnit\Framework\TestCase
 
     protected function setUp() : void
     {
-        $this->pdo = $this->createMock('MockPDO');
+        $this->pdo = $this->getMockBuilder(PDO::class)->disableOriginalConstructor()->getMock();
         $this->pdo
                 ->expects($this->any())
                 ->method('quote')

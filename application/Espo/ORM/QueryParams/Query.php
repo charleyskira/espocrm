@@ -29,6 +29,9 @@
 
 namespace Espo\ORM\QueryParams;
 
+/**
+ * Query parameters. Instances are immutable. Need to clone with a builder to get a copy for a further modification.
+ */
 interface Query
 {
     /**

@@ -31,7 +31,7 @@ namespace Espo\ORM\QueryParams;
 
 /**
  * Builds query parameters.
- * Builder instances are one-off, meaning you need to instantiate it for every new building.
+ * Builder instances are one-off, meaning that you need to instantiate it for every new building process.
  */
 interface Builder
 {
@@ -42,7 +42,7 @@ interface Builder
     //public function build() : Query;
 
     /**
-     * Clone an existing query for a subsequent modifying and building.
+     * Clone an existing query for a further modification and building.
      * @todo Uncomment when 7.4 is a min supported PHP version. Need the support of contravariant method parameters.
      */
     //public function clone(Query $query) : self;

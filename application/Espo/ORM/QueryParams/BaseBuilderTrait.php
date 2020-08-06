@@ -29,10 +29,6 @@
 
 namespace Espo\ORM\QueryParams;
 
-use Espo\ORM\{
-    DB\Query\BaseQuery as QueryComposer,
-};
-
 use RuntimeException;
 
 trait BaseBuilderTrait
