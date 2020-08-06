@@ -99,7 +99,18 @@ class EntityManager
 
         $this->queryExecutor = new QueryExecutor($this);
 
-        $this->queryBuilder = new QueryBuilder();
+        $this->initQuery();
+
+        $this->queryBuilder = new QueryBuilder($this->query);
+    }
+
+    protected function initQuery()
+    {
+        $platform = $this->params['platform'];
+
+        $className = 'Espo\\ORM\\DB\\Query\\' . ucfirst($platform) . 'Query';
+
+        $this->query = new $className($this->getPDO(), $this->entityFactory, $this->metadata);
     }
 
     /**
@@ -107,11 +118,6 @@ class EntityManager
      */
     public function getQuery() : Query
     {
-        if (empty($this->query)) {
-            $platform = $this->params['platform'];
-            $className = 'Espo\\ORM\\DB\\Query\\' . ucfirst($platform) . 'Query';
-            $this->query = new $className($this->getPDO(), $this->entityFactory, $this->metadata);
-        }
         return $this->query;
     }
 

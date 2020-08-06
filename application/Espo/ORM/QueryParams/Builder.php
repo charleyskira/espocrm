@@ -27,45 +27,16 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\ORM;
+namespace Espo\ORM\QueryParams;
 
 use Espo\ORM\{
-    QueryParams\SelectBuilder,
-    QueryParams\UpdateBuilder,
-    QueryParams\DeleteBuilder,
-    QueryParams\InsertBuilder,
     DB\Query\BaseQuery as QueryComposer,
 };
 
-/**
- * Creates query builders for specific query types.
- */
-class QueryBuilder
+interface Builder
 {
-    protected $queryComposer;
+    // @todo Uncomment when 7.4 is a min supported PHP version. Need the support of covariant return types.
+    //public function build() : Query;
 
-    public function __construct(QueryComposer $queryComposer)
-    {
-        $this->queryComposer = $queryComposer;
-    }
-
-    public function select() : SelectBuilder
-    {
-        return new SelectBuilder($this->queryComposer);
-    }
-
-    public function update() : UpdateBuilder
-    {
-        return new UpdateBuilder($this->queryComposer);
-    }
-
-    public function delete() : DeleteBuilder
-    {
-        return new DeleteBuilder($this->queryComposer);
-    }
-
-    public function insert() : InsertBuilder
-    {
-        return new InsertBuilder($this->queryComposer);
-    }
+    public function buildSql() : string;
 }

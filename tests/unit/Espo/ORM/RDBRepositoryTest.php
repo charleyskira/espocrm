@@ -158,6 +158,28 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
         $this->repository->where('name', 'test')->find();
     }
 
+    public function testWhereMerge()
+    {
+        $paramsExpected = [
+            'whereClause' => [
+                'name2' => 'test2',
+                ['name1' => 'test1'],
+            ],
+        ];
+
+        $this->mapper
+            ->expects($this->once())
+            ->method('select')
+            ->will($this->returnValue($this->collection))
+            ->with($this->seed, $paramsExpected);
+
+        $this->repository
+            ->where(['name1' => 'test1'])
+            ->find([
+                'whereClause' => ['name2' => 'test2'],
+            ]);
+    }
+
     public function testWhereFineOne()
     {
         $paramsExpected = [

@@ -228,7 +228,7 @@ abstract class BaseQuery
 
         $params['from'] = $entityType;
 
-        return $this->createSelectQueryInternal($params);
+        return $this->create(SelectParams::fromRaw($params));
     }
 
     protected function createDeleteQuery(array $params = null) : string

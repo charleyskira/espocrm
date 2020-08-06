@@ -27,20 +27,13 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\ORM;
+namespace Espo\ORM\QueryParams;
 
 use Espo\ORM\{
-    QueryParams\SelectBuilder,
-    QueryParams\UpdateBuilder,
-    QueryParams\DeleteBuilder,
-    QueryParams\InsertBuilder,
     DB\Query\BaseQuery as QueryComposer,
 };
 
-/**
- * Creates query builders for specific query types.
- */
-class QueryBuilder
+trait BaseBuilderTrait
 {
     protected $queryComposer;
 
@@ -49,23 +42,10 @@ class QueryBuilder
         $this->queryComposer = $queryComposer;
     }
 
-    public function select() : SelectBuilder
+    public function buildSql() : string
     {
-        return new SelectBuilder($this->queryComposer);
-    }
+        $query = $this->build();
 
-    public function update() : UpdateBuilder
-    {
-        return new UpdateBuilder($this->queryComposer);
-    }
-
-    public function delete() : DeleteBuilder
-    {
-        return new DeleteBuilder($this->queryComposer);
-    }
-
-    public function insert() : InsertBuilder
-    {
-        return new InsertBuilder($this->queryComposer);
+        $this->queryComposer->create($query);
     }
 }

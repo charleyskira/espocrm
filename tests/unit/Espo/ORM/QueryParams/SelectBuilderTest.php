@@ -27,45 +27,31 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\ORM;
+namespace tests\unit\Espo\ORM\QueryParams;
 
 use Espo\ORM\{
-    QueryParams\SelectBuilder,
-    QueryParams\UpdateBuilder,
-    QueryParams\DeleteBuilder,
-    QueryParams\InsertBuilder,
+    EntityManager,
     DB\Query\BaseQuery as QueryComposer,
+    QueryParams\Select,
+    QueryParams\SelectBuilder,
 };
 
-/**
- * Creates query builders for specific query types.
- */
-class QueryBuilder
+class SelectBuilderTest extends \PHPUnit\Framework\TestCase
 {
-    protected $queryComposer;
-
-    public function __construct(QueryComposer $queryComposer)
+    protected function setUp() : void
     {
-        $this->queryComposer = $queryComposer;
+        $this->queryComposer = $this->getMockBuilder(QueryComposer::class)->disableOriginalConstructor()->getMock();
+
+        $this->builder = new SelectBuilder($this->queryComposer);
     }
 
-    public function select() : SelectBuilder
+    public function testFrom()
     {
-        return new SelectBuilder($this->queryComposer);
-    }
+        $params = $this->builder
+            ->from('Test')
+            ->build()
+            ->getRawParams();
 
-    public function update() : UpdateBuilder
-    {
-        return new UpdateBuilder($this->queryComposer);
-    }
-
-    public function delete() : DeleteBuilder
-    {
-        return new DeleteBuilder($this->queryComposer);
-    }
-
-    public function insert() : InsertBuilder
-    {
-        return new InsertBuilder($this->queryComposer);
+        $this->assertEquals('Test', $params['from']);
     }
 }

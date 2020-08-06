@@ -164,23 +164,28 @@ class RDBSelectBuilder implements Findable
 
         if (is_array($relationName)) {
             $joinList = $relationName;
+
             foreach ($joinList as $item) {
                 $this->params['joins'][] = $item;
             }
+
             return $this;
         }
 
         if (is_null($alias) && is_null($conditions)) {
             $this->params['joins'][] = $relationName;
+
             return $this;
         }
 
         if (is_null($conditions)) {
             $this->params['joins'][] = [$relationName, $alias];
+
             return $this;
         }
 
         $this->params['joins'][] = [$relationName, $alias, $conditions];
+
         return $this;
     }
 
@@ -199,23 +204,28 @@ class RDBSelectBuilder implements Findable
 
         if (is_array($relationName)) {
             $joinList = $relationName;
+
             foreach ($joinList as $item) {
                 $this->params['leftJoins'][] = $item;
             }
+
             return $this;
         }
 
         if (is_null($alias) && is_null($conditions)) {
             $this->params['leftJoins'][] = $relationName;
+
             return $this;
         }
 
         if (is_null($conditions)) {
             $this->params['leftJoins'][] = [$relationName, $alias];
+
             return $this;
         }
 
         $this->params['leftJoins'][] = [$relationName, $alias, $conditions];
+
         return $this;
     }
 
@@ -230,7 +240,7 @@ class RDBSelectBuilder implements Findable
     }
 
     /**
-     * Set to return STH collection. Recommended fetching large number of records.
+     * Set to return STH collection. Recommended for fetching large number of records.
      */
     public function sth() : self
     {
@@ -341,6 +351,10 @@ class RDBSelectBuilder implements Findable
 
     protected function getMergedParams(array $params = []) : array
     {
+        // @todo Use SelectBuilder.
+        // $params = $builder->build()->getRawParams();
+        // Then merge.
+
         if (isset($params['whereClause'])) {
             $params['whereClause'] = $params['whereClause'];
             if (!empty($this->whereClause)) {
