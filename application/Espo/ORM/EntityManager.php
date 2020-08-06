@@ -101,7 +101,7 @@ class EntityManager
 
         $this->initQuery();
 
-        $this->queryBuilder = new QueryBuilder($this->query);
+        $this->queryBuilder = new QueryBuilder();
     }
 
     protected function initQuery()

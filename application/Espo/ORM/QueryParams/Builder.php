@@ -29,14 +29,8 @@
 
 namespace Espo\ORM\QueryParams;
 
-use Espo\ORM\{
-    DB\Query\BaseQuery as QueryComposer,
-};
-
 interface Builder
 {
     // @todo Uncomment when 7.4 is a min supported PHP version. Need the support of covariant return types.
     //public function build() : Query;
-
-    public function buildSql() : string;
 }

@@ -34,7 +34,6 @@ use Espo\ORM\{
     QueryParams\UpdateBuilder,
     QueryParams\DeleteBuilder,
     QueryParams\InsertBuilder,
-    DB\Query\BaseQuery as QueryComposer,
 };
 
 /**
@@ -42,30 +41,28 @@ use Espo\ORM\{
  */
 class QueryBuilder
 {
-    protected $queryComposer;
 
-    public function __construct(QueryComposer $queryComposer)
+    public function __construct()
     {
-        $this->queryComposer = $queryComposer;
     }
 
     public function select() : SelectBuilder
     {
-        return new SelectBuilder($this->queryComposer);
+        return new SelectBuilder();
     }
 
     public function update() : UpdateBuilder
     {
-        return new UpdateBuilder($this->queryComposer);
+        return new UpdateBuilder();
     }
 
     public function delete() : DeleteBuilder
     {
-        return new DeleteBuilder($this->queryComposer);
+        return new DeleteBuilder();
     }
 
     public function insert() : InsertBuilder
     {
-        return new InsertBuilder($this->queryComposer);
+        return new InsertBuilder();
     }
 }

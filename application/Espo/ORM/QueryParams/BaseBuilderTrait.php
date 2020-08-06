@@ -35,17 +35,7 @@ use Espo\ORM\{
 
 trait BaseBuilderTrait
 {
-    protected $queryComposer;
-
-    public function __construct(QueryComposer $queryComposer)
+    public function __construct()
     {
-        $this->queryComposer = $queryComposer;
-    }
-
-    public function buildSql() : string
-    {
-        $query = $this->build();
-
-        $this->queryComposer->create($query);
     }
 }
