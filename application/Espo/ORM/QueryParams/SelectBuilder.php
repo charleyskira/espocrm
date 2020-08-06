@@ -31,14 +31,9 @@ namespace Espo\ORM\QueryParams;
 
 class SelectBuilder implements Builder
 {
-    use BaseBuilderTrait;
     use SelectingBuilderTrait;
 
     protected $params = [];
-
-    protected $whereClause = [];
-
-    protected $havingClause = [];
 
     /**
      * Build a SELECT query.
@@ -48,6 +43,16 @@ class SelectBuilder implements Builder
         $params = $this->getMergedRawParams();
 
         return Select::fromRaw($params);
+    }
+
+    /**
+     * Clone an existing query for a subsequent modifying and building.
+     */
+    public function clone(Select $query) : self
+    {
+        $this->cloneInternalSelecting($query);
+
+        return $this;
     }
 
     /**

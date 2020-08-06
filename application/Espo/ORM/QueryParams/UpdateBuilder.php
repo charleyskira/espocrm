@@ -33,7 +33,6 @@ use LogicException;
 
 class UpdateBuilder implements Builder
 {
-    use BaseBuilderTrait;
     use SelectingBuilderTrait;
 
     /**
@@ -44,6 +43,16 @@ class UpdateBuilder implements Builder
         $params = $this->getMergedRawParams();
 
         return Update::fromRaw($params);
+    }
+
+    /**
+     * Clone an existing query for a subsequent modifying and building.
+     */
+    public function clone(Delete $query) : self
+    {
+        $this->cloneInternalSelecting($query);
+
+        return $this;
     }
 
     public function set(array $set) : self

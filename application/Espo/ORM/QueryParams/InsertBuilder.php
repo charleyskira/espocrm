@@ -44,6 +44,14 @@ class InsertBuilder implements Builder
     }
 
     /**
+     * Clone an existing query for a subsequent modifying and building.
+     */
+    public function clone(Insert $query) : self
+    {
+        $this->cloneInternalBase($query);
+    }
+
+    /**
      * Into what entity type to insert.
      */
     public function into(string $entityType) : self
@@ -86,9 +94,9 @@ class InsertBuilder implements Builder
     /**
      * For a mass insert by a select sub-query.
      */
-    public function valuesQuery(Select $select) : self
+    public function valuesQuery(Select $query) : self
     {
-        $this->params['valuesSelectParams'] = $select->getRawParams();
+        $this->params['valuesSelectParams'] = $query->getRawParams();
 
         return $this;
     }

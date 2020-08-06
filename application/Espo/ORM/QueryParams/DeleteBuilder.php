@@ -31,7 +31,6 @@ namespace Espo\ORM\QueryParams;
 
 class DeleteBuilder implements Builder
 {
-    use BaseBuilderTrait;
     use SelectingBuilderTrait;
 
     /**
@@ -42,6 +41,16 @@ class DeleteBuilder implements Builder
         $params = $this->getMergedRawParams();
 
         return Delete::fromRaw($params);
+    }
+
+    /**
+     * Clone an existing query for a subsequent modifying and building.
+     */
+    public function clone(Delete $query) : self
+    {
+        $this->cloneInternalSelecting($query);
+
+        return $this;
     }
 
     /**

@@ -33,9 +33,28 @@ use Espo\ORM\{
     DB\Query\BaseQuery as QueryComposer,
 };
 
+use RuntimeException;
+
 trait BaseBuilderTrait
 {
+    protected $params = [];
+
     public function __construct()
     {
     }
+
+    protected function isEmpty() : bool
+    {
+        return empty($this->params);
+    }
+
+    protected function cloneInternalBase(Query $query)
+    {
+        if (!$this->isEmpty()) {
+            throw new RuntimeException("Clone can be called only on a new empty builder instance.");
+        }
+
+        $this->params = $query->getRawParams();
+    }
+
 }

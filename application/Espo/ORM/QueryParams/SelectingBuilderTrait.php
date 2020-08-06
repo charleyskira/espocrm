@@ -31,6 +31,30 @@ namespace Espo\ORM\QueryParams;
 
 trait SelectingBuilderTrait
 {
+    use BaseBuilderTrait {
+        isEmpty as protected isEmptyBase;
+    }
+
+    protected $whereClause = [];
+
+    protected $havingClause = [];
+
+    protected function cloneInternalSelecting(Query $query)
+    {
+        $this->cloneInternalBase($query);
+
+        $this->whereClause = $this->params['whereClause'] ?? [];
+        $this->havingClause = $this->params['havingClause'] ?? [];
+
+        unset($this->params['whereClause']);
+        unset($this->params['havingClause']);
+    }
+
+    protected function isEmpty() : bool
+    {
+        return empty($this->params) && empty($this->whereClause) && empty($this->havingClause);
+    }
+
     /**
      * Set FROM parameter. For what entity type to build a query.
      */

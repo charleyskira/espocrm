@@ -31,7 +31,6 @@ namespace tests\unit\Espo\ORM\QueryParams;
 
 use Espo\ORM\{
     EntityManager,
-    DB\Query\BaseQuery as QueryComposer,
     QueryParams\Select,
     QueryParams\SelectBuilder,
 };
@@ -40,9 +39,7 @@ class SelectBuilderTest extends \PHPUnit\Framework\TestCase
 {
     protected function setUp() : void
     {
-        $this->queryComposer = $this->getMockBuilder(QueryComposer::class)->disableOriginalConstructor()->getMock();
-
-        $this->builder = new SelectBuilder($this->queryComposer);
+        $this->builder = new SelectBuilder();
     }
 
     public function testFrom()
@@ -54,4 +51,67 @@ class SelectBuilderTest extends \PHPUnit\Framework\TestCase
 
         $this->assertEquals('Test', $params['from']);
     }
+
+    public function testCloneNotSame()
+    {
+        $builder = new SelectBuilder();
+
+        $select = $builder
+            ->from('Test')
+            ->build();
+
+        $builder = new SelectBuilder();
+
+        $selectCloned = $builder
+            ->clone($select)
+            ->build();
+
+        $this->assertNotSame($selectCloned, $select);
+    }
+
+    public function testClone()
+    {
+        $builder = new SelectBuilder();
+
+        $select = $builder
+            ->from('Test')
+            ->where('test1', '1')
+            ->build();
+
+        $builder = new SelectBuilder();
+
+        $selectCloned = $builder
+            ->clone($select)
+            ->distinct()
+            ->where('test2', '2')
+            ->build();
+
+        $params = $select->getRawParams();
+        $paramsCloned = $selectCloned->getRawParams();
+
+        $this->assertTrue($paramsCloned['distinct']);
+        $this->assertFalse($params['distinct'] ?? false);
+
+        $this->assertEquals([['test1' =>'1']], $params['whereClause']);
+        $this->assertEquals([['test1' => '1'], ['test2' => '2']], $paramsCloned['whereClause']);
+    }
+
+    public function testCloneException()
+    {
+        $builder = new SelectBuilder();
+
+        $select = $builder
+            ->from('Test')
+            ->where('test1', '1')
+            ->build();
+
+        $builder = new SelectBuilder();
+
+        $this->expectException(\RuntimeException::class);
+
+        $builder
+            ->from('Test')
+            ->clone($select);
+    }
+
 }
