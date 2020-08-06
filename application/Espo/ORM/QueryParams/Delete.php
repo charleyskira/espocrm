@@ -37,33 +37,10 @@ use RuntimeException;
 class Delete implements Query
 {
     use SelectingTrait;
+    use BaseTrait;
 
-    protected $params = [];
-
-    /**
-     * Get parameters in RAW format.
-     */
-    public function getRawParams() : array
+    protected function validateRawParams(array $params)
     {
-        return $this->params;
-    }
-
-    /**
-     * Create from RAW params.
-     */
-    public static function fromRaw(array $params) : self
-    {
-        self::validateRawParams($params);
-
-        $obj = new self();
-
-        $obj->params = $params;
-
-        return $obj;
-    }
-
-    protected static function validateRawParams(array $params)
-    {
-        $this->validateRawParamsSelecting();
+        $this->validateRawParamsSelecting($params);
     }
 }

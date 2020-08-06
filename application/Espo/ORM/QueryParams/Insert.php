@@ -36,31 +36,9 @@ use RuntimeException;
  */
 class Insert implements Query
 {
-    protected $params = [];
+    use BaseTrait;
 
-    /**
-     * Get parameters in RAW format.
-     */
-    public function getRawParams() : array
-    {
-        return $this->params;
-    }
-
-    /**
-     * Create from RAW params.
-     */
-    public static function fromRaw(array $params) : self
-    {
-        self::validateRawParams($params);
-
-        $obj = new self();
-
-        $obj->params = $params;
-
-        return $obj;
-    }
-
-    protected static function validateRawParams(array $params)
+    protected function validateRawParams(array $params)
     {
         $into = $params['into'] ?? null;
 
@@ -76,11 +54,13 @@ class Insert implements Query
 
         $values = $params['values'] = $params['values'] ?? [];
 
+        $valuesSelectParams = $params['valuesSelectParams'] = $params['valuesSelectParams'] ?? null;
+
         if (!is_array($values)) {
             throw new RuntimeException("Bad 'values' parameter.");
         }
 
-        $updateSet = $params['updateSet'] = $params['updateSet'] ?? null
+        $updateSet = $params['updateSet'] = $params['updateSet'] ?? null;
 
         if ($updateSet && !is_array($updateSet)) {
             throw new RuntimeException("Bad 'updateSet' parameter.");

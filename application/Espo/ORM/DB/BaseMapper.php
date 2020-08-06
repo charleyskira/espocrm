@@ -37,6 +37,10 @@ use Espo\ORM\{
     DB\Query\BaseQuery as Query,
     EntityCollection,
     Sth2Collection,
+    QueryParams\Select,
+    QueryParams\Update,
+    QueryParams\Delete,
+    QueryParams\Insert,
 };
 
 use PDO;
@@ -88,17 +92,23 @@ abstract class BaseMapper implements Mapper
 
         $params['whereClause']['id'] = $id;
 
-        $sql = $this->query->createSelectQuery($entity->getEntityType(), $params);
+        $params['from'] = $entity->getEntityType();
+
+        $sql = $this->query->create(Select::fromRaw($params));
 
         $ps = $this->pdo->query($sql);
 
-        if ($ps) {
-            foreach ($ps as $row) {
-                $entity = $this->fromRow($entity, $row);
-                $entity->setAsFetched();
-                return $entity;
-            }
+        if (!$ps) {
+            return null;
         }
+
+        foreach ($ps as $row) {
+            $this->populateEntityFromRow($entity, $row);
+            $entity->setAsFetched();
+
+            return $entity;
+        }
+
         return null;
     }
 
@@ -130,7 +140,10 @@ abstract class BaseMapper implements Mapper
      */
     public function select(Entity $entity, ?array $params = null) : Collection
     {
-        $sql = $this->query->createSelectQuery($entity->getEntityType(), $params);
+        $params = $params ?? [];
+        $params['from'] = $entity->getEntityType();
+
+        $sql = $this->query->create(Select::fromRaw($params));
 
         return $this->selectByQuery($entity, $sql, $params);
     }
@@ -183,7 +196,9 @@ abstract class BaseMapper implements Mapper
         $params['aggregation'] = $aggregation;
         $params['aggregationBy'] = $aggregationBy;
 
-        $sql = $this->query->createSelectQuery($entity->getEntityType(), $params);
+        $params['from'] = $entity->getEntityType();
+
+        $sql = $this->query->create(Select::fromRaw($params));
 
         $ps = $this->pdo->query($sql);
 
@@ -250,8 +265,9 @@ abstract class BaseMapper implements Mapper
                 $params['whereClause'][$foreignKey] = $entity->get($key);
                 $params['offset'] = 0;
                 $params['limit'] = 1;
+                $params['from'] = $relEntity->getEntityType();
 
-                $sql = $this->query->createSelectQuery($relEntity->getEntityType(), $params);
+                $sql = $this->query->create(Select::fromRaw($params));
 
                 $ps = $this->pdo->query($sql);
 
@@ -267,7 +283,7 @@ abstract class BaseMapper implements Mapper
                 }
 
                 foreach ($ps as $row) {
-                    $relEntity = $this->fromRow($relEntity, $row);
+                    $this->populateEntityFromRow($relEntity, $row);
                     $relEntity->setAsFetched();
 
                     return $relEntity;
@@ -296,13 +312,16 @@ abstract class BaseMapper implements Mapper
 
                 $resultDataList = [];
 
-                $sql = $this->query->createSelectQuery($relEntity->getEntityType(), $params);
+                $params['from'] = $relEntity->getEntityType();
+
+                $sql = $this->query->create(Select::fromRaw($params));
 
                 if (!$returnTotalCount) {
                     if (!empty($params['returnSthCollection']) && $relType !== Entity::HAS_ONE) {
                         $collection = $this->createSthCollection($relEntity->getEntityType());
                         $collection->setQuery($sql);
                         $collection->setAsFetched();
+
                         return $collection;
                     }
                 }
@@ -324,7 +343,7 @@ abstract class BaseMapper implements Mapper
 
                 if ($relType == Entity::HAS_ONE) {
                     if (count($resultDataList)) {
-                        $relEntity = $this->fromRow($relEntity, $resultDataList[0]);
+                        $this->populateEntityFromRow($relEntity, $resultDataList[0]);
                         $relEntity->setAsFetched();
 
                         return $relEntity;
@@ -347,9 +366,12 @@ abstract class BaseMapper implements Mapper
 
                 $params['joins'][] = $this->getManyManyJoin($entity, $relationName, $additionalColumnsConditions);
 
+                // @todo Rename the parameter?
                 $params['relationName'] = $relDefs['relationName'];
 
-                $sql = $this->query->createSelectQuery($relEntity->getEntityType(), $params);
+                $params['from'] = $relEntity->getEntityType();
+
+                $sql = $this->query->create(Select::fromRaw($params));
 
                 $resultDataList = [];
 
@@ -399,7 +421,9 @@ abstract class BaseMapper implements Mapper
 
                 $relEntity = $this->entityFactory->create($foreignEntityType);
 
-                $sql = $this->query->createSelectQuery($foreignEntityType, $params);
+                $params['from'] = $foreignEntityType;
+
+                $sql = $this->query->create(Select::fromRaw($params));
 
                 $ps = $this->pdo->query($sql);
 
@@ -415,7 +439,7 @@ abstract class BaseMapper implements Mapper
                 }
 
                 foreach ($ps as $row) {
-                    $relEntity = $this->fromRow($relEntity, $row);
+                    $this->populateEntityFromRow($relEntity, $row);
                     return $relEntity;
                 }
 
@@ -522,10 +546,13 @@ abstract class BaseMapper implements Mapper
                     $where[$k] = $value;
                 }
 
-                $sql = $this->query->createUpdateQuery($middleName, [
-                    'whereClause' => $where,
-                    'set' => $update,
-                ]);
+                $sql = $this->query->create(
+                    Update::fromRaw([
+                        'from' => $middleName,
+                        'whereClause' => $where,
+                        'set' => $update,
+                    ])
+                );
 
                 $this->runQuery($sql, true);
 
@@ -579,10 +606,13 @@ abstract class BaseMapper implements Mapper
             $where[$k] = $value;
         }
 
-        $sql = $this->query->createSelectQuery($middleName, [
-            'select' => [[$column, 'value']],
-            'whereClause' => $where,
-        ]);
+        $sql = $this->query->create(
+            Select::fromRaw([
+                'from' => $middleName,
+                'select' => [[$column, 'value']],
+                'whereClause' => $where,
+            ])
+        );
 
         $ps = $this->pdo->query($sql);
 
@@ -671,13 +701,16 @@ abstract class BaseMapper implements Mapper
 
                 $params['from'] = $foreignEntityType;
 
-                $sql = $this->query->createInsertQuery($middleName, [
-                    'columns' => $columns,
-                    'valuesSelectParams' => $params,
-                    'updateSet' => [
-                        'deleted' => false,
-                    ],
-                ]);
+                $sql = $this->query->create(
+                    Insert::fromRaw([
+                        'into' => $middleName,
+                        'columns' => $columns,
+                        'valuesSelectParams' => $params,
+                        'updateSet' => [
+                            'deleted' => false,
+                        ],
+                    ])
+                );
 
                 $this->runQuery($sql, true);
 
@@ -746,29 +779,35 @@ abstract class BaseMapper implements Mapper
                 $foreignRelationName = $entity->getRelationParam($relationName, 'foreign');
 
                 if ($foreignRelationName && $relEntity->getRelationParam($foreignRelationName, 'type') === Entity::HAS_ONE) {
-                    $sql = $this->query->createUpdateQuery($entityType, [
-                        'whereClause' => [
-                            'id!=' => $entity->id,
-                            $key => $id,
-                            'deleted' => false,
-                        ],
-                        'set' => [
-                            $key => NULL,
-                        ],
-                    ]);
+                    $sql = $this->query->create(
+                        Update::fromRaw([
+                            'from' => $entityType,
+                            'whereClause' => [
+                                'id!=' => $entity->id,
+                                $key => $id,
+                                'deleted' => false,
+                            ],
+                            'set' => [
+                                $key => null,
+                            ],
+                        ])
+                    );
 
                     $this->runQuery($sql, true);
                 }
 
-                $sql = $this->query->createUpdateQuery($entityType, [
-                    'whereClause' => [
-                        'id' => $entity->id,
-                        'deleted' => false,
-                    ],
-                    'set' => [
-                        $key => $relEntity->id,
-                    ],
-                ]);
+                $sql = $this->query->create(
+                    Update::fromRaw([
+                        'from' => $entityType,
+                        'whereClause' => [
+                            'id' => $entity->id,
+                            'deleted' => false,
+                        ],
+                        'set' => [
+                            $key => $relEntity->id,
+                        ],
+                    ])
+                );
 
                 $this->runQuery($sql, true);
 
@@ -778,16 +817,19 @@ abstract class BaseMapper implements Mapper
                 $key = $relationName . 'Id';
                 $typeKey = $relationName . 'Type';
 
-                $sql = $this->query->createUpdateQuery($entityType, [
-                    'whereClause' => [
-                        'id' => $entity->id,
-                        'deleted' => false,
-                    ],
-                    'set' => [
-                        $key => $relEntity->id,
-                        $typeKey => $relEntity->getEntityType(),
-                    ],
-                ]);
+                $sql = $this->query->create(
+                    Update::fromRaw([
+                        'from' => $entityType,
+                        'whereClause' => [
+                            'id' => $entity->id,
+                            'deleted' => false,
+                        ],
+                        'set' => [
+                            $key => $relEntity->id,
+                            $typeKey => $relEntity->getEntityType(),
+                        ],
+                    ])
+                );
 
                 $this->runQuery($sql, true);
 
@@ -800,27 +842,33 @@ abstract class BaseMapper implements Mapper
                     return false;
                 }
 
-                $sql = $this->query->createUpdateQuery($relEntity->getEntityType(), [
-                    'whereClause' => [
-                        $foreignKey => $entity->id,
-                        'deleted' => false,
-                    ],
-                    'set' => [
-                        $foreignKey => NULL,
-                    ],
-                ]);
+                $sql = $this->query->create(
+                    Update::fromRaw([
+                        'from' => $relEntity->getEntityType(),
+                        'whereClause' => [
+                            $foreignKey => $entity->id,
+                            'deleted' => false,
+                        ],
+                        'set' => [
+                            $foreignKey => NULL,
+                        ],
+                    ])
+                );
 
                 $this->runQuery($sql, true);
 
-                $sql = $this->query->createUpdateQuery($relEntity->getEntityType(), [
-                    'whereClause' => [
-                        'id' => $id,
-                        'deleted' => false,
-                    ],
-                    'set' => [
-                        $foreignKey => $entity->id,
-                    ],
-                ]);
+                $sql = $this->query->create(
+                    Update::fromRaw([
+                        'from' => $relEntity->getEntityType(),
+                        'whereClause' => [
+                            'id' => $id,
+                            'deleted' => false,
+                        ],
+                        'set' => [
+                            $foreignKey => $entity->id,
+                        ],
+                    ])
+                );
 
                 $this->runQuery($sql, true);
 
@@ -844,13 +892,16 @@ abstract class BaseMapper implements Mapper
                     $set[$foreignType] = $entity->getEntityType();
                 }
 
-                $sql = $this->query->createUpdateQuery($relEntity->getEntityType(), [
-                    'whereClause' => [
-                        'id' => $id,
-                        'deleted' => false,
-                    ],
-                    'set' => $set,
-                ]);
+                $sql = $this->query->create(
+                    Update::fromRaw([
+                        'from' => $relEntity->getEntityType(),
+                        'whereClause' => [
+                            'id' => $id,
+                            'deleted' => false,
+                        ],
+                        'set' => $set,
+                    ])
+                );
 
                 $this->runQuery($sql, true);
 
@@ -882,11 +933,14 @@ abstract class BaseMapper implements Mapper
                     $where[$f] = $v;
                 }
 
-                $sql = $this->query->createSelectQuery($middleName, [
-                    'select' => ['id'],
-                    'whereClause' => $where,
-                    'withDeleted' => true,
-                ]);
+                $sql = $this->query->create(
+                    Select::fromRaw([
+                        'from' => $middleName,
+                        'select' => ['id'],
+                        'whereClause' => $where,
+                        'withDeleted' => true,
+                    ])
+                );
 
                 $ps = $this->pdo->query($sql);
 
@@ -906,11 +960,14 @@ abstract class BaseMapper implements Mapper
                         $update[$column] = $value;
                     }
 
-                    $sql = $this->query->createInsertQuery($middleName, [
-                        'columns' => $columns,
-                        'values' => $values,
-                        'updateSet' => $update,
-                    ]);
+                    $sql = $this->query->create(
+                        Insert::fromRaw([
+                            'into' => $middleName,
+                            'columns' => $columns,
+                            'values' => $values,
+                            'updateSet' => $update,
+                        ])
+                    );
 
                     $this->runQuery($sql, true);
 
@@ -925,10 +982,13 @@ abstract class BaseMapper implements Mapper
                     $update[$column] = $value;
                 }
 
-                $sql = $this->query->createUpdateQuery($middleName, [
-                    'whereClause' => $where,
-                    'set' => $update,
-                ]);
+                $sql = $this->query->create(
+                    Update::fromRaw([
+                        'from' => $middleName,
+                        'whereClause' => $where,
+                        'set' => $update,
+                    ])
+                );
 
                 $this->runQuery($sql, true);
 
@@ -1009,10 +1069,13 @@ abstract class BaseMapper implements Mapper
 
                 $where['deleted'] = false;
 
-                $sql = $this->query->createUpdateQuery($entityType, [
-                    'whereClause' => $where,
-                    'set' => $update,
-                ]);
+                $sql = $this->query->create(
+                    Update::fromRaw([
+                        'from' => $entityType,
+                        'whereClause' => $where,
+                        'set' => $update,
+                    ])
+                );
 
                 $this->runQuery($sql, true);
 
@@ -1043,10 +1106,13 @@ abstract class BaseMapper implements Mapper
 
                 $where['deleted'] = false;
 
-                $sql = $this->query->createUpdateQuery($relEntity->getEntityType(), [
-                    'whereClause' => $where,
-                    'set' => $update,
-                ]);
+                $sql = $this->query->create(
+                    Update::fromRaw([
+                        'from' => $relEntity->getEntityType(),
+                        'whereClause' => $where,
+                        'set' => $update,
+                    ])
+                );
 
                 $this->runQuery($sql, true);
 
@@ -1076,12 +1142,15 @@ abstract class BaseMapper implements Mapper
                     $where[$f] = $v;
                 }
 
-                $sql = $this->query->createUpdateQuery($middleName, [
-                    'whereClause' => $where,
-                    'set' => [
-                        'deleted' => true,
-                    ],
-                ]);
+                $sql = $this->query->create(
+                    Update::fromRaw([
+                        'from' => $middleName,
+                        'whereClause' => $where,
+                        'set' => [
+                            'deleted' => true,
+                        ],
+                    ])
+                );
 
                 $this->runQuery($sql, true);
 
@@ -1117,11 +1186,14 @@ abstract class BaseMapper implements Mapper
             $update = $onDuplicateSetMap = $this->getInsertOnDuplicateSetMap($entity, $onDuplicateUpdateAttributeList);
         }
 
-        $sql = $this->query->createInsertQuery($entity->getEntityType(), [
-            'columns' => $this->getInsertColumnList($entity),
-            'values' => $this->getInsertValueMap($entity),
-            'updateSet' => $update,
-        ]);
+        $sql = $this->query->create(
+            Insert::fromRaw([
+                'into' => $entity->getEntityType(),
+                'columns' => $this->getInsertColumnList($entity),
+                'values' => $this->getInsertValueMap($entity),
+                'updateSet' => $update,
+            ])
+        );
 
         $this->runQuery($sql, true);
     }
@@ -1141,10 +1213,13 @@ abstract class BaseMapper implements Mapper
             $values[] = $this->getInsertValueMap($entity);
         }
 
-        $sql = $this->query->createInsertQuery($entity->getEntityType(), [
-            'columns' => $this->getInsertColumnList($collection[0]),
-            'values' => $values,
-        ]);
+        $sql = $this->query->create(
+            Insert::fromRaw([
+                'into' => $entity->getEntityType(),
+                'columns' => $this->getInsertColumnList($collection[0]),
+                'values' => $values,
+            ])
+        );
 
         $this->runQuery($sql, true);
     }
@@ -1221,13 +1296,16 @@ abstract class BaseMapper implements Mapper
             return;
         }
 
-        $sql = $this->query->createUpdateQuery($entity->getEntityType(), [
-            'whereClause' => [
-                'id' => $entity->id,
-                'deleted' => false,
-            ],
-            'set' => $valueMap,
-        ]);
+        $sql = $this->query->create(
+            Update::fromRaw([
+                'from' => $entity->getEntityType(),
+                'whereClause' => [
+                    'id' => $entity->id,
+                    'deleted' => false,
+                ],
+                'set' => $valueMap,
+            ])
+        );
 
         $this->pdo->query($sql);
     }
@@ -1264,9 +1342,10 @@ abstract class BaseMapper implements Mapper
             $whereClause['deleted'] = true;
         }
 
-        $sql = $this->query->createDeleteQuery($entityType, [
+        $sql = $this->query->create(Delete::fromRaw([
+            'from' => $entityType,
             'whereClause' => $whereClause,
-        ]);
+        ]));
 
         $this->runQuery($sql);
     }
@@ -1284,10 +1363,13 @@ abstract class BaseMapper implements Mapper
             'id' => $id,
         ];
 
-        $sql = $this->query->createUpdateQuery($entityType, [
-            'whereClause' => $whereClause,
-            'set' => ['deleted' => false],
-        ]);
+        $sql = $this->query->create(
+            Update::fromRaw([
+                'from' => $entityType,
+                'whereClause' => $whereClause,
+                'set' => ['deleted' => false],
+            ])
+        );
 
         $this->runQuery($sql);
     }
@@ -1325,11 +1407,9 @@ abstract class BaseMapper implements Mapper
         return $data;
     }
 
-    protected function fromRow(Entity $entity, $data) : Entity
+    protected function populateEntityFromRow(Entity $entity, $data)
     {
         $entity->set($data);
-
-        return $entity;
     }
 
     protected function getManyManyJoin(Entity $entity, string $relationName, ?array $conditions = null) : array

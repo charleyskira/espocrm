@@ -29,24 +29,33 @@
 
 namespace Espo\ORM\QueryParams;
 
-use RuntimeException;
-
-/**
- * Update parameters.
- */
-class Update implements Query
+trait BaseTrait
 {
-    use SelectingTrait;
-    use BaseTrait;
+    protected $params = [];
+
+    /**
+     * Get parameters in RAW format.
+     */
+    public function getRawParams() : array
+    {
+        return $this->params;
+    }
+
+    /**
+     * Create from RAW params.
+     */
+    public static function fromRaw(array $params) : self
+    {
+        $obj = new self();
+
+        $obj->validateRawParams($params);
+
+        $obj->params = $params;
+
+        return $obj;
+    }
 
     protected function validateRawParams(array $params)
     {
-        $this->validateRawParamsSelecting($params);
-
-        $set = $params['set'] ?? null;
-
-        if (!$set || !is_array($set)) {
-            throw new RuntimeException("Update params: Bad or missing 'set' parameter.");
-        }
     }
 }

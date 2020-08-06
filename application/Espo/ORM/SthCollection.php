@@ -29,6 +29,10 @@
 
 namespace Espo\ORM;
 
+use Espo\ORM\{
+    QueryParams\Select,
+};
+
 /**
  * Reasonable to use when selecting a large number of records.
  * It doesn't allocate a memory for every entity.
@@ -91,15 +95,22 @@ class SthCollection implements \IteratorAggregate, Collection
      */
     public function executeQuery()
     {
-        if ($this->sql) {
-            $sql = $this->sql;
-        } else {
-            $sql = $this->getQuery()->createSelectQuery($this->entityType, $this->selectParams);
+        if (!$this->sql) {
+            $this->sql = $this->getQuery()->create($this->getSelectQueryParams());
         }
-        $sth = $this->getPdo()->prepare($sql);
+
+        $sth = $this->getPDO()->prepare($this->sql);
         $sth->execute();
 
         $this->sth = $sth;
+    }
+
+    protected function getSelectQueryParams() : Select
+    {
+        $params = $this->selectParams;
+        $params['from'] = $this->entityType;
+
+        return Select::fromRaw($params);
     }
 
     public function getIterator()

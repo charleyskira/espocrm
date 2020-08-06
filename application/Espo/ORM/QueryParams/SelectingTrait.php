@@ -31,7 +31,7 @@ namespace Espo\ORM\QueryParams;
 
 use RuntimeException;
 
-trait Selecting
+trait SelectingTrait
 {
     /**
      * Get an entity type.

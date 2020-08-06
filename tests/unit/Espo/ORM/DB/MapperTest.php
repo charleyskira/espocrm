@@ -76,11 +76,13 @@ class DBMapperTest extends \PHPUnit\Framework\TestCase
         $this->entityFactory
             ->expects($this->any())
             ->method('create')
-            ->will($this->returnCallback(function () use ($entityManager) {
-                $args = func_get_args();
-                $className = "\\Espo\\Entities\\" . $args[0];
-                return new $className($args[0], [], $entityManager);
-            }));
+            ->will($this->returnCallback(
+                function () use ($entityManager) {
+                    $args = func_get_args();
+                    $className = "Espo\\Entities\\" . $args[0];
+                    return new $className($args[0], [], $entityManager);
+                }
+            ));
 
         $this->metadata = $this->getMockBuilder('Espo\\ORM\\Metadata')->disableOriginalConstructor()->getMock();
 

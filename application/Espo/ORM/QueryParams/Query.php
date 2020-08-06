@@ -31,5 +31,8 @@ namespace Espo\ORM\QueryParams;
 
 interface Query
 {
-
+    /**
+     * Get parameters in RAW format.
+     */
+    public function getRawParams() : array;
 }

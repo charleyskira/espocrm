@@ -35,10 +35,16 @@ use Espo\ORM\{
     Metadata,
     DB\Helper,
     DB\Query\Functions,
+    QueryParams\Query as QueryParams,
+    QueryParams\Select as SelectParams,
+    QueryParams\Update as UpdateParams,
+    QueryParams\Insert as InsertParams,
+    QueryParams\Delete as DeleteParams,
 };
 
 use PDO;
 use RuntimeException;
+use LogicException;
 
 /**
  * Composes SQL queries.
@@ -162,23 +168,74 @@ abstract class BaseQuery
     }
 
     /**
-     * Compose a SELECT query.
+     * Composes a SQL query by a given query parameters.
      */
-    public function createSelectQuery(string $entityType, ?array $params = nul) : string
+    public function create(QueryParams $queryParams) : string
     {
-        $params = $params ?? [];
+        if ($queryParams instanceof SelectParams) {
+            return $this->createSelect($queryParams);
+        }
 
-        return $this->createSelectQueryInternal($entityType, $params);
+        if ($queryParams instanceof UpdateParams) {
+            return $this->createUpdate($queryParams);
+        }
+
+        if ($queryParams instanceof InsertParams) {
+            return $this->createInsert($queryParams);
+        }
+
+        if ($queryParams instanceof DeleteParams) {
+            return $this->createDelete($queryParams);
+        }
+
+        throw new LogicException("ORM Query: Query params could not be handled.");
+    }
+
+    protected function createSelect(SelectParams $queryParam) : string
+    {
+        $params = $queryParam->getRawParams();
+
+        return $this->createSelectQueryInternal($params);
+    }
+
+    protected function createUpdate(UpdateParams $queryParam) : string
+    {
+        $params = $queryParam->getRawParams();
+
+        return $this->createUpdateQuery($params);
+    }
+
+    protected function createDelete(DeleteParams $queryParam) : string
+    {
+        $params = $queryParam->getRawParams();
+
+        return $this->createDeleteQuery($params);
+    }
+
+    protected function createInsert(InsertParams $queryParam) : string
+    {
+        $params = $queryParam->getRawParams();
+
+        return $this->createInsertQuery($params);
     }
 
     /**
-     * Compose a DELETE query.
+     * @deprecated
      */
-    public function createDeleteQuery(string $entityType, ?array $params = null) : string
+    public function createSelectQuery(string $entityType, ?array $params = null) : string
     {
         $params = $params ?? [];
 
+        $params['from'] = $entityType;
+
+        return $this->createSelectQueryInternal($params);
+    }
+
+    protected function createDeleteQuery(array $params = null) : string
+    {
         $params = $this->normilizeParams(self::DELETE_METHOD, $params);
+
+        $entityType = $params['from'];
 
         $entity = $this->getSeed($entityType);
 
@@ -197,14 +254,11 @@ abstract class BaseQuery
         return $sql;
     }
 
-    /**
-     * Compose an UPDATE query.
-     */
-    public function createUpdateQuery(string $entityType, ?array $params = null) : string
+    protected function createUpdateQuery(array $params = null) : string
     {
-        $params = $params ?? [];
-
         $params = $this->normilizeParams(self::UPDATE_METHOD, $params);
+
+        $entityType = $params['from'];
 
         $values = $params['set'];
 
@@ -228,9 +282,11 @@ abstract class BaseQuery
         return $sql;
     }
 
-    public function createInsertQuery(string $entityType, array $params) : string
+    protected function createInsertQuery(array $params) : string
     {
         $params = $this->normilizeInsertParams($params);
+
+        $entityType = $params['into'];
 
         $columns = $params['columns'];
         $values = $params['values'];
@@ -377,11 +433,13 @@ abstract class BaseQuery
         return $params;
     }
 
-    protected function createSelectQueryInternal(string $entityType, ?array $params = null) : string
+    protected function createSelectQueryInternal(array $params = null) : string
     {
-        $entity = $this->getSeed($entityType);
-
         $params = $this->normilizeParams(self::SELECT_METHOD, $params);
+
+        $entityType = $params['from'];
+
+        $entity = $this->getSeed($entityType);
 
         $isAggregation = (bool) ($params['aggregation'] ?? null);
 

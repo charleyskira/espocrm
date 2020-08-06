@@ -31,6 +31,13 @@ use Espo\ORM\DB\Query\MysqlQuery as Query;
 use Espo\ORM\EntityFactory;
 use Espo\ORM\Metadata;
 
+use Espo\ORM\QueryParams\{
+    Select,
+    Insert,
+    Update,
+    Delete,
+};
+
 use Espo\Core\ORM\EntityManager;
 
 use Espo\Entities\Post;
@@ -106,11 +113,12 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testDelete1()
     {
-        $sql = $this->query->createDeleteQuery('Account', [
+        $sql = $this->query->create(Delete::fromRaw([
+            'from' => 'Account',
             'whereClause' => [
                 'name' => 'test',
             ],
-        ]);
+        ]));
 
         $expectedSql =
             "DELETE FROM `account` " .
@@ -121,13 +129,14 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testDeleteWithLimit()
     {
-        $sql = $this->query->createDeleteQuery('Account', [
+        $sql = $this->query->create(Delete::fromRaw([
+            'from' => 'Account',
             'whereClause' => [
                 'name' => 'test',
             ],
             'orderBy' => 'name',
             'limit' => 1,
-        ]);
+        ]));
 
         $expectedSql =
             "DELETE FROM `account` " .
@@ -140,12 +149,13 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testDeleteWithDeleted()
     {
-        $sql = $this->query->createDeleteQuery('Account', [
+        $sql = $this->query->create(Delete::fromRaw([
+            'from' => 'Account',
             'whereClause' => [
                 'name' => 'test',
                 'deleted' => true,
             ],
-        ]);
+        ]));
 
         $expectedSql =
             "DELETE FROM `account` " .
@@ -156,7 +166,8 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testUpdateQuery1()
     {
-        $sql = $this->query->createUpdateQuery('Account', [
+        $sql = $this->query->create(Update::fromRaw([
+            'from' => 'Account',
             'whereClause' => [
                 'name' => 'test',
             ],
@@ -164,7 +175,7 @@ class QueryTest extends \PHPUnit\Framework\TestCase
                 'deleted' => false,
                 'name' => 'hello',
             ],
-        ]);
+        ]));
 
         $expectedSql =
             "UPDATE `account` " .
@@ -176,7 +187,8 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testUpdateQueryWithJoin()
     {
-        $sql = $this->query->createUpdateQuery('Comment', [
+        $sql = $this->query->create(Update::fromRaw([
+            'from' => 'Comment',
             'whereClause' => [
                 'name' => 'test',
             ],
@@ -184,7 +196,7 @@ class QueryTest extends \PHPUnit\Framework\TestCase
             'set' => [
                 'name:' => 'post.name',
             ],
-        ]);
+        ]));
 
         $expectedSql =
             "UPDATE `comment` " .
@@ -197,7 +209,8 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testUpdateQueryWithOrder()
     {
-        $sql = $this->query->createUpdateQuery('Account', [
+        $sql = $this->query->create(Update::fromRaw([
+            'from' => 'Account',
             'whereClause' => [
                 'name' => 'test',
             ],
@@ -206,7 +219,7 @@ class QueryTest extends \PHPUnit\Framework\TestCase
                 'deleted' => false,
                 'name' => 'hello',
             ]
-        ]);
+        ]));
 
         $expectedSql =
             "UPDATE `account` " .
@@ -219,7 +232,8 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testUpdateQueryWithLimit()
     {
-        $sql = $this->query->createUpdateQuery('Account', [
+        $sql = $this->query->create(Update::fromRaw([
+            'from' => 'Account',
             'whereClause' => [
                 'name' => 'test',
             ],
@@ -229,7 +243,7 @@ class QueryTest extends \PHPUnit\Framework\TestCase
                 'deleted' => false,
                 'name' => 'hello',
             ],
-        ]);
+        ]));
 
         $expectedSql =
             "UPDATE `account` " .
@@ -243,13 +257,14 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testInsertQuery1()
     {
-        $sql = $this->query->createInsertQuery('Account', [
+        $sql = $this->query->create(Insert::fromRaw([
+            'into' => 'Account',
             'columns' => ['id', 'name'],
             'values' => [
                 'id' => '1',
                 'name' => 'hello',
             ],
-        ]);
+        ]));
 
         $expectedSql =
             "INSERT INTO `account` (`id`, `name`) VALUES ('1', 'hello')";
@@ -259,7 +274,8 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testInsertQuery2()
     {
-        $sql = $this->query->createInsertQuery('Account', [
+        $sql = $this->query->create(Insert::fromRaw([
+            'into' => 'Account',
             'columns' => ['id', 'name'],
             'values' => [
                 [
@@ -271,7 +287,7 @@ class QueryTest extends \PHPUnit\Framework\TestCase
                     'name' => 'test',
                 ],
             ],
-        ]);
+        ]));
 
         $expectedSql =
             "INSERT INTO `account` (`id`, `name`) VALUES ('1', 'hello'), ('2', 'test')";
@@ -281,7 +297,8 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testInsertUpdate()
     {
-        $sql = $this->query->createInsertQuery('Account', [
+        $sql = $this->query->create(Insert::fromRaw([
+            'into' => 'Account',
             'columns' => ['id', 'name'],
             'values' => [
                 'id' => '1',
@@ -291,7 +308,7 @@ class QueryTest extends \PHPUnit\Framework\TestCase
                 'deleted' => false,
                 'name' => 'test'
             ],
-        ]);
+        ]));
 
         $expectedSql =
             "INSERT INTO `account` (`id`, `name`) VALUES ('1', 'hello') ON DUPLICATE KEY UPDATE `deleted` = 0, `name` = 'test'";
@@ -301,12 +318,15 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testSelectAllColumns()
     {
-        $sql = $this->query->createSelectQuery('Account', [
-            'orderBy' => 'name',
-            'order' => 'ASC',
-            'offset' => 10,
-            'limit' => 20
-        ]);
+        $sql = $this->query->create(
+            Select::fromRaw([
+                'from' => 'Account',
+                'orderBy' => 'name',
+                'order' => 'ASC',
+                'offset' => 10,
+                'limit' => 20,
+            ])
+        );
 
         $expectedSql =
             "SELECT account.id AS `id`, account.name AS `name`, account.deleted AS `deleted` FROM `account` " .
@@ -317,13 +337,16 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testSelectSkipTextColumns()
     {
-        $sql = $this->query->createSelectQuery('Article', [
-            'orderBy' => 'name',
-            'order' => 'ASC',
-            'offset' => 10,
-            'limit' => 20,
-            'skipTextColumns' => true
-        ]);
+        $sql = $this->query->create(
+            Select::fromRaw([
+                'from' => 'Article',
+                'orderBy' => 'name',
+                'order' => 'ASC',
+                'offset' => 10,
+                'limit' => 20,
+                'skipTextColumns' => true,
+            ])
+        );
 
         $expectedSql =
             "SELECT article.id AS `id`, article.name AS `name`, article.deleted AS `deleted` FROM `article` " .
@@ -334,8 +357,11 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testSelectWithBelongsToJoin()
     {
-        $sql = $this->query->createSelectQuery('Comment', [
-        ]);
+        $sql = $this->query->create(
+            Select::fromRaw([
+                'from' => 'Comment',
+            ])
+        );
 
         $expectedSql =
             "SELECT comment.id AS `id`, comment.post_id AS `postId`, post.name AS `postName`, comment.name AS `name`, comment.deleted AS `deleted` FROM `comment` " .
@@ -347,18 +373,24 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testSelectWithSpecifiedColumns()
     {
-        $sql = $this->query->createSelectQuery('Comment', [
-            'select' => ['id', 'name']
-        ]);
+        $sql = $this->query->create(
+            Select::fromRaw([
+                'from' => 'Comment',
+                'select' => ['id', 'name']
+            ])
+        );
+
         $expectedSql =
             "SELECT comment.id AS `id`, comment.name AS `name` FROM `comment` " .
             "WHERE comment.deleted = 0";
 
         $this->assertEquals($expectedSql, $sql);
 
-        $sql = $this->query->createSelectQuery('Comment', array(
-            'select' => array('id', 'name', 'postName')
-        ));
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Comment',
+            'select' => ['id', 'name', 'postName'],
+        ]));
+
         $expectedSql =
             "SELECT comment.id AS `id`, comment.name AS `name`, post.name AS `postName` FROM `comment` " .
             "LEFT JOIN `post` AS `post` ON comment.post_id = post.id " .
@@ -366,10 +398,11 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
         $this->assertEquals($expectedSql, $sql);
 
-        $sql = $this->query->createSelectQuery('Comment', array(
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Comment',
             'select' => array('id', 'name', 'postName'),
-            'leftJoins' => array('post')
-        ));
+            'leftJoins' => array('post'),
+        ]));
         $expectedSql =
             "SELECT comment.id AS `id`, comment.name AS `name`, post.name AS `postName` FROM `comment` " .
             "LEFT JOIN `post` AS `post` ON comment.post_id = post.id " .
@@ -377,10 +410,11 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
         $this->assertEquals($expectedSql, $sql);
 
-        $sql = $this->query->createSelectQuery('Comment', array(
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Comment',
             'select' => array('id', 'name'),
             'leftJoins' => array('post')
-        ));
+        ]));
         $expectedSql =
             "SELECT comment.id AS `id`, comment.name AS `name` FROM `comment` " .
             "LEFT JOIN `post` AS `post` ON comment.post_id = post.id " .
@@ -391,20 +425,22 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testSelectUseIndex()
     {
-        $sql = $this->query->createSelectQuery('Account', [
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Account',
             'select' => ['id', 'name'],
             'useIndex' => 'name',
-        ]);
+        ]));
         $expectedSql =
             "SELECT account.id AS `id`, account.name AS `name` FROM `account` USE INDEX (`IDX_NAME`) " .
             "WHERE account.deleted = 0";
 
         $this->assertEquals($expectedSql, $sql);
 
-        $sql = $this->query->createSelectQuery('Account', [
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Account',
             'select' => ['id', 'name'],
             'useIndex' => ['name'],
-        ]);
+        ]));
         $expectedSql =
             "SELECT account.id AS `id`, account.name AS `name` FROM `account` USE INDEX (`IDX_NAME`) " .
             "WHERE account.deleted = 0";
@@ -414,11 +450,12 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testWithSpecifiedFunction()
     {
-        $sql = $this->query->createSelectQuery('Comment', array(
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Comment',
             'select' => array('id', 'postId', 'post.name', 'COUNT:id'),
             'leftJoins' => array('post'),
             'groupBy' => array('postId', 'post.name')
-        ));
+        ]));
         $expectedSql =
             "SELECT comment.id AS `id`, comment.post_id AS `postId`, post.name AS `post.name`, COUNT(comment.id) AS `COUNT:id` FROM `comment` " .
             "LEFT JOIN `post` AS `post` ON comment.post_id = post.id " .
@@ -427,11 +464,12 @@ class QueryTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($expectedSql, $sql);
 
 
-        $sql = $this->query->createSelectQuery('Comment', array(
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Comment',
             'select' => array('id', 'COUNT:id', 'MONTH:post.createdAt'),
             'leftJoins' => array('post'),
             'groupBy' => array('MONTH:post.createdAt')
-        ));
+        ]));
         $expectedSql =
             "SELECT comment.id AS `id`, COUNT(comment.id) AS `COUNT:id`, DATE_FORMAT(post.created_at, '%Y-%m') AS `MONTH:post.createdAt` FROM `comment` " .
             "LEFT JOIN `post` AS `post` ON comment.post_id = post.id " .
@@ -442,10 +480,11 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testSelectWithJoinChildren()
     {
-        $sql = $this->query->createSelectQuery('Post', array(
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Post',
             'select' => ['id', 'name'],
             'leftJoins' => [['notes', 'notesLeft']]
-        ));
+        ]));
 
         $expectedSql =
             "SELECT post.id AS `id`, post.name AS `name` FROM `post` " .
@@ -457,10 +496,11 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testJoinConditions1()
     {
-        $sql = $this->query->createSelectQuery('Post', [
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Post',
             'select' => ['id', 'name'],
             'leftJoins' => [['notes', 'notesLeft', ['notesLeft.name!=' => null]]]
-        ]);
+        ]));
 
         $expectedSql =
             "SELECT post.id AS `id`, post.name AS `name` FROM `post` " .
@@ -473,10 +513,11 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testJoinConditions2()
     {
-        $sql = $this->query->createSelectQuery('Post', [
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Post',
             'select' => ['id', 'name'],
             'leftJoins' => [['notes', 'notesLeft', ['notesLeft.name=:' => 'post.name']]]
-        ]);
+        ]));
 
         $expectedSql =
             "SELECT post.id AS `id`, post.name AS `name` FROM `post` " .
@@ -489,7 +530,8 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testJoinConditions3()
     {
-        $sql = $this->query->createSelectQuery('Note', [
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Note',
             'select' => ['id'],
             'leftJoins' => [['post', 'post', [
                 'OR' => [
@@ -498,7 +540,7 @@ class QueryTest extends \PHPUnit\Framework\TestCase
                 ]
             ]]],
             'withDeleted' => true,
-        ]);
+        ]));
 
         $expectedSql = "SELECT note.id AS `id` FROM `note` LEFT JOIN `post` AS `post` ON (post.name = 'test' OR post.name IS NULL)";
 
@@ -507,7 +549,8 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testJoinConditions4()
     {
-        $sql = $this->query->createSelectQuery('Note', [
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Note',
             'select' => ['id'],
             'leftJoins' => [['post', 'post', [
                 'name' => null,
@@ -517,7 +560,7 @@ class QueryTest extends \PHPUnit\Framework\TestCase
                 ]
             ]]],
             'withDeleted' => true,
-        ]);
+        ]));
 
         $expectedSql = "SELECT note.id AS `id` FROM `note` LEFT JOIN `post` AS `post` ON post.name IS NULL AND (post.name = 'test' OR post.name IS NULL)";
 
@@ -526,10 +569,11 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testJoinTable()
     {
-        $sql = $this->query->createSelectQuery('Post', [
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Post',
             'select' => ['id', 'name'],
             'leftJoins' => [['NoteTable', 'note', ['note.parentId=:' => 'post.id', 'note.parentType' => 'Post']]]
-        ]);
+        ]));
 
         $expectedSql =
             "SELECT post.id AS `id`, post.name AS `name` FROM `post` " .
@@ -542,10 +586,11 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testJoinOnlyMiddle()
     {
-        $sql = $this->query->createSelectQuery('Post', [
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Post',
             'select' => ['id'],
             'leftJoins' => [['tags', null, null, ['onlyMiddle' => true]]]
-        ]);
+        ]));
 
         $expectedSql =
             "SELECT post.id AS `id` FROM `post` " .
@@ -557,12 +602,13 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testWhereNotValue1()
     {
-        $sql = $this->query->createSelectQuery('Post', [
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Post',
             'select' => ['id', 'name'],
             'whereClause' => [
                 'name!=:' => 'post.id'
             ]
-        ]);
+        ]));
 
         $expectedSql =
             "SELECT post.id AS `id`, post.name AS `name` FROM `post` " .
@@ -573,13 +619,14 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testWhereNotValue2()
     {
-        $sql = $this->query->createSelectQuery('Post', [
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Post',
             'select' => ['id', 'name'],
             'whereClause' => [
                 'name:' => null
             ],
             'withDeleted' => true
-        ]);
+        ]));
 
         $expectedSql =
             "SELECT post.id AS `id`, post.name AS `name` FROM `post` " .
@@ -590,7 +637,8 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testSelectWithSubquery()
     {
-        $sql = $this->query->createSelectQuery('Post', array(
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Post',
             'select' => ['id', 'name'],
             'whereClause' => array(
                 'post.id=s' => array(
@@ -603,12 +651,13 @@ class QueryTest extends \PHPUnit\Framework\TestCase
                     )
                 )
             )
-        ));
+        ]));
 
         $expectedSql = "SELECT post.id AS `id`, post.name AS `name` FROM `post` WHERE post.id IN (SELECT post.id AS `id` FROM `post` WHERE post.name = 'test' AND post.deleted = 0) AND post.deleted = 0";
         $this->assertEquals($expectedSql, $sql);
 
-        $sql = $this->query->createSelectQuery('Post', array(
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Post',
             'select' => ['id', 'name'],
             'whereClause' => array(
                 'post.id!=s' => array(
@@ -621,13 +670,14 @@ class QueryTest extends \PHPUnit\Framework\TestCase
                     )
                 )
             )
-        ));
+        ]));
 
         $expectedSql = "SELECT post.id AS `id`, post.name AS `name` FROM `post` WHERE post.id NOT IN (SELECT post.id AS `id` FROM `post` WHERE post.name = 'test' AND post.deleted = 0) AND post.deleted = 0";
         $this->assertEquals($expectedSql, $sql);
 
 
-        $sql = $this->query->createSelectQuery('Post', array(
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Post',
             'select' => ['id', 'name'],
             'whereClause' => array(
                 'NOT'=> array(
@@ -635,7 +685,7 @@ class QueryTest extends \PHPUnit\Framework\TestCase
                     'post.createdById' => '1'
                 )
             )
-        ));
+        ]));
 
         $expectedSql = "SELECT post.id AS `id`, post.name AS `name` FROM `post` WHERE post.id NOT IN (SELECT post.id AS `id` FROM `post` WHERE post.name = 'test' AND post.created_by_id = '1' AND post.deleted = 0) AND post.deleted = 0";
         $this->assertEquals($expectedSql, $sql);
@@ -643,10 +693,11 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testGroupBy()
     {
-        $sql = $this->query->createSelectQuery('Comment', [
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Comment',
             'select' => ['COUNT:id', 'QUARTER:comment.createdAt'],
             'groupBy' => ['QUARTER:comment.createdAt']
-        ]);
+        ]));
         $expectedSql =
             "SELECT COUNT(comment.id) AS `COUNT:id`, CONCAT(YEAR(comment.created_at), '_', QUARTER(comment.created_at)) AS `QUARTER:comment.createdAt` FROM `comment` " .
             "WHERE comment.deleted = 0 " .
@@ -654,10 +705,11 @@ class QueryTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($expectedSql, $sql);
 
 
-        $sql = $this->query->createSelectQuery('Comment', [
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Comment',
             'select' => ['COUNT:id', 'YEAR_5:comment.createdAt'],
             'groupBy' => ['YEAR_5:comment.createdAt']
-        ]);
+        ]));
         $expectedSql =
             "SELECT COUNT(comment.id) AS `COUNT:id`, CASE WHEN MONTH(comment.created_at) >= 6 THEN YEAR(comment.created_at) ELSE YEAR(comment.created_at) - 1 END AS `YEAR_5:comment.createdAt` FROM `comment` " .
             "WHERE comment.deleted = 0 " .
@@ -665,10 +717,11 @@ class QueryTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($expectedSql, $sql);
 
 
-        $sql = $this->query->createSelectQuery('Comment', [
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Comment',
             'select' => ['COUNT:id', 'QUARTER_4:comment.createdAt'],
             'groupBy' => ['QUARTER_4:comment.createdAt']
-        ]);
+        ]));
 
         $expectedSql =
             "SELECT COUNT(comment.id) AS `COUNT:id`, CASE WHEN MONTH(comment.created_at) >= 5 THEN CONCAT(YEAR(comment.created_at), '_', FLOOR((MONTH(comment.created_at) - 5) / 3) + 1) ELSE CONCAT(YEAR(comment.created_at) - 1, '_', CEIL((MONTH(comment.created_at) + 7) / 3)) END AS `QUARTER_4:comment.createdAt` FROM `comment` " .
@@ -679,12 +732,13 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testOrderBy()
     {
-        $sql = $this->query->createSelectQuery('Comment', array(
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Comment',
             'select' => array('COUNT:id', 'YEAR:post.createdAt'),
             'leftJoins' => array('post'),
             'groupBy' => array('YEAR:post.createdAt'),
             'orderBy' => 2
-        ));
+        ]));
         $expectedSql =
             "SELECT COUNT(comment.id) AS `COUNT:id`, YEAR(post.created_at) AS `YEAR:post.createdAt` FROM `comment` " .
             "LEFT JOIN `post` AS `post` ON comment.post_id = post.id " .
@@ -693,12 +747,13 @@ class QueryTest extends \PHPUnit\Framework\TestCase
             "ORDER BY 2 ASC";
         $this->assertEquals($expectedSql, $sql);
 
-        $sql = $this->query->createSelectQuery('Comment', array(
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Comment',
             'select' => array('COUNT:id', 'post.name'),
             'leftJoins' => array('post'),
             'groupBy' => array('post.name'),
             'orderBy' => 'LIST:post.name:Test,Hello',
-        ));
+        ]));
 
         $expectedSql =
             "SELECT COUNT(comment.id) AS `COUNT:id`, post.name AS `post.name` FROM `comment` " .
@@ -708,7 +763,8 @@ class QueryTest extends \PHPUnit\Framework\TestCase
             "ORDER BY FIELD(post.name, 'Hello', 'Test') DESC";
         $this->assertEquals($expectedSql, $sql);
 
-        $sql = $this->query->createSelectQuery('Comment', array(
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Comment',
             'select' => array('COUNT:id', 'YEAR:post.createdAt', 'post.name'),
             'leftJoins' => array('post'),
             'groupBy' => array('YEAR:post.createdAt', 'post.name'),
@@ -716,7 +772,7 @@ class QueryTest extends \PHPUnit\Framework\TestCase
                 array(2, 'DESC'),
                 array('LIST:post.name:Test,Hello')
             )
-        ));
+        ]));
         $expectedSql =
             "SELECT COUNT(comment.id) AS `COUNT:id`, YEAR(post.created_at) AS `YEAR:post.createdAt`, post.name AS `post.name` FROM `comment` " .
             "LEFT JOIN `post` AS `post` ON comment.post_id = post.id " .
@@ -728,14 +784,15 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testForeign()
     {
-        $sql = $this->query->createSelectQuery('Comment', array(
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Comment',
             'select' => array('COUNT:comment.id', 'postId', 'postName'),
             'leftJoins' => array('post'),
             'groupBy' => array('postId'),
             'whereClause' => array(
                 'post.createdById' => 'id_1'
             ),
-        ));
+        ]));
         $expectedSql =
             "SELECT COUNT(comment.id) AS `COUNT:comment.id`, comment.post_id AS `postId`, post.name AS `postName` FROM `comment` " .
             "LEFT JOIN `post` AS `post` ON comment.post_id = post.id " .
@@ -746,46 +803,50 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testInArray()
     {
-        $sql = $this->query->createSelectQuery('Comment', array(
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Comment',
             'select' => ['id'],
             'whereClause' => array(
                 'id' => ['id_1']
             ),
-        ));
+        ]));
         $expectedSql =
             "SELECT comment.id AS `id` FROM `comment` " .
             "WHERE comment.id IN ('id_1') AND comment.deleted = 0";
         $this->assertEquals($expectedSql, $sql);
 
-        $sql = $this->query->createSelectQuery('Comment', array(
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Comment',
             'select' => ['id'],
             'whereClause' => array(
                 'id!=' => ['id_1']
             ),
-        ));
+        ]));
         $expectedSql =
             "SELECT comment.id AS `id` FROM `comment` " .
             "WHERE comment.id NOT IN ('id_1') AND comment.deleted = 0";
         $this->assertEquals($expectedSql, $sql);
 
-        $sql = $this->query->createSelectQuery('Comment', array(
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Comment',
             'select' => ['id'],
             'whereClause' => array(
                 'id' => []
             ),
-        ));
+        ]));
         $expectedSql =
             "SELECT comment.id AS `id` FROM `comment` " .
             "WHERE 0 AND comment.deleted = 0";
         $this->assertEquals($expectedSql, $sql);
 
-        $sql = $this->query->createSelectQuery('Comment', array(
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Comment',
             'select' => ['id'],
             'whereClause' => array(
                 'name' => 'Test',
                 'id!=' => []
             ),
-        ));
+        ]));
         $expectedSql =
             "SELECT comment.id AS `id` FROM `comment` " .
             "WHERE comment.name = 'Test' AND 1 AND comment.deleted = 0";
@@ -794,12 +855,13 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testFunction1()
     {
-        $sql = $this->query->createSelectQuery('Comment', [
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Comment',
             'select' => ['id'],
             'whereClause' => [
                 'MONTH_NUMBER:comment.created_at' => 2
             ]
-        ]);
+        ]));
         $expectedSql =
             "SELECT comment.id AS `id` FROM `comment` " .
             "WHERE MONTH(comment.created_at) = '2' AND comment.deleted = 0";
@@ -808,12 +870,13 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testFunction2()
     {
-        $sql = $this->query->createSelectQuery('Comment', [
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Comment',
             'select' => ['id'],
             'whereClause' => [
                 'WEEK_NUMBER_1:createdAt' => 2
             ]
-        ]);
+        ]));
         $expectedSql =
             "SELECT comment.id AS `id` FROM `comment` " .
             "WHERE WEEK(comment.created_at, 3) = '2' AND comment.deleted = 0";
@@ -822,12 +885,13 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testFunction3()
     {
-        $sql = $this->query->createSelectQuery('Comment', [
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Comment',
             'select' => ['id'],
             'whereClause' => [
                 'MONTH_NUMBER:(comment.created_at)' => 2
             ]
-        ]);
+        ]));
         $expectedSql =
             "SELECT comment.id AS `id` FROM `comment` " .
             "WHERE MONTH(comment.created_at) = '2' AND comment.deleted = 0";
@@ -836,12 +900,13 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testFunction4()
     {
-        $sql = $this->query->createSelectQuery('Comment', [
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Comment',
             'select' => ['id'],
             'whereClause' => [
                 "CONCAT:(MONTH:comment.created_at,' ',CONCAT:(comment.name,'+'))" => 'Test Hello'
             ]
-        ]);
+        ]));
         $expectedSql =
             "SELECT comment.id AS `id` FROM `comment` " .
             "WHERE CONCAT(DATE_FORMAT(comment.created_at, '%Y-%m'), ' ', CONCAT(comment.name, '+')) = 'Test Hello' AND comment.deleted = 0";
@@ -850,11 +915,12 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testFunction5()
     {
-        $sql = $this->query->createSelectQuery('Comment', [
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Comment',
             'select' => ['id', ['FLOOR:3.5', 'FLOOR:3.5']],
             'whereClause' => [
             ]
-        ]);
+        ]));
         $expectedSql =
             "SELECT comment.id AS `id`, FLOOR('3.5') AS `FLOOR:3.5` FROM `comment` " .
             "WHERE comment.deleted = 0";
@@ -863,10 +929,11 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testFunction6()
     {
-        $sql = $this->query->createSelectQuery('Comment', [
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Comment',
             'select' => ['id', ['ROUND:3.5,1', 'ROUND:3.5,1']],
             'whereClause' => []
-        ]);
+        ]));
         $expectedSql =
             "SELECT comment.id AS `id`, ROUND('3.5', '1') AS `ROUND:3.5,1` FROM `comment` " .
             "WHERE comment.deleted = 0";
@@ -875,10 +942,11 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testFunction7()
     {
-        $sql = $this->query->createSelectQuery('Comment', [
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Comment',
             'select' => ['id', 'ROUND:3.5,1'],
             'whereClause' => []
-        ]);
+        ]));
         $expectedSql =
             "SELECT comment.id AS `id`, ROUND('3.5', '1') AS `ROUND:3.5,1` FROM `comment` " .
             "WHERE comment.deleted = 0";
@@ -887,9 +955,10 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testFunction8()
     {
-        $sql = $this->query->createSelectQuery('Comment', [
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Comment',
             'select' => ['id', ["CONCAT:(',test',\"+\",'\"', \"'\")", 'value']]
-        ]);
+        ]));
         $expectedSql =
             "SELECT comment.id AS `id`, CONCAT(',test', '+', '\"', ''') AS `value` FROM `comment` " .
             "WHERE comment.deleted = 0";
@@ -898,9 +967,10 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testFunction9()
     {
-        $sql = $this->query->createSelectQuery('Comment', [
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Comment',
             'select' => ['id', ["COALESCE:(name,FALSE,true,null)", 'value']]
-        ]);
+        ]));
         $expectedSql =
             "SELECT comment.id AS `id`, COALESCE(comment.name, FALSE, TRUE, NULL) AS `value` FROM `comment` " .
             "WHERE comment.deleted = 0";
@@ -909,9 +979,10 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testFunction10()
     {
-        $sql = $this->query->createSelectQuery('Comment', [
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Comment',
             'select' => ['id', ["IF:(LIKE:(name,'%test%'),'1','0')", 'value']]
-        ]);
+        ]));
         $expectedSql =
             "SELECT comment.id AS `id`, IF(comment.name LIKE '%test%', '1', '0') AS `value` FROM `comment` " .
             "WHERE comment.deleted = 0";
@@ -920,10 +991,11 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testFunction11()
     {
-        $sql = $this->query->createSelectQuery('Comment', [
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Comment',
             'select' => [["IS_NULL:(name)", 'value1'], ["IS_NOT_NULL:(name)", 'value2']],
             'withDeleted' => true
-        ]);
+        ]));
         $expectedSql =
             "SELECT comment.name IS NULL AS `value1`, comment.name IS NOT NULL AS `value2` FROM `comment`";
         $this->assertEquals($expectedSql, $sql);
@@ -931,10 +1003,11 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testFunction12()
     {
-        $sql = $this->query->createSelectQuery('Comment', [
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Comment',
             'select' => ["IF:(OR:('1','0'),'1',' ')"],
             'withDeleted' => true
-        ]);
+        ]));
         $expectedSql =
             "SELECT IF('1' OR '0', '1', ' ') AS `IF:(OR:('1','0'),'1',' ')` FROM `comment`";
         $this->assertEquals($expectedSql, $sql);
@@ -942,10 +1015,11 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testFunction13()
     {
-        $sql = $this->query->createSelectQuery('Comment', [
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Comment',
             'select' => ["IN:(name,'1','0')"],
             'withDeleted' => true
-        ]);
+        ]));
         $expectedSql =
             "SELECT comment.name IN ('1', '0') AS `IN:(name,'1','0')` FROM `comment`";
         $this->assertEquals($expectedSql, $sql);
@@ -953,10 +1027,11 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testFunction14()
     {
-        $sql = $this->query->createSelectQuery('Comment', [
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Comment',
             'select' => ["NOT:(name)"],
             'withDeleted' => true
-        ]);
+        ]));
         $expectedSql =
             "SELECT NOT comment.name AS `NOT:(name)` FROM `comment`";
         $this->assertEquals($expectedSql, $sql);
@@ -964,10 +1039,11 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testFunction15()
     {
-        $sql = $this->query->createSelectQuery('Comment', [
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Comment',
             'select' => ["MUL:(2,2.5,SUB:(3,1))"],
             'withDeleted' => true
-        ]);
+        ]));
         $expectedSql =
             "SELECT ('2' * '2.5' * ('3' - '1')) AS `MUL:(2,2.5,SUB:(3,1))` FROM `comment`";
         $this->assertEquals($expectedSql, $sql);
@@ -975,10 +1051,11 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testFunction16()
     {
-        $sql = $this->query->createSelectQuery('Comment', [
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Comment',
             'select' => ["NOW:()"],
             'withDeleted' => true
-        ]);
+        ]));
         $expectedSql =
             "SELECT NOW() AS `NOW:()` FROM `comment`";
         $this->assertEquals($expectedSql, $sql);
@@ -986,10 +1063,11 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testFunction17()
     {
-        $sql = $this->query->createSelectQuery('Comment', [
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Comment',
             'select' => [["TIMESTAMPDIFF_YEAR:('2016-10-10', '2018-10-10')", 'test']],
             'withDeleted' => true
-        ]);
+        ]));
         $expectedSql =
             "SELECT TIMESTAMPDIFF(YEAR, '2016-10-10', '2018-10-10') AS `test` FROM `comment`";
         $this->assertEquals($expectedSql, $sql);
@@ -997,10 +1075,11 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testFunction18()
     {
-        $sql = $this->query->createSelectQuery('Comment', [
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Comment',
             'select' => [["IFNULL:(name, '')", 'test']],
             'withDeleted' => true
-        ]);
+        ]));
         $expectedSql =
             "SELECT IFNULL(comment.name, '') AS `test` FROM `comment`";
         $this->assertEquals($expectedSql, $sql);
@@ -1008,10 +1087,11 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testFunctionTZ1()
     {
-        $sql = $this->query->createSelectQuery('Comment', [
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Comment',
             'select' => ['id', "MONTH_NUMBER:TZ:(comment.created_at,-3.5)"],
             'whereClause' => []
-        ]);
+        ]));
         $expectedSql =
             "SELECT comment.id AS `id`, MONTH(CONVERT_TZ(comment.created_at, '+00:00', '-03:30')) AS `MONTH_NUMBER:TZ:(comment.created_at,-3.5)` FROM `comment` " .
             "WHERE comment.deleted = 0";
@@ -1020,10 +1100,11 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testFunctionTZ2()
     {
-        $sql = $this->query->createSelectQuery('Comment', [
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Comment',
             'select' => ['id', "MONTH_NUMBER:TZ:(comment.created_at,0)"],
             'whereClause' => []
-        ]);
+        ]));
         $expectedSql =
             "SELECT comment.id AS `id`, MONTH(CONVERT_TZ(comment.created_at, '+00:00', '+00:00')) AS `MONTH_NUMBER:TZ:(comment.created_at,0)` FROM `comment` " .
             "WHERE comment.deleted = 0";
@@ -1032,7 +1113,8 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testHaving()
     {
-        $sql = $this->query->createSelectQuery('Comment', [
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Comment',
             'select' => ['COUNT:comment.id', 'postId', 'postName'],
             'leftJoins' => ['post'],
             'groupBy' => ['postId'],
@@ -1042,7 +1124,7 @@ class QueryTest extends \PHPUnit\Framework\TestCase
             'havingClause' => [
                 'COUNT:comment.id>' => 1
             ]
-        ]);
+        ]));
 
         $expectedSql =
             "SELECT COUNT(comment.id) AS `COUNT:comment.id`, comment.post_id AS `postId`, post.name AS `postName` " .
@@ -1055,13 +1137,14 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testWhere1()
     {
-        $sql = $this->query->createSelectQuery('Comment', [
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Comment',
             'select' => ['id'],
             'whereClause' => [
                 'post.createdById<=' => '1'
             ],
             'withDeleted' => true
-        ]);
+        ]));
 
         $expectedSql =
             "SELECT comment.id AS `id` " .
@@ -1072,13 +1155,14 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testMatch1()
     {
-        $sql = $this->query->createSelectQuery('Article', [
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Article',
             'select' => ['id', 'name'],
             'whereClause' => [
                 'MATCH_BOOLEAN:name,description:test +hello',
                 'id!=' => null
             ]
-        ]);
+        ]));
 
         $expectedSql =
             "SELECT article.id AS `id`, article.name AS `name` FROM `article` " .
@@ -1089,12 +1173,13 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testMatch2()
     {
-        $sql = $this->query->createSelectQuery('Article', [
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Article',
             'select' => ['id', 'name'],
             'whereClause' => [
                 'MATCH_NATURAL_LANGUAGE:description:"test hello"'
             ]
-        ]);
+        ]));
 
         $expectedSql =
             "SELECT article.id AS `id`, article.name AS `name` FROM `article` " .
@@ -1105,7 +1190,8 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testMatch3()
     {
-        $sql = $this->query->createSelectQuery('Article', [
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Article',
             'select' => ['id', 'MATCH_BOOLEAN:description:test'],
             'whereClause' => [
                 'MATCH_BOOLEAN:description:test'
@@ -1113,7 +1199,7 @@ class QueryTest extends \PHPUnit\Framework\TestCase
             'orderBy' => [
                 [2, 'DESC']
             ]
-        ]);
+        ]));
 
         $expectedSql =
             "SELECT article.id AS `id`, MATCH (article.description) AGAINST ('test' IN BOOLEAN MODE) AS `MATCH_BOOLEAN:description:test` FROM `article` " .
@@ -1125,7 +1211,8 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testMatch4()
     {
-        $sql = $this->query->createSelectQuery('Article', [
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Article',
             'select' => ['id', ['MATCH_BOOLEAN:description:test', 'relevance']],
             'whereClause' => [
                 'MATCH_BOOLEAN:description:test'
@@ -1133,7 +1220,7 @@ class QueryTest extends \PHPUnit\Framework\TestCase
             'orderBy' => [
                 [2, 'DESC']
             ]
-        ]);
+        ]));
 
         $expectedSql =
             "SELECT article.id AS `id`, MATCH (article.description) AGAINST ('test' IN BOOLEAN MODE) AS `relevance` FROM `article` " .
@@ -1145,12 +1232,13 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testMatch5()
     {
-        $sql = $this->query->createSelectQuery('Article', [
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Article',
             'select' => ['id', 'name'],
             'whereClause' => [
                 'MATCH_NATURAL_LANGUAGE:description:test>' => 1
             ]
-        ]);
+        ]));
 
         $expectedSql =
             "SELECT article.id AS `id`, article.name AS `name` FROM `article` " .
@@ -1161,12 +1249,13 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     public function testMatch6()
     {
-        $sql = $this->query->createSelectQuery('Article', [
+        $sql = $this->query->create(Select::fromRaw([
+            'from' => 'Article',
             'select' => ['id', 'name'],
             'whereClause' => [
                 'MATCH_NATURAL_LANGUAGE:(description,test)'
             ]
-        ]);
+        ]));
 
         $expectedSql =
             "SELECT article.id AS `id`, article.name AS `name` FROM `article` " .
