@@ -31,21 +31,14 @@ namespace Espo\ORM\QueryParams;
 
 class SelectBuilder implements Builder
 {
-    use SelectingBuilderTrait {
-        getMergedRawParams as protected getMergedRawParamsSelecting;
-        isEmpty as protected isEmptySelecting;
-    }
-
-    protected $havingClause = [];
+    use SelectingBuilderTrait;
 
     /**
      * Build a SELECT query.
      */
     public function build() : Select
     {
-        $params = $this->getMergedRawParams();
-
-        return Select::fromRaw($params);
+        return Select::fromRaw($this->params);
     }
 
     /**
@@ -53,18 +46,9 @@ class SelectBuilder implements Builder
      */
     public function clone(Select $query) : self
     {
-        $this->cloneInternalSelecting($query);
-
-        $this->havingClause = $this->params['havingClause'] ?? [];
-
-        unset($this->params['havingClause']);
+        $this->cloneInternal($query);
 
         return $this;
-    }
-
-    protected function isEmpty() : bool
-    {
-        return empty($this->params) && empty($this->whereClause) && empty($this->havingClause);
     }
 
     /**
@@ -119,14 +103,16 @@ class SelectBuilder implements Builder
      */
     public function having($param1 = [], $param2 = null) : self
     {
+        $this->params['havingClause'] = $this->params['havingClause'] ?? [];
+
         if (is_array($param1)) {
-            $this->havingClause = $param1 + $this->havingClause;
+            $this->params['havingClause'] = $param1 + $this->params['havingClause'];
 
             return $this;
         }
 
         if (!is_null($param2)) {
-            $this->havingClause[] = [$param1 => $param2];
+            $this->params['havingClause'][] = [$param1 => $param2];
 
             return $this;
         }
@@ -142,25 +128,5 @@ class SelectBuilder implements Builder
         $this->params['withDeleted'] = true;
 
         return $this;
-    }
-
-    protected function getMergedRawParams() : array
-    {
-        $params = [];
-
-        $params['whereClause'] = $this->whereClause;
-        $params['havingClause'] = $this->havingClause;
-
-        if (empty($params['whereClause'])) {
-            unset($params['whereClause']);
-        }
-
-        if (empty($params['havingClause'])) {
-            unset($params['havingClause']);
-        }
-
-        $params = array_replace_recursive($this->params, $params);
-
-        return $params;
     }
 }

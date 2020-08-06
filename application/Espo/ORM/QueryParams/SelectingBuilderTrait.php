@@ -31,25 +31,7 @@ namespace Espo\ORM\QueryParams;
 
 trait SelectingBuilderTrait
 {
-    use BaseBuilderTrait {
-        isEmpty as protected isEmptyBase;
-    }
-
-    protected $whereClause = [];
-
-    protected function cloneInternalSelecting(Query $query)
-    {
-        $this->cloneInternalBase($query);
-
-        $this->whereClause = $this->params['whereClause'] ?? [];
-
-        unset($this->params['whereClause']);
-    }
-
-    protected function isEmpty() : bool
-    {
-        return empty($this->params) && empty($this->whereClause);
-    }
+    use BaseBuilderTrait;
 
     /**
      * Set FROM parameter. For what entity type to build a query.
@@ -84,14 +66,16 @@ trait SelectingBuilderTrait
      */
     public function where($param1 = [], $param2 = null) : self
     {
+        $this->params['whereClause'] = $this->params['whereClause'] ?? [];
+
         if (is_array($param1)) {
-            $this->whereClause = $param1 + $this->whereClause;
+            $this->params['whereClause'] = $param1 + $this->params['whereClause'];
 
             return $this;
         }
 
         if (!is_null($param2)) {
-            $this->whereClause[] = [$param1 => $param2];
+            $this->params['whereClause'][] = [$param1 => $param2];
 
             return $this;
         }
@@ -206,20 +190,5 @@ trait SelectingBuilderTrait
         $this->params['leftJoins'][] = [$relationName, $alias, $conditions];
 
         return $this;
-    }
-
-    protected function getMergedRawParams() : array
-    {
-        $params = [];
-
-        $params['whereClause'] = $this->whereClause;
-
-        if (empty($params['whereClause'])) {
-            unset($params['whereClause']);
-        }
-
-        $params = array_replace_recursive($this->params, $params);
-
-        return $params;
     }
 }

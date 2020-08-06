@@ -44,7 +44,7 @@ trait BaseBuilderTrait
         return empty($this->params);
     }
 
-    protected function cloneInternalBase(Query $query)
+    protected function cloneInternal(Query $query)
     {
         if (!$this->isEmpty()) {
             throw new RuntimeException("Clone can be called only on a new empty builder instance.");

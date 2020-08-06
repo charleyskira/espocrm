@@ -38,9 +38,7 @@ class DeleteBuilder implements Builder
      */
     public function build() : Delete
     {
-        $params = $this->getMergedRawParams();
-
-        return Delete::fromRaw($params);
+        return Delete::fromRaw($this->params);
     }
 
     /**
@@ -48,7 +46,7 @@ class DeleteBuilder implements Builder
      */
     public function clone(Delete $query) : self
     {
-        $this->cloneInternalSelecting($query);
+        $this->cloneInternal($query);
 
         return $this;
     }

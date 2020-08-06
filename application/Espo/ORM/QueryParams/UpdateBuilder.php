@@ -40,9 +40,7 @@ class UpdateBuilder implements Builder
      */
     public function build() : Update
     {
-        $params = $this->getMergedRawParams();
-
-        return Update::fromRaw($params);
+        return Update::fromRaw($this->params);
     }
 
     /**
@@ -50,7 +48,7 @@ class UpdateBuilder implements Builder
      */
     public function clone(Delete $query) : self
     {
-        $this->cloneInternalSelecting($query);
+        $this->cloneInternal($query);
 
         return $this;
     }
