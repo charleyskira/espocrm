@@ -47,9 +47,9 @@ class QueryExecutor
         $this->entityManager = $entityManager;
     }
 
-    public function run(Query $params) : PDOStatement
+    public function run(Query $query) : PDOStatement
     {
-        $sql = $this->entityManager->getQuery()->create($params);
+        $sql = $this->entityManager->getQuery()->create($query);
 
         return $this->entityManager->runQuery($sql, true);
     }
