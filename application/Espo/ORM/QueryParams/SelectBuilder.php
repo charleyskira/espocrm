@@ -31,9 +31,12 @@ namespace Espo\ORM\QueryParams;
 
 class SelectBuilder implements Builder
 {
-    use SelectingBuilderTrait;
+    use SelectingBuilderTrait {
+        getMergedRawParams as protected getMergedRawParamsSelecting;
+        isEmpty as protected isEmptySelecting;
+    }
 
-    protected $params = [];
+    protected $havingClause = [];
 
     /**
      * Build a SELECT query.
@@ -52,6 +55,27 @@ class SelectBuilder implements Builder
     {
         $this->cloneInternalSelecting($query);
 
+        $this->havingClause = $this->params['havingClause'] ?? [];
+
+        unset($this->params['havingClause']);
+
+        return $this;
+    }
+
+    protected function isEmpty() : bool
+    {
+        return empty($this->params) && empty($this->whereClause) && empty($this->havingClause);
+    }
+
+    /**
+     * Set to return STH collection. Recommended for fetching large number of records.
+     *
+     * @todo Remove.
+     */
+    public function sth() : self
+    {
+        $this->params['returnSthCollection'] = true;
+
         return $this;
     }
 
@@ -67,7 +91,7 @@ class SelectBuilder implements Builder
     }
 
     /**
-     * Specify SELECT. Columns and expressions to be selected. If omitten, then all entity attributes will be selected.
+     * Specify SELECT. Columns and expressions to be selected. If omitted, then all entity attributes will be selected.
      */
     public function select(array $select) : self
     {
@@ -86,10 +110,57 @@ class SelectBuilder implements Builder
         return $this;
     }
 
+    /**
+     * Add a HAVING clause.
+     *
+     * Two usage options:
+     * * `having(array $havingClause)`
+     * * `having(string $key, string $value)`
+     */
+    public function having($param1 = [], $param2 = null) : self
+    {
+        if (is_array($param1)) {
+            $this->havingClause = $param1 + $this->havingClause;
+
+            return $this;
+        }
+
+        if (!is_null($param2)) {
+            $this->havingClause[] = [$param1 => $param2];
+
+            return $this;
+        }
+
+        throw new BadMethodCallException();
+    }
+
+    /**
+     * @todo Remove?
+     */
     public function withDeleted() : self
     {
         $this->params['withDeleted'] = true;
 
         return $this;
+    }
+
+    protected function getMergedRawParams() : array
+    {
+        $params = [];
+
+        $params['whereClause'] = $this->whereClause;
+        $params['havingClause'] = $this->havingClause;
+
+        if (empty($params['whereClause'])) {
+            unset($params['whereClause']);
+        }
+
+        if (empty($params['havingClause'])) {
+            unset($params['havingClause']);
+        }
+
+        $params = array_replace_recursive($this->params, $params);
+
+        return $params;
     }
 }

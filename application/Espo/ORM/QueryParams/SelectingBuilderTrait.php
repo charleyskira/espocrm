@@ -37,22 +37,18 @@ trait SelectingBuilderTrait
 
     protected $whereClause = [];
 
-    protected $havingClause = [];
-
     protected function cloneInternalSelecting(Query $query)
     {
         $this->cloneInternalBase($query);
 
         $this->whereClause = $this->params['whereClause'] ?? [];
-        $this->havingClause = $this->params['havingClause'] ?? [];
 
         unset($this->params['whereClause']);
-        unset($this->params['havingClause']);
     }
 
     protected function isEmpty() : bool
     {
-        return empty($this->params) && empty($this->whereClause) && empty($this->havingClause);
+        return empty($this->params) && empty($this->whereClause);
     }
 
     /**
@@ -80,17 +76,6 @@ trait SelectingBuilderTrait
     }
 
     /**
-     * Set to return STH collection. Recommended for fetching large number of records.
-     * @todo Remove?
-     */
-    public function sth() : self
-    {
-        $this->params['returnSthCollection'] = true;
-
-        return $this;
-    }
-
-    /**
      * Add a WHERE clause.
      *
      * Two usage options:
@@ -107,30 +92,6 @@ trait SelectingBuilderTrait
 
         if (!is_null($param2)) {
             $this->whereClause[] = [$param1 => $param2];
-
-            return $this;
-        }
-
-        throw new BadMethodCallException();
-    }
-
-    /**
-     * Add a HAVING clause.
-     *
-     * Two usage options:
-     * * `having(array $havingClause)`
-     * * `having(string $key, string $value)`
-     */
-    public function having($param1 = [], $param2 = null) : self
-    {
-        if (is_array($param1)) {
-            $this->havingClause = $param1 + $this->havingClause;
-
-            return $this;
-        }
-
-        if (!is_null($param2)) {
-            $this->havingClause[] = [$param1 => $param2];
 
             return $this;
         }
@@ -253,14 +214,8 @@ trait SelectingBuilderTrait
 
         $params['whereClause'] = $this->whereClause;
 
-        $params['havingClause'] = $this->havingClause;
-
         if (empty($params['whereClause'])) {
             unset($params['whereClause']);
-        }
-
-        if (empty($params['havingClause'])) {
-            unset($params['havingClause']);
         }
 
         $params = array_replace_recursive($this->params, $params);

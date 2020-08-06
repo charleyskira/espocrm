@@ -139,20 +139,7 @@ class RDBSelectBuilder implements Findable
     /**
      * Add JOIN.
      *
-     * @param string|array $relationName A relationName or table. A relationName is in camelCase, a table is in CamelCase.
-     *
-     * Usage options:
-     * * `join(string $relationName)`
-     * * `join(array $joinDefinitionList)`
-     *
-     * Usage examples:
-     * ```
-     * ->join($relationName)
-     * ->join($relationName, $alias, $conditions)
-     * ->join([$relationName1, $relationName2, ...])
-     * ->join([[$relationName, $alias], ...])
-     * ->join([[$relationName, $alias, $conditions], ...])
-     * ```
+     * @see Espo\ORM\QueryParams\SelectBuilder::join()
      */
     public function join($relationName, ?string $alias = null, ?array $conditions = null) : self
     {
@@ -164,9 +151,7 @@ class RDBSelectBuilder implements Findable
     /**
      * Add LEFT JOIN.
      *
-     * @param string|array $relationName A relationName or table. A relationName is in camelCase, a table is in CamelCase.
-     *
-     * This method works the same way as `join` method.
+     * @see Espo\ORM\QueryParams\SelectBuilder::leftJoin()
      */
     public function leftJoin($relationName, ?string $alias = null, ?array $conditions = null) : self
     {
@@ -187,6 +172,8 @@ class RDBSelectBuilder implements Findable
 
     /**
      * Set to return STH collection. Recommended for fetching large number of records.
+     *
+     * @todo Remove.
      */
     public function sth() : self
     {
@@ -198,9 +185,7 @@ class RDBSelectBuilder implements Findable
     /**
      * Add a WHERE clause.
      *
-     * Two usage options:
-     * * `where(array $whereClause)`
-     * * `where(string $key, string $value)`
+     * @see Espo\ORM\QueryParams\SelectBuilder::where()
      */
     public function where($param1 = [], $param2 = null) : self
     {
@@ -212,9 +197,7 @@ class RDBSelectBuilder implements Findable
     /**
      * Add a HAVING clause.
      *
-     * Two usage options:
-     * * `having(array $havingClause)`
-     * * `having(string $key, string $value)`
+     * @see Espo\ORM\QueryParams\SelectBuilder::having()
      */
     public function having($param1 = [], $param2 = null) : self
     {
