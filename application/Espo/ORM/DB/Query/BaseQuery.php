@@ -681,7 +681,7 @@ abstract class BaseQuery
         if (strpos($function, 'YEAR_') === 0 && $function !== 'YEAR_NUMBER') {
             $fiscalShift = substr($function, 5);
             if (is_numeric($fiscalShift)) {
-                $fiscalShift = intval($fiscalShift);
+                $fiscalShift = (int) $fiscalShift;
                 $fiscalFirstMonth = $fiscalShift + 1;
 
                 return
@@ -694,7 +694,7 @@ abstract class BaseQuery
         if (strpos($function, 'QUARTER_') === 0 && $function !== 'QUARTER_NUMBER') {
             $fiscalShift = substr($function, 8);
             if (is_numeric($fiscalShift)) {
-                $fiscalShift = intval($fiscalShift);
+                $fiscalShift = (int) $fiscalShift;
                 $fiscalFirstMonth = $fiscalShift + 1;
                 $fiscalDistractedMonth = 12 - $fiscalFirstMonth;
 
@@ -821,7 +821,7 @@ abstract class BaseQuery
             $offsetHoursString = substr($offsetHoursString, 1, -1);
         }
         $offset = floatval($offsetHoursString);
-        $offsetHours = intval(floor(abs($offset)));
+        $offsetHours = (int) (floor(abs($offset)));
         $offsetMinutes = (abs($offset) - $offsetHours) * 60;
         $offsetString =
             str_pad((string) $offsetHours, 2, '0', \STR_PAD_LEFT) .
@@ -1304,7 +1304,7 @@ abstract class BaseQuery
                 }
                 $fieldPath = $this->getFieldPath($entity, $attribute, $params);
                 if ($attributeType === $entity::TEXT && $maxTextColumnsLength !== null) {
-                    $fieldPath = 'LEFT(' . $fieldPath . ', '. intval($maxTextColumnsLength) . ')';
+                    $fieldPath = 'LEFT(' . $fieldPath . ', '. strval($maxTextColumnsLength) . ')';
                 }
             }
 

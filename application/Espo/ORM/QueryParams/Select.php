@@ -39,6 +39,14 @@ class Select implements Query
     use SelectingTrait;
     use BaseTrait;
 
+    /**
+     * @todo Remove?
+     */
+    public function isSth() : bool
+    {
+        return $this->params['sth'] ?? false;
+    }
+
     protected function validateRawParams(array $params)
     {
         $this->validateRawParamsSelecting($params);

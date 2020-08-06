@@ -37,6 +37,7 @@ use Espo\ORM\{
     Repository,
     DB\Mapper,
     RDBSelectBuilder as RDBSelectBuilder,
+    QueryParams\Select,
 };
 
 use StdClass;
@@ -84,6 +85,7 @@ class RDB extends Repository implements Findable, Relatable, Removable
         if ($entity) {
             $entity->setIsNew(true);
             $entity->populateDefaults();
+
             return $entity;
         }
 
@@ -93,16 +95,27 @@ class RDB extends Repository implements Findable, Relatable, Removable
     /**
      * Fetch an entity by ID.
      */
-    public function getById(string $id, array $params = []) : ?Entity
+    public function getById(string $id, ?array $params = null) : ?Entity
     {
-        $entity = $this->entityFactory->create($this->entityType);
-        if (!$entity) return null;
+        $params = $params ?? [];
 
         if (empty($params['skipAdditionalSelectParams'])) {
             $this->handleSelectParams($params);
         }
 
-        return $this->getMapper()->selectById($entity, $id, $params);
+        $builder = $this->getQueryBuilder()
+            ->select()
+            ->where([
+                'id' => $id,
+            ]);
+
+        if (!empty($params['withDeleted'])) {
+            $builder->withDeleted();
+        }
+
+        $select = $builder->build();
+
+        return $this->getMapper()->selectOne($select);
     }
 
     public function get(?string $id = null) : ?Entity
@@ -189,9 +202,11 @@ class RDB extends Repository implements Findable, Relatable, Removable
             $this->handleSelectParams($params);
         }
 
-        $params['from'] = $this->seed->getEntityType();
+        $params['from'] = $this->entityType;
 
-        $collection = $this->getMapper()->select($this->seed, $params);
+        $select = Select::fromRaw($params);
+
+        $collection = $this->getMapper()->select($select);
 
         return $collection;
     }
@@ -200,27 +215,18 @@ class RDB extends Repository implements Findable, Relatable, Removable
     {
         $params = $params ?? [];
 
-        unset($params['returnSthCollection']);
-
         $collection = $this->limit(0, 1)->find($params);
 
-        if (count($collection)) {
-            return $collection[0];
+        foreach ($collection as $entity) {
+            return $entity;
         }
 
         return null;
     }
 
-    public function findByQuery(string $sql, ?string $collectionType = null)
+    public function findByQuery(string $sql) : Collection
     {
-        if (!$collectionType) {
-            $collection = $this->getMapper()->selectByQuery($this->seed, $sql);
-        } else if ($collectionType === EntityManager::STH_COLLECTION) {
-            $collection = $this->getEntityManager()->createSthCollection($this->entityType);
-            $collection->setQuery($sql);
-        }
-
-        return $collection;
+        return $this->getMapper()->selectByQuery($this->entityType, $sql);
     }
 
     public function findRelated(Entity $entity, string $relationName, array $params = [])
@@ -239,7 +245,9 @@ class RDB extends Repository implements Findable, Relatable, Removable
             $this->getEntityManager()->getRepository($entityType)->handleSelectParams($params);
         }
 
-        $result = $this->getMapper()->selectRelated($entity, $relationName, $params);
+        $select = Select::fromRaw();
+
+        $result = $this->getMapper()->selectRelated($entity, $relationName, $select);
 
         return $result;
     }
@@ -256,7 +264,9 @@ class RDB extends Repository implements Findable, Relatable, Removable
             $this->getEntityManager()->getRepository($entityType)->handleSelectParams($params);
         }
 
-        return intval($this->getMapper()->countRelated($entity, $relationName, $params));
+        $select = Select::fromRaw();
+
+        return (int) $this->getMapper()->countRelated($entity, $relationName, $select);
     }
 
     public function isRelated(Entity $entity, string $relationName, $foreign) : bool
@@ -468,7 +478,9 @@ class RDB extends Repository implements Findable, Relatable, Removable
 
         $this->beforeMassRelate($entity, $relationName, $params, $options);
 
-        $this->getMapper()->massRelate($entity, $relationName, $params);
+        $select = Select::fromRaw($params);
+
+        $this->getMapper()->massRelate($entity, $relationName, $select);
 
         $this->afterMassRelate($entity, $relationName, $params, $options);
     }
@@ -481,24 +493,38 @@ class RDB extends Repository implements Findable, Relatable, Removable
             $this->handleSelectParams($params);
         }
 
-        $count = $this->getMapper()->count($this->seed, $params);
+        $select = Select::fromRaw($params);
 
-        return intval($count);
+        $count = $this->getMapper()->count($select);
+
+        return (int) $count;
     }
 
-    public function max(string $attribute, array $params = [])
+    public function max(string $attribute, ?array $params = null)
     {
-        return $this->getMapper()->max($this->seed, $params, $attribute);
+        $params = $params ?? [];
+
+        $select = Select::fromRaw($params);
+
+        return $this->getMapper()->max($select, $attribute);
     }
 
-    public function min(string $attribute, array $params = [])
+    public function min(string $attribute, ?array $params = null)
     {
-        return $this->getMapper()->min($this->seed, $params, $attribute);
+        $params = $params ?? [];
+
+        $select = Select::fromRaw($params);
+
+        return $this->getMapper()->min($select, $attribute);
     }
 
-    public function sum(string $attribute, array $params = [])
+    public function sum(string $attribute, ?array $params = null)
     {
-        return $this->getMapper()->sum($this->seed, $params, $attribute);
+        $params = $params ?? [];
+
+        $select = Select::fromRaw($params);
+
+        return $this->getMapper()->sum($select, $attribute);
     }
 
     /**
@@ -620,7 +646,7 @@ class RDB extends Repository implements Findable, Relatable, Removable
     {
         $tableName = $this->getEntityManager()->getQuery()->toDb($this->entityType);
 
-        // @todo Use Query to get SQL.
+        // @todo Use Query to get SQL. Transaction query params.
         $this->getPDO()->query("LOCK TABLES `{$tableName}` WRITE");
         $this->isTableLocked = true;
     }
@@ -641,6 +667,7 @@ class RDB extends Repository implements Findable, Relatable, Removable
     {
         $builder = new RDBSelectBuilder($this->getEntityManager());
         $builder->from($this->getEntityType());
+
         return $builder;
     }
 }

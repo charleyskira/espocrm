@@ -82,19 +82,45 @@ abstract class BaseMapper implements Mapper
     /**
      * Get a single entity from DB by ID.
      */
-    public function selectById(Entity $entity, string $id, ?array $params = null) : ?Entity
+    /*public function selectById(string $entityType, string $id, ?array $params = null) : ?Entity
     {
+        $entity = $this->entityFactory->create($entityType);
+
         $params = $params ?? [];
 
-        if (!array_key_exists('whereClause', $params)) {
-            $params['whereClause'] = [];
-        }
+        $params['whereClause'] = $params['whereClause'] ?? [];
 
+        $params['from'] = $entityType;
         $params['whereClause']['id'] = $id;
 
-        $params['from'] = $entity->getEntityType();
-
         $sql = $this->query->create(Select::fromRaw($params));
+
+        $ps = $this->pdo->query($sql);
+
+        if (!$ps) {
+            return null;
+        }
+
+        foreach ($ps as $row) {
+            $this->populateEntityFromRow($entity, $row);
+            $entity->setAsFetched();
+
+            return $entity;
+        }
+
+        return null;
+    }*/
+
+    /**
+     * Get the first entity from DB.
+     */
+    public function selectOne(Select $select) : ?Entity
+    {
+        $entityType = $select->getFrom();
+
+        $entity = $this->entityFactory->create($entityType);
+
+        $sql = $this->query->create($select);
 
         $ps = $this->pdo->query($sql);
 
@@ -115,48 +141,52 @@ abstract class BaseMapper implements Mapper
     /**
      * Get a number of entities in DB.
      */
-    public function count(Entity $entity, ?array $params = null) : int
+    public function count(Select $select) : int
     {
-        return (int) $this->aggregate($entity, $params, 'COUNT', 'id');
+        return (int) $this->aggregate($select, 'COUNT', 'id');
     }
 
-    public function max(Entity $entity, ?array $params, string $attribute)
+    public function max(Select $select, string $attribute)
     {
-        return $this->aggregate($entity, $params, 'MAX', $attribute);
+        return $this->aggregate($select, 'MAX', $attribute);
     }
 
-    public function min(Entity $entity, ?array $params, string $attribute)
+    public function min(Select $select, string $attribute)
     {
-        return $this->aggregate($entity, $params, 'MIN', $attribute);
+        return $this->aggregate($select, 'MIN', $attribute);
     }
 
-    public function sum(Entity $entity, ?array $params, string $attribute)
+    public function sum(Select $select, string $attribute)
     {
-        return $this->aggregate($entity, $params, 'SUM', $attribute);
+        return $this->aggregate($select, 'SUM', $attribute);
     }
 
     /**
      * Select enities from DB.
      */
-    public function select(Entity $entity, ?array $params = null) : Collection
+    public function select(Select $select) : Collection
     {
-        $params = $params ?? [];
-        $params['from'] = $entity->getEntityType();
+        $entityType = $select->getFrom();
 
-        $sql = $this->query->create(Select::fromRaw($params));
+        $sql = $this->query->create($select);
 
-        return $this->selectByQuery($entity, $sql, $params);
+        return $this->selectByQueryInternal($entityType, $sql, $select->isSth());
     }
 
     /**
      * Select enities from DB by a SQL query.
      */
-    public function selectByQuery(Entity $entity, string $sql, ?array $params = null) : Collection
+    public function selectByQuery(string $entityType, string $sql) : Sth2Collection
+    {
+        return $this->selectByQueryInternal($entityType, $sql, true);
+    }
+
+    protected function selectByQueryInternal(string $entityType, string $sql, bool $returnSthCollection = false) : Collection
     {
         $params = $params ?? [];
 
-        if ($params['returnSthCollection'] ?? false) {
-            $collection = $this->createSthCollection($entity->getEntityType());
+        if ($returnSthCollection) {
+            $collection = $this->createSthCollection($entityType);
             $collection->setQuery($sql);
             $collection->setAsFetched();
 
@@ -169,7 +199,7 @@ abstract class BaseMapper implements Mapper
             $dataList = $ps->fetchAll();
         }
 
-        $collection = $this->createCollection($entity->getEntityType(), $dataList);
+        $collection = $this->createCollection($entityType, $dataList);
         $collection->setAsFetched();
 
         return $collection;
@@ -185,43 +215,53 @@ abstract class BaseMapper implements Mapper
         return new $this->sthCollectionClass($entityType, $this->entityFactory, $this->query, $this->pdo);;
     }
 
-    public function aggregate(Entity $entity, ?array $params, string $aggregation, string $aggregationBy)
+    public function aggregate(Select $select, string $aggregation, string $aggregationBy)
     {
+        /*$params = $params ?? [];
+
+        $entityType = $entityType['from'];
+
+        $entity = $this->entityFactory->create($entityType);
+
         if (empty($aggregation) || !$entity->hasAttribute($aggregationBy)) {
             return null;
-        }
+        }*/
 
-        $params = $params ?? [];
+        $params = $select->getRawParams();
 
         $params['aggregation'] = $aggregation;
         $params['aggregationBy'] = $aggregationBy;
 
-        $params['from'] = $entity->getEntityType();
+        $select = Select::fromRaw($params);
 
-        $sql = $this->query->create(Select::fromRaw($params));
+        $sql = $this->query->create($select);
 
         $ps = $this->pdo->query($sql);
 
-        if ($ps) {
-            foreach ($ps as $row) {
-                return $row['value'];
-            }
+        if (!$ps) {
+            return null;
         }
 
-        return null;
+        foreach ($ps as $row) {
+            return $row['value'];
+        }
     }
 
     /**
      * Select related entities from DB.
      */
-    public function selectRelated(Entity $entity, string $relationName, ?array $params = null)
+    public function selectRelated(Entity $entity, string $relationName, ?Select $select = null)
     {
-        return $this->selectRelatedInternal($entity, $relationName, $params);
+        return $this->selectRelatedInternal($entity, $relationName, $select);
     }
 
-    protected function selectRelatedInternal(Entity $entity, string $relationName, ?array $params = null, bool $returnTotalCount = false)
+    protected function selectRelatedInternal(Entity $entity, string $relationName, ?Select $select = null, bool $returnTotalCount = false)
     {
-        $params = $params ?? [];
+        $params = [];
+
+        if ($select) {
+            $params = $select->getRawParams();
+        }
 
         $entityType = $entity->getEntityType();
 
@@ -277,7 +317,7 @@ abstract class BaseMapper implements Mapper
 
                 if ($returnTotalCount) {
                     foreach ($ps as $row) {
-                        return intval($row['value']);
+                        return (int) $row['value'];
                     }
                     return 0;
                 }
@@ -334,7 +374,7 @@ abstract class BaseMapper implements Mapper
 
                 if ($returnTotalCount) {
                     foreach ($ps as $row) {
-                        return intval($row['value']);
+                        return (int) $row['value'];
                     }
                     return 0;
                 }
@@ -393,7 +433,7 @@ abstract class BaseMapper implements Mapper
 
                 if ($returnTotalCount) {
                     foreach ($ps as $row) {
-                        return intval($row['value']);
+                        return (int) $row['value'];
                     }
                     return null;
                 }
@@ -433,7 +473,7 @@ abstract class BaseMapper implements Mapper
 
                 if ($returnTotalCount) {
                     foreach ($ps as $row) {
-                        return intval($row['value']);
+                        return (int) $row['value'];
                     }
                     return 0;
                 }
@@ -454,9 +494,9 @@ abstract class BaseMapper implements Mapper
     /**
      * Get a number of related enities in DB.
      */
-    public function countRelated(Entity $entity, string $relationName, ?array $params = null) : int
+    public function countRelated(Entity $entity, string $relationName, ?Select $select = null) : int
     {
-        return (int) $this->selectRelatedInternal($entity, $relationName, $params, true);
+        return (int) $this->selectRelatedInternal($entity, $relationName, $select, true);
     }
 
     /**
@@ -624,15 +664,15 @@ abstract class BaseMapper implements Mapper
             $value = $row['value'];
 
             if ($columnType == Entity::BOOL) {
-                return boolval($value);
+                return (bool) $value;
             }
 
             if ($columnType == Entity::INT) {
-                return intval($value);
+                return (int) $value;
             }
 
             if ($columnType == Entity::FLOAT) {
-                return floatval($value);
+                return (int) $value;
             }
 
             return $value;
@@ -644,8 +684,10 @@ abstract class BaseMapper implements Mapper
     /**
      * Mass relate.
      */
-    public function massRelate(Entity $entity, string $relationName, array $params = [])
+    public function massRelate(Entity $entity, string $relationName, Select $select)
     {
+        $params = $select->getRawParams();
+
         $id = $entity->id;
 
         if (empty($id) || empty($relationName)) {
@@ -838,7 +880,12 @@ abstract class BaseMapper implements Mapper
             case Entity::HAS_ONE:
                 $foreignKey = $keySet['foreignKey'];
 
-                if ($this->count($relEntity, ['whereClause' => ['id' => $id]]) === 0) {
+                $selectForCount = Select::fromRaw([
+                    'from' => $relEntity->getEntityType(),
+                    'whereClause' => ['id' => $id],
+                ]);
+
+                if ($this->count($selectForCount) === 0) {
                     return false;
                 }
 
@@ -879,7 +926,12 @@ abstract class BaseMapper implements Mapper
                 $key = $keySet['key'];
                 $foreignKey = $keySet['foreignKey'];
 
-                if ($this->count($relEntity, ['whereClause' => ['id' => $id]]) === 0) {
+                $selectForCount = Select::fromRaw([
+                    'from' => $relEntity->getEntityType(),
+                    'whereClause' => ['id' => $id],
+                ]);
+
+                if ($this->count($selectForCount) === 0) {
                     return false;
                 }
 
@@ -911,7 +963,12 @@ abstract class BaseMapper implements Mapper
                 $nearKey = $keySet['nearKey'];
                 $distantKey = $keySet['distantKey'];
 
-                if ($this->count($relEntity, ['whereClause' => ['id' => $id]]) === 0) {
+                $selectForCount = Select::fromRaw([
+                    'from' => $relEntity->getEntityType(),
+                    'whereClause' => ['id' => $id],
+                ]);
+
+                if ($this->count($selectForCount) === 0) {
                     return false;
                 }
 

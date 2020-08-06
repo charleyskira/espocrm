@@ -92,6 +92,7 @@ class SelectBuilder implements Builder
 
     /**
      * Set to return STH collection. Recommended for fetching large number of records.
+     * @todo Remove?
      */
     public function sth() : self
     {
@@ -284,6 +285,13 @@ class SelectBuilder implements Builder
         }
 
         $this->params['leftJoins'][] = [$relationName, $alias, $conditions];
+
+        return $this;
+    }
+
+    public function withDeleted() : self
+    {
+        $this->params['withDeleted'] = true;
 
         return $this;
     }

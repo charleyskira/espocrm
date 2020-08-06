@@ -32,40 +32,41 @@ namespace Espo\ORM\DB;
 use Espo\ORM\{
     Entity,
     Collection,
+    QueryParams\Select,
 };
 
 interface Mapper
 {
     /**
-     * Select an entity by ID.
+     * Get the first entity from DB.
      */
-    public function selectById(Entity $entity, string $id, ?array $params = null) : ?Entity;
+    public function selectOne(Select $select) : ?Entity;
 
     /**
      * Select a list of entities according to given parameters.
      */
-    public function select(Entity $entity, ?array $params = null) : Collection;
+    public function select(Select $select) : Collection;
 
     /**
      * Returns count of records according to given parameters.
      *
      * @return Record count.
      */
-    public function count(Entity $entity, ?array $params = null) : int;
+    public function count(Select $select) : int;
 
     /**
      * Selects related entity or list of entities.
      *
      * @return List of entities or one entity.
      */
-    public function selectRelated(Entity $entity, string $relationName, ?array $params = null);
+    public function selectRelated(Entity $entity, string $relationName, ?Select $select = null);
 
     /**
      * Returns count of related records according to given parameters.
      *
      * @return A number of records.
      */
-    public function countRelated(Entity $entity, string $relationName, ?array $params = null) : int;
+    public function countRelated(Entity $entity, string $relationName, ?Select $select = null) : int;
 
     /**
      * Insert an entity into DB.

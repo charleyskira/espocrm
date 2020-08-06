@@ -34,6 +34,7 @@ use Espo\ORM\{
     DB\Query\Mysql as Query,
     Repositories\RDB as Repository,
     EntityCollection,
+    QueryParams\Select,
 };
 
 use Espo\Core\ORM\{
@@ -84,18 +85,18 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
             ],
         ];
 
-        $paramsExpected = [
+        $paramsExpected = Select::fromRaw([
             'from' => 'Test',
             'whereClause' => [
                 'name' => 'test',
             ],
-        ];
+        ]);
 
         $this->mapper
             ->expects($this->once())
             ->method('select')
             ->will($this->returnValue($this->collection))
-            ->with($this->seed, $paramsExpected);
+            ->with($paramsExpected);
 
         $this->repository->find($params);
     }
@@ -108,75 +109,75 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
             ],
         ];
 
-        $paramsExpected = [
+        $paramsExpected = Select::fromRaw([
             'from' => 'Test',
             'whereClause' => [
                 'name' => 'test',
             ],
             'offset' => 0,
             'limit' => 1,
-        ];
+        ]);
 
         $this->mapper
             ->expects($this->once())
             ->method('select')
             ->will($this->returnValue($this->collection))
-            ->with($this->seed, $paramsExpected);
+            ->with($paramsExpected);
 
         $this->repository->findOne($params);
     }
 
     public function testWhere1()
     {
-        $paramsExpected = [
+        $paramsExpected = Select::fromRaw([
             'from' => 'Test',
             'whereClause' => [
                 'name' => 'test',
             ],
-        ];
+        ]);
 
         $this->mapper
             ->expects($this->once())
             ->method('select')
             ->will($this->returnValue($this->collection))
-            ->with($this->seed, $paramsExpected);
+            ->with($paramsExpected);
 
         $this->repository->where(['name' => 'test'])->find();
     }
 
     public function testWhere2()
     {
-        $paramsExpected = [
+        $paramsExpected = Select::fromRaw([
             'from' => 'Test',
             'whereClause' => [
                 ['name' => 'test'],
             ],
-        ];
+        ]);
 
         $this->mapper
             ->expects($this->once())
             ->method('select')
             ->will($this->returnValue($this->collection))
-            ->with($this->seed, $paramsExpected);
+            ->with($paramsExpected);
 
         $this->repository->where('name', 'test')->find();
     }
 
     public function testWhereMerge()
     {
-        $paramsExpected = [
+        $paramsExpected = Select::fromRaw([
             'from' => 'Test',
             'whereClause' => [
                 'name2' => 'test2',
                 ['name1' => 'test1'],
             ],
-        ];
+        ]);
 
         $this->mapper
             ->expects($this->once())
             ->method('select')
             ->will($this->returnValue($this->collection))
-            ->with($this->seed, $paramsExpected);
+            ->with($paramsExpected);
 
         $this->repository
             ->where(['name1' => 'test1'])
@@ -187,196 +188,196 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
 
     public function testWhereFineOne()
     {
-        $paramsExpected = [
+        $paramsExpected = Select::fromRaw([
             'from' => 'Test',
             'whereClause' => [
                 ['name' => 'test'],
             ],
             'offset' => 0,
             'limit' => 1,
-        ];
+        ]);
 
         $this->mapper
             ->expects($this->once())
             ->method('select')
             ->will($this->returnValue($this->collection))
-            ->with($this->seed, $paramsExpected);
+            ->with($paramsExpected);
 
         $this->repository->where('name', 'test')->findOne();
     }
 
     public function testJoin1()
     {
-        $paramsExpected = [
+        $paramsExpected = Select::fromRaw([
             'from' => 'Test',
             'joins' => [
                 'Test',
             ],
-        ];
+        ]);
 
         $this->mapper
             ->expects($this->once())
             ->method('select')
             ->will($this->returnValue($this->collection))
-            ->with($this->seed, $paramsExpected);
+            ->with($paramsExpected);
 
         $this->repository->join('Test')->find();
     }
 
     public function testJoin2()
     {
-        $paramsExpected = [
+        $paramsExpected = Select::fromRaw([
             'from' => 'Test',
             'joins' => [
                 'Test1',
                 'Test2',
             ],
-        ];
+        ]);
 
         $this->mapper
             ->expects($this->once())
             ->method('select')
             ->will($this->returnValue($this->collection))
-            ->with($this->seed, $paramsExpected);
+            ->with($paramsExpected);
 
         $this->repository->join(['Test1', 'Test2'])->find();
     }
 
     public function testJoin3()
     {
-        $paramsExpected = [
+        $paramsExpected = Select::fromRaw([
             'from' => 'Test',
             'joins' => [
                 ['Test1', 'test1'],
                 ['Test2', 'test2'],
             ],
-        ];
+        ]);
 
         $this->mapper
             ->expects($this->once())
             ->method('select')
             ->will($this->returnValue($this->collection))
-            ->with($this->seed, $paramsExpected);
+            ->with($paramsExpected);
 
         $this->repository->join([['Test1', 'test1'], ['Test2', 'test2']])->find();
     }
 
     public function testJoin4()
     {
-        $paramsExpected = [
+        $paramsExpected = Select::fromRaw([
             'from' => 'Test',
             'joins' => [
                 ['Test1', 'test1', ['k' => 'v']],
             ],
-        ];
+        ]);
 
         $this->mapper
             ->expects($this->once())
             ->method('select')
             ->will($this->returnValue($this->collection))
-            ->with($this->seed, $paramsExpected);
+            ->with($paramsExpected);
 
         $this->repository->join('Test1', 'test1', ['k' => 'v'])->find();
     }
 
     public function testLeftJoin1()
     {
-        $paramsExpected = [
+        $paramsExpected = Select::fromRaw([
             'from' => 'Test',
             'leftJoins' => [
                 'Test',
             ],
-        ];
+        ]);
 
         $this->mapper
             ->expects($this->once())
             ->method('select')
             ->will($this->returnValue($this->collection))
-            ->with($this->seed, $paramsExpected);
+            ->with($paramsExpected);
 
         $this->repository->leftJoin('Test')->find();
     }
 
     public function testMultipleLeftJoins()
     {
-        $paramsExpected = [
+        $paramsExpected = Select::fromRaw([
             'from' => 'Test',
             'leftJoins' => [
                 'Test1',
                 ['Test2', 'test2'],
             ],
-        ];
+        ]);
 
         $this->mapper
             ->expects($this->once())
             ->method('select')
             ->will($this->returnValue($this->collection))
-            ->with($this->seed, $paramsExpected);
+            ->with($paramsExpected);
 
         $this->repository->leftJoin('Test1')->leftJoin('Test2', 'test2')->find();
     }
 
     public function testDistinct()
     {
-        $paramsExpected = [
+        $paramsExpected = Select::fromRaw([
             'from' => 'Test',
             'distinct' => true,
-        ];
+        ]);
 
         $this->mapper
             ->expects($this->once())
             ->method('select')
             ->will($this->returnValue($this->collection))
-            ->with($this->seed, $paramsExpected);
+            ->with($paramsExpected);
 
         $this->repository->distinct()->find();
     }
 
     public function testSth()
     {
-        $paramsExpected = [
+        $paramsExpected = Select::fromRaw([
             'from' => 'Test',
             'returnSthCollection' => true,
-        ];
+        ]);
 
         $this->mapper
             ->expects($this->once())
             ->method('select')
             ->will($this->returnValue($this->collection))
-            ->with($this->seed, $paramsExpected);
+            ->with($paramsExpected);
 
         $this->repository->sth()->find();
     }
 
     public function testOrder1()
     {
-        $paramsExpected = [
+        $paramsExpected = Select::fromRaw([
             'from' => 'Test',
             'orderBy' => 'name',
             'order' => 'ASC',
-        ];
+        ]);
 
         $this->mapper
             ->expects($this->once())
             ->method('select')
             ->will($this->returnValue($this->collection))
-            ->with($this->seed, $paramsExpected);
+            ->with($paramsExpected);
 
         $this->repository->order('name')->find();
     }
 
     public function testSelect()
     {
-        $paramsExpected = [
+        $paramsExpected = Select::fromRaw([
             'from' => 'Test',
             'select' => ['name', 'date'],
-        ];
+        ]);
 
         $this->mapper
             ->expects($this->once())
             ->method('select')
             ->will($this->returnValue($this->collection))
-            ->with($this->seed, $paramsExpected);
+            ->with($paramsExpected);
 
         $this->repository->select(['name', 'date'])->find();
     }

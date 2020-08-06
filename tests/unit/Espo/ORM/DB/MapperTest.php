@@ -27,16 +27,23 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-use Espo\ORM\DB\MysqlMapper;
-use Espo\ORM\DB\Query\MysqlQuery as Query;
-use Espo\ORM\EntityFactory;
-use Espo\ORM\EntityCollection;
+use Espo\ORM\{
+    Metadata,
+    EntityManager,
+    EntityFactory,
+    EntityCollection,
+    DB\Query\MysqlQuery as Query,
+    DB\MysqlMapper,
+    QueryParams\Select,
+};
 
-use Espo\Entities\Post;
-use Espo\Entities\Comment;
-use Espo\Entities\Tag;
-use Espo\Entities\Note;
-use Espo\Entities\Job;
+use Espo\Entities\{
+    Post,
+    Comment,
+    Tag,
+    Note,
+    Job,
+};
 
 require_once 'tests/unit/testData/DB/Entities.php';
 require_once 'tests/unit/testData/DB/MockPDO.php';
@@ -62,17 +69,17 @@ class DBMapperTest extends \PHPUnit\Framework\TestCase
                     return "'" . $args[0] . "'";
                 }));
 
-        $metadata = $this->getMockBuilder('Espo\\ORM\\Metadata')->disableOriginalConstructor()->getMock();
+        $metadata = $this->getMockBuilder(Metadata::class)->disableOriginalConstructor()->getMock();
         $metadata
             ->method('get')
             ->will($this->returnValue(false));
 
-        $entityManager = $this->getMockBuilder('Espo\\ORM\\EntityManager')->disableOriginalConstructor()->getMock();
+        $entityManager = $this->getMockBuilder(EntityManager::class)->disableOriginalConstructor()->getMock();
         $entityManager
             ->method('getMetadata')
             ->will($this->returnValue($metadata));
 
-        $this->entityFactory = $this->getMockBuilder('Espo\\ORM\\EntityFactory')->disableOriginalConstructor()->getMock();
+        $this->entityFactory = $this->getMockBuilder(EntityFactory::class)->disableOriginalConstructor()->getMock();
         $this->entityFactory
             ->expects($this->any())
             ->method('create')
@@ -122,30 +129,41 @@ class DBMapperTest extends \PHPUnit\Framework\TestCase
                   ->will($this->returnValue($return));
     }
 
-    public function testSelectById()
+    public function testSelectOne()
     {
         $query =
             "SELECT post.id AS `id`, post.name AS `name`, NULLIF(TRIM(CONCAT(IFNULL(createdBy.salutation_name, ''), IFNULL(createdBy.first_name, ''), ' ', IFNULL(createdBy.last_name, ''))), '') AS `createdByName`, post.created_by_id AS `createdById`, post.deleted AS `deleted` ".
             "FROM `post` ".
             "LEFT JOIN `user` AS `createdBy` ON post.created_by_id = createdBy.id " .
             "WHERE post.id = '1' AND post.deleted = 0";
-        $return = new MockDBResult(array(
-            array(
+
+        $return = new MockDBResult([
+            [
                 'id' => '1',
                 'name' => 'test',
                 'deleted' => false,
-            ),
-        ));
+            ],
+        ]);
         $this->mockQuery($query, $return);
 
-        $this->db->selectById($this->post, '1');
-        $this->assertEquals($this->post->id, '1');
+        $select = Select::fromRaw([
+            'from' => 'Post',
+            'whereClause' => [
+                'id' => '1',
+            ],
+        ]);
+
+        $post = $this->db->selectOne($select);
+
+        $this->assertEquals($post->id, '1');
     }
 
     public function testSelect1()
     {
         $query =
-            "SELECT post.id AS `id`, post.name AS `name`, NULLIF(TRIM(CONCAT(IFNULL(createdBy.salutation_name, ''), IFNULL(createdBy.first_name, ''), ' ', IFNULL(createdBy.last_name, ''))), '') AS `createdByName`, post.created_by_id AS `createdById`, post.deleted AS `deleted` ".
+            "SELECT post.id AS `id`, post.name AS `name`, NULLIF(TRIM(CONCAT(IFNULL(createdBy.salutation_name, ''), " .
+            "IFNULL(createdBy.first_name, ''), ' ', IFNULL(createdBy.last_name, ''))), '') AS `createdByName`, " .
+            "post.created_by_id AS `createdById`, post.deleted AS `deleted` ".
             "FROM `post` ".
             "LEFT JOIN `user` AS `createdBy` ON post.created_by_id = createdBy.id " .
             "JOIN `post_tag` AS `tagsMiddle` ON post.id = tagsMiddle.post_id AND tagsMiddle.deleted = 0 ".
@@ -154,39 +172,41 @@ class DBMapperTest extends \PHPUnit\Framework\TestCase
             "WHERE post.name = 'test_1' AND (post.id = '100' OR post.name LIKE 'test_%') AND tags.name = 'yoTag' AND post.deleted = 0 ".
             "ORDER BY post.name DESC ".
             "LIMIT 0, 10";
-        $return = new MockDBResult(array(
-            array(
+
+        $return = new MockDBResult([
+            [
                 'id' => '2',
                 'name' => 'test_2',
                 'deleted' => false,
-            ),
-            array(
+            ],
+            [
                 'id' => '1',
                 'name' => 'test_1',
                 'deleted' => false,
-            ),
-        ));
+            ],
+        ]);
         $this->mockQuery($query, $return);
 
-        $selectParams = array(
-            'whereClause' => array(
+        $selectParams = [
+            'from' => 'Post',
+            'whereClause' => [
                 'name' => 'test_1',
-                'OR' => array(
+                'OR' => [
                     'id' => '100',
                     'name*' => 'test_%',
-                ),
+                ],
                 'tags.name' => 'yoTag',
-            ),
+            ],
             'order' => 'DESC',
             'orderBy' => 'name',
             'limit' => 10,
-            'joins' => array(
+            'joins' => [
                 'tags',
                 'comments',
-            ),
-        );
-        $list = $this->db->select($this->post, $selectParams);
+            ],
+        ];
 
+        $list = $this->db->select(Select::fromRaw($selectParams));
 
         $this->assertTrue($list[0] instanceof Post);
         $this->assertTrue(isset($list[0]->id));
@@ -196,51 +216,65 @@ class DBMapperTest extends \PHPUnit\Framework\TestCase
     public function testSelectWithSpecifiedParams()
     {
         $query =
-            "SELECT contact.id AS `id`, TRIM(CONCAT(contact.first_name, ' ', contact.last_name)) AS `name`, contact.first_name AS `firstName`, contact.last_name AS `lastName`, contact.deleted AS `deleted` ".
+            "SELECT contact.id AS `id`, TRIM(CONCAT(contact.first_name, ' ', contact.last_name)) AS `name`, " .
+            "contact.first_name AS `firstName`, contact.last_name AS `lastName`, contact.deleted AS `deleted` ".
             "FROM `contact` ".
-            "WHERE (contact.first_name LIKE 'test%' OR contact.last_name LIKE 'test%' OR CONCAT(contact.first_name, ' ', contact.last_name) LIKE 'test%') AND contact.deleted = 0 ".
+            "WHERE " .
+            "(contact.first_name LIKE 'test%' OR contact.last_name LIKE 'test%' OR CONCAT(contact.first_name, ' ', contact.last_name) " .
+                "LIKE 'test%') ".
+            "AND contact.deleted = 0 ".
             "ORDER BY contact.first_name DESC, contact.last_name DESC ".
             "LIMIT 0, 10";
 
-        $return = new MockDBResult(array(
-            array(
+        $return = new MockDBResult([
+            [
                 'id' => '1',
                 'name' => 'test',
                 'deleted' => false,
-            ),
-        ));
+            ],
+        ]);
+
         $this->mockQuery($query, $return);
 
-        $selectParams = array(
-            'whereClause' => array(
+        $selectParams = [
+            'from' => 'Contact',
+            'whereClause' => [
                 'name*' => 'test%',
-            ),
+            ],
             'order' => 'DESC',
             'orderBy' => 'name',
-            'limit' => 10
-        );
-        $list = $this->db->select($this->contact, $selectParams);
+            'limit' => 10,
+        ];
+
+        $list = $this->db->select(Select::fromRaw($selectParams));
     }
 
     public function testJoin()
     {
         $query =
-            "SELECT comment.id AS `id`, comment.post_id AS `postId`, post.name AS `postName`, comment.name AS `name`, comment.deleted AS `deleted` ".
+            "SELECT comment.id AS `id`, comment.post_id AS `postId`, post.name AS `postName`, comment.name AS `name`, " .
+            "comment.deleted AS `deleted` ".
             "FROM `comment` ".
             "LEFT JOIN `post` AS `post` ON comment.post_id = post.id ".
             "WHERE comment.deleted = 0";
-        $return = new MockDBResult(array(
-            array(
+
+        $return = new MockDBResult([
+            [
                 'id' => '11',
                 'postId' => '1',
                 'postName' => 'test',
                 'name' => 'test_comment',
                 'deleted' => false,
-            ),
-        ));
+            ],
+        ]);
+
         $this->mockQuery($query, $return);
 
-        $list = $this->db->select($this->comment);
+        $selectParams = [
+            'from' => 'Comment',
+        ];
+
+        $list = $this->db->select(Select::fromRaw($selectParams));
 
         $this->assertTrue($list[0] instanceof Comment);
         $this->assertTrue($list[0]->has('postName'));
@@ -254,6 +288,7 @@ class DBMapperTest extends \PHPUnit\Framework\TestCase
             "FROM `tag` ".
             "JOIN `post_tag` AS `postTag` ON postTag.tag_id = tag.id AND postTag.post_id = '1' AND postTag.deleted = 0 ".
             "WHERE tag.deleted = 0";
+
         $return = new MockDBResult([
             [
                 'id' => '1',
@@ -261,8 +296,10 @@ class DBMapperTest extends \PHPUnit\Framework\TestCase
                 'deleted' => false,
             ],
         ]);
+
         $this->mockQuery($query, $return);
         $this->post->id = '1';
+
         $list = $this->db->selectRelated($this->post, 'tags');
 
         $this->assertTrue($list[0] instanceof Tag);
@@ -286,11 +323,14 @@ class DBMapperTest extends \PHPUnit\Framework\TestCase
         $this->mockQuery($query, $return);
         $this->account->id = '1';
 
-        $list = $this->db->selectRelated($this->account, 'teams', [
+        $select = Select::fromRaw([
+            'from' => 'Team',
             'additionalColumns' => [
                 'teamId' => 'stub',
             ],
         ]);
+
+        $list = $this->db->selectRelated($this->account, 'teams', $select);
     }
 
     public function testSelectRelatedHasChildren()
@@ -300,13 +340,15 @@ class DBMapperTest extends \PHPUnit\Framework\TestCase
             "note.id AS `id`, note.name AS `name`, note.parent_id AS `parentId`, note.parent_type AS `parentType`, note.deleted AS `deleted` ".
             "FROM `note` ".
             "WHERE note.parent_id = '1' AND note.parent_type = 'Post' AND note.deleted = 0";
-        $return = new MockDBResult(array(
-            array(
+
+        $return = new MockDBResult([
+            [
                 'id' => '1',
                 'name' => 'test',
                 'deleted' => false,
-            ),
-        ));
+            ],
+        ]);
+
         $this->mockQuery($query, $return);
         $this->post->id = '1';
         $list = $this->db->selectRelated($this->post, 'notes');
@@ -345,7 +387,6 @@ class DBMapperTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($post->get('name'), 'test');
     }
 
-
     public function testCountRelated()
     {
         $query =
@@ -353,14 +394,17 @@ class DBMapperTest extends \PHPUnit\Framework\TestCase
             "FROM `tag` ".
             "JOIN `post_tag` AS `postTag` ON postTag.tag_id = tag.id AND postTag.post_id = '1' AND postTag.deleted = 0 ".
             "WHERE tag.deleted = 0";
+
         $return = new MockDBResult([
             [
                 'value' => 1,
             ],
         ]);
+
         $this->mockQuery($query, $return);
 
         $this->post->id = '1';
+
         $count = $this->db->countRelated($this->post, 'tags');
 
         $this->assertEquals($count, 1);
@@ -370,6 +414,7 @@ class DBMapperTest extends \PHPUnit\Framework\TestCase
     {
         $query = "INSERT INTO `post` (`id`, `name`) VALUES ('1', 'test')";
         $return = true;
+
         $this->mockQuery($query, $return);
 
         $this->post->reset();
@@ -511,6 +556,7 @@ class DBMapperTest extends \PHPUnit\Framework\TestCase
 
         $this->note->id = 'noteId';
         $this->post->id = 'postId';
+
         $this->db->unrelate($this->note, 'parent', $this->post);
     }
 
@@ -535,6 +581,7 @@ class DBMapperTest extends \PHPUnit\Framework\TestCase
         $this->mockQuery($query, true);
 
         $this->post->id = 'postId';
+
         $this->db->unrelateById($this->post, 'comments', 'commentId');
     }
 
@@ -547,6 +594,7 @@ class DBMapperTest extends \PHPUnit\Framework\TestCase
         $this->mockQuery($query, true);
 
         $this->post->id = 'postId';
+
         $this->db->unrelateAll($this->post, 'comments');
     }
 
@@ -573,6 +621,7 @@ class DBMapperTest extends \PHPUnit\Framework\TestCase
         $this->mockQuery($query, true);
 
         $this->post->id = 'postId';
+
         $this->db->unrelateById($this->post, 'notes', 'noteId');
     }
 
@@ -585,6 +634,7 @@ class DBMapperTest extends \PHPUnit\Framework\TestCase
         $this->mockQuery($query, true);
 
         $this->post->id = 'postId';
+
         $this->db->unrelateAll($this->post, 'notes');
     }
 
@@ -595,6 +645,7 @@ class DBMapperTest extends \PHPUnit\Framework\TestCase
         $this->mockQuery($query, $return);
 
         $this->post->id = '1';
+
         $this->db->unrelateById($this->post, 'tags', '100');
     }
 
@@ -605,6 +656,7 @@ class DBMapperTest extends \PHPUnit\Framework\TestCase
         $this->mockQuery($query, $return);
 
         $this->post->id = '1';
+
         $this->db->unrelateAll($this->post, 'tags');
     }
 
@@ -613,10 +665,11 @@ class DBMapperTest extends \PHPUnit\Framework\TestCase
         $query =
             "UPDATE `entity_team` SET entity_team.deleted = 1 ".
             "WHERE entity_team.entity_id = '1' AND entity_team.team_id = '100' AND entity_team.entity_type = 'Account'";
-        $return = true;
-        $this->mockQuery($query, $return);
+
+        $this->mockQuery($query, true);
 
         $this->account->id = '1';
+
         $this->db->unrelateById($this->account, 'teams', '100');
     }
 
@@ -626,8 +679,7 @@ class DBMapperTest extends \PHPUnit\Framework\TestCase
             "UPDATE `entity_team` SET entity_team.deleted = 1 ".
             "WHERE entity_team.entity_id = '1' AND entity_team.entity_type = 'Account'";
 
-        $return = true;
-        $this->mockQuery($query, $return);
+        $this->mockQuery($query, true);
 
         $this->account->id = '1';
         $this->db->unrelateAll($this->account, 'teams');
@@ -636,8 +688,8 @@ class DBMapperTest extends \PHPUnit\Framework\TestCase
     public function testUnrelateManyToMany()
     {
         $query = "UPDATE `post_tag` SET post_tag.deleted = 1 WHERE post_tag.post_id = 'postId' AND post_tag.tag_id = 'tagId'";
-        $return = true;
-        $this->mockQuery($query, $return);
+
+        $this->mockQuery($query, true);
 
         $this->post->id = 'postId';
         $this->tag->id = 'tagId';
@@ -804,7 +856,8 @@ class DBMapperTest extends \PHPUnit\Framework\TestCase
             "WHERE post_tag.post_id = 'postId' AND post_tag.tag_id = 'tagId'";
 
         $query3 =
-            "UPDATE `post_tag` SET post_tag.deleted = 0, post_tag.role = 'Test' WHERE post_tag.post_id = 'postId' AND post_tag.tag_id = 'tagId'";
+            "UPDATE `post_tag` SET post_tag.deleted = 0, post_tag.role = 'Test' " .
+            "WHERE post_tag.post_id = 'postId' AND post_tag.tag_id = 'tagId'";
 
         $ps = $this->createMock(\PDOStatement::class);
         $ps->expects($this->exactly(1))
@@ -924,7 +977,7 @@ class DBMapperTest extends \PHPUnit\Framework\TestCase
         ]);
         $this->mockQuery($query, $return);
 
-        $value = $this->db->max($this->post, array(), 'id', true);
+        $value = $this->db->max(Select::fromRaw(['from' => 'Post']), 'id');
 
         $this->assertEquals($value, 10);
     }
@@ -940,11 +993,14 @@ class DBMapperTest extends \PHPUnit\Framework\TestCase
 
         $this->post->id = '1';
 
-        $this->db->massRelate($this->post, 'tags', [
+        $select = Select::fromRaw([
+            'from' => 'Tag',
             'whereClause' => [
                 'name' => 'test',
             ],
         ]);
+
+        $this->db->massRelate($this->post, 'tags', $select);
     }
 
     public function testDeleteFromDb1()
