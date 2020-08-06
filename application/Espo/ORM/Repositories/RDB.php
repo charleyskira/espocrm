@@ -245,7 +245,7 @@ class RDB extends Repository implements Findable, Relatable, Removable
             $this->getEntityManager()->getRepository($entityType)->handleSelectParams($params);
         }
 
-        $select = Select::fromRaw();
+        $select = Select::fromRaw($params);
 
         $result = $this->getMapper()->selectRelated($entity, $relationName, $select);
 
@@ -264,7 +264,7 @@ class RDB extends Repository implements Findable, Relatable, Removable
             $this->getEntityManager()->getRepository($entityType)->handleSelectParams($params);
         }
 
-        $select = Select::fromRaw();
+        $select = Select::fromRaw($params);
 
         return (int) $this->getMapper()->countRelated($entity, $relationName, $select);
     }
