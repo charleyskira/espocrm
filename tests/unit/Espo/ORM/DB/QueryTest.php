@@ -27,9 +27,14 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-use Espo\ORM\DB\Query\MysqlQuery as Query;
-use Espo\ORM\EntityFactory;
-use Espo\ORM\Metadata;
+
+use Espo\ORM\{
+    EntityFactory,
+    Metadata,
+    DB\Query\MysqlQuery as Query,
+    QueryBuilder,
+    EntityManager,
+};
 
 use Espo\ORM\QueryParams\{
     Select,
@@ -38,12 +43,13 @@ use Espo\ORM\QueryParams\{
     Delete,
 };
 
-use Espo\Core\ORM\EntityManager;
 
-use Espo\Entities\Post;
-use Espo\Entities\Comment;
-use Espo\Entities\Tag;
-use Espo\Entities\Note;
+use Espo\Entities\{
+    Post,
+    Comment,
+    Tag,
+    Note,
+};
 
 require_once 'tests/unit/testData/DB/Entities.php';
 require_once 'tests/unit/testData/DB/MockPDO.php';
@@ -59,6 +65,8 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
     protected function setUp() : void
     {
+        $this->queryBuilder = new QueryBuilder();
+
         $this->pdo = $this->createMock('MockPDO');
         $this->pdo
                 ->expects($this->any())
@@ -316,21 +324,43 @@ class QueryTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($expectedSql, $sql);
     }
 
-    public function testSelectAllColumns()
+    public function testSelectAllColumns1()
     {
-        $sql = $this->query->create(
-            Select::fromRaw([
-                'from' => 'Account',
-                'orderBy' => 'name',
-                'order' => 'ASC',
-                'offset' => 10,
-                'limit' => 20,
+        $select = $this->queryBuilder
+            ->select()
+            ->from('Account')
+            ->order('name', 'ASC')
+            ->where([
+                'deleted' => false,
             ])
-        );
+            ->limit(10, 20)
+            ->build();
+
+        $sql = $this->query->create($select);
 
         $expectedSql =
             "SELECT account.id AS `id`, account.name AS `name`, account.deleted AS `deleted` FROM `account` " .
             "WHERE account.deleted = 0 ORDER BY account.name ASC LIMIT 10, 20";
+
+        $this->assertEquals($expectedSql, $sql);
+    }
+
+    public function _testSelectAllColumns2()
+    {
+        $expectedSql =
+            "SELECT account.id AS `id`, account.name AS `name`, account.deleted AS `deleted` FROM `account` " .
+            "WHERE account.deleted = 0";
+
+        $select = $this->queryBuilder
+            ->select()
+            ->from('Account')
+            ->select(['*'])
+            ->where([
+                'deleted' => false,
+            ])
+            ->build();
+
+        $sql = $this->query->create($select);
 
         $this->assertEquals($expectedSql, $sql);
     }

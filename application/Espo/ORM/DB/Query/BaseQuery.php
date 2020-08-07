@@ -916,6 +916,7 @@ abstract class BaseQuery
                 $attribute = substr($attribute, 1, -1);
             }
         }
+
         if (!empty($function)) {
             $function = strtoupper($this->sanitize($function));
         }
@@ -931,6 +932,7 @@ abstract class BaseQuery
             foreach ($argumentList as $argument) {
                 $argumentPartList[] = $this->getFunctionArgumentPart($entity, $argument, $distinct, $params);
             }
+
             $part = implode(', ', $argumentPartList);
 
         } else {
@@ -1176,6 +1178,7 @@ abstract class BaseQuery
                     $params['leftJoins'][] = $j;
                 }
             }
+
             if (!empty($fieldDefs[$type]['joins'])) {
                 foreach ($fieldDefs[$type]['joins'] as $j) {
                     $jAlias = $this->obtainJoinAlias($j);
@@ -1214,9 +1217,6 @@ abstract class BaseQuery
         ?int $maxTextColumnsLength = null,
         ?array &$params = null
     ) : string {
-        $select = '';
-        $arr = [];
-        $specifiedList = is_array($itemList) ? true : false;
 
         if (empty($itemList)) {
             $attributeList = $entity->getAttributeList();
@@ -1224,6 +1224,7 @@ abstract class BaseQuery
             $attributeList = $itemList;
         }
 
+        // @todo Get rid of 'additionalSelect' parameter.
         if ($params && isset($params['additionalSelect'])) {
             foreach ($params['additionalSelect'] as $item) {
                 $attributeList[] = $item;
@@ -1239,14 +1240,21 @@ abstract class BaseQuery
                     ];
                     continue;
                 }
+                if ($attribute === '') {
+                    throw new RuntimeException("Bad select expression.");
+                }
+                continue;
             }
         }
+
+        $itemPairList = [];
 
         foreach ($attributeList as $attribute) {
             $attributeType = null;
             if (is_string($attribute)) {
                 $attributeType = $entity->getAttributeType($attribute);
             }
+
             if ($skipTextColumns) {
                 if ($attributeType === $entity::TEXT) {
                     continue;
@@ -1254,67 +1262,114 @@ abstract class BaseQuery
             }
 
             if (is_array($attribute) && count($attribute) == 2) {
+                $alias = $attribute[1];
+
                 if (stripos($attribute[0], 'VALUE:') === 0) {
                     $part = substr($attribute[0], 6);
+
                     if ($part !== false) {
                         $part = $this->quote($part);
                     } else {
                         $part = $this->quote('');
                     }
-                } else {
-                    if (!$entity->hasAttribute($attribute[0])) {
-                        $part = $this->convertComplexExpression($entity, $attribute[0], $distinct, $params);
-                    } else {
-                        $fieldDefs = $entity->getAttributes()[$attribute[0]];
-                        if (!empty($fieldDefs['select'])) {
-                            $part = $this->getAttributeSql($entity, $attribute[0], 'select', $params);
-                        } else {
-                            if (!empty($fieldDefs['noSelect'])) {
-                                continue;
-                            }
-                            if (!empty($fieldDefs['notStorable'])) {
-                                continue;
-                            }
-                            $part = $this->getFieldPath($entity, $attribute[0], $params);
-                        }
-                    }
+
+                    $itemPairList[] = [$part, $alias];
+
+                    continue;
                 }
 
-                $arr[] = $part . ' AS `' . $this->sanitizeSelectAlias($attribute[1]) . '`';
+                if (!$entity->hasAttribute($attribute[0])) {
+                    $part = $this->convertComplexExpression($entity, $attribute[0], $distinct, $params);
+
+                    $itemPairList[] = [$part, $alias];
+
+                    continue;
+                }
+
+                $fieldDefs = $entity->getAttributes()[$attribute[0]];
+
+                if (!empty($fieldDefs['select'])) {
+                    $part = $this->getAttributeSql($entity, $attribute[0], 'select', $params);
+
+                    $itemPairList[] = [$part, $alias];
+
+                    continue;
+                }
+
+                if (!empty($fieldDefs['noSelect'])) {
+                    continue;
+                }
+
+                if (!empty($fieldDefs['notStorable'])) {
+                    continue;
+                }
+
+                $part = $this->getAttributePath($entity, $attribute[0], $params);
+
+                $itemPairList[] = [$part, $alias];
+
                 continue;
             }
 
-            $attribute = $this->sanitizeSelectItem($attribute);
+            if (!$entity->hasAttribute($attribute)) {
+                $expression = $this->sanitizeSelectItem($attribute);
 
-            if ($entity->hasAttribute($attribute)) {
-                $fieldDefs = $entity->getAttributes()[$attribute];
-            } else {
-                $part = $this->convertComplexExpression($entity, $attribute, $distinct, $params);
-                $arr[] = $part . ' AS `' . $this->sanitizeSelectAlias($attribute) . '`';
+                $part = $this->convertComplexExpression($entity, $expression, $distinct, $params);
+
+                $itemPairList[] = [$part, $attribute];
+
                 continue;
             }
+
+            $fieldDefs = $entity->getAttributes()[$attribute];
 
             if (!empty($fieldDefs['select'])) {
                 $fieldPath = $this->getAttributeSql($entity, $attribute, 'select', $params);
-            } else {
-                if (!empty($fieldDefs['notStorable']) && ($fieldDefs['type'] ?? null) !== 'foreign') {
-                    continue;
-                }
-                if ($attributeType === null) {
-                    continue;
-                }
-                $fieldPath = $this->getFieldPath($entity, $attribute, $params);
-                if ($attributeType === $entity::TEXT && $maxTextColumnsLength !== null) {
-                    $fieldPath = 'LEFT(' . $fieldPath . ', '. strval($maxTextColumnsLength) . ')';
-                }
+
+                $itemPairList[] = [$fieldPath, $attribute];
+
+                continue;
             }
 
-            $arr[] = $fieldPath . ' AS `' . $attribute . '`';
+            if (!empty($fieldDefs['notStorable']) && ($fieldDefs['type'] ?? null) !== 'foreign') {
+                continue;
+            }
+
+            if ($attributeType === null) {
+                continue;
+            }
+
+            $fieldPath = $this->getAttributePath($entity, $attribute, $params);
+
+            if ($attributeType === $entity::TEXT && $maxTextColumnsLength !== null) {
+                $fieldPath = 'LEFT(' . $fieldPath . ', '. strval($maxTextColumnsLength) . ')';
+            }
+
+            $itemPairList[] = [$fieldPath, $attribute];
+
+            continue;
         }
 
-        $select = implode(', ', $arr);
+        if (!count($itemPairList)) {
+            throw new RuntimeException("ORM Query: Select part can't be empty.");
+        }
 
-        return $select;
+        $selectPartItemList = [];
+
+        foreach ($itemPairList as $item) {
+            $expression = $item[0];
+            $alias = $this->sanitizeSelectAlias($item[1]);
+
+            if ($expression === '' || $alias === '') {
+                throw new RuntimeException("Bad select expression.");
+            }
+
+            $selectPartItemList[] = "{$expression} AS `{$alias}`";
+        }
+
+        $selectPart = implode(', ', $selectPartItemList);
+
+        return $selectPart;
     }
 
     protected function getBelongsToJoinItemPart(Entity $entity, $relationName, $r = null, $alias = null)
@@ -1421,7 +1476,7 @@ abstract class BaseQuery
             if ($useColumnAlias) {
                 $fieldPath = '`'. $this->sanitizeSelectAlias($field) . '`';
             } else {
-                $fieldPath = $this->getFieldPathForOrderBy($entity, $field, $params);
+                $fieldPath = $this->getAttributePathForOrderBy($entity, $field, $params);
             }
             $listQuoted = [];
             $list = array_reverse(explode(',', $list));
@@ -1462,7 +1517,7 @@ abstract class BaseQuery
         if ($useColumnAlias) {
             $fieldPath = '`'. $this->sanitizeSelectAlias($orderBy) . '`';
         } else {
-            $fieldPath = $this->getFieldPathForOrderBy($entity, $orderBy, $params);
+            $fieldPath = $this->getAttributePathForOrderBy($entity, $orderBy, $params);
         }
 
         return "{$fieldPath} " . $order;
@@ -1485,7 +1540,7 @@ abstract class BaseQuery
         return $sql;
     }
 
-    protected function getFieldPathForOrderBy(Entity $entity, string $orderBy, array $params) : ?string
+    protected function getAttributePathForOrderBy(Entity $entity, string $orderBy, array $params) : ?string
     {
         if (strpos($orderBy, '.') !== false || strpos($orderBy, ':') !== false) {
             return $this->convertComplexExpression(
@@ -1496,7 +1551,7 @@ abstract class BaseQuery
             );
         }
 
-        return $this->getFieldPath($entity, $orderBy, $params);
+        return $this->getAttributePath($entity, $orderBy, $params);
     }
 
     protected function getAggregationSelectPart(Entity $entity, string $aggregation, string $aggregationBy, bool $distinct = false) : ?string
@@ -1592,13 +1647,15 @@ abstract class BaseQuery
         return $aliases;
     }
 
-    protected function getFieldPath(Entity $entity, $field, &$params = null) : ?string
+    protected function getAttributePath(Entity $entity, string $attribute, ?array &$params = null) : ?string
     {
-        if (!isset($entity->getAttributes()[$field])) {
+        if (!isset($entity->getAttributes()[$attribute])) {
             return null;
         }
 
-        $f = $entity->getAttributes()[$field];
+        $entityType = $entity->getEntityType();
+
+        $f = $entity->getAttributes()[$attribute];
 
         $relationType = $f['type'];
 
@@ -1612,46 +1669,48 @@ abstract class BaseQuery
             return null;
         }
 
-        $fieldPath = '';
-
         switch ($relationType) {
             case 'foreign':
-                if (isset($f['relation'])) {
-                    $relationName = $f['relation'];
+                $relationName = $f['relation'] ?? null;
 
-                    $foreign = $f['foreign'];
-
-                    if (is_array($foreign)) {
-                        $wsCount = 0;
-                        foreach ($foreign as $i => $value) {
-                            if ($value == ' ') {
-                                $foreign[$i] = '\' \'';
-                                $wsCount ++;
-                            } else {
-                                $item =  $this->getAlias($entity, $relationName) . '.' . $this->toDb($value);
-
-                                $foreign[$i] = "IFNULL({$item}, '')";
-                            }
-                        }
-
-                        $fieldPath = 'TRIM(CONCAT(' . implode(', ', $foreign). '))';
-
-                        if ($wsCount > 1) {
-                            $fieldPath = "REPLACE({$fieldPath}, '  ', ' ')";
-                        }
-
-                        $fieldPath = "NULLIF({$fieldPath}, '')";
-                    } else {
-                        $expression = $this->getAlias($entity, $relationName) . '.' . $foreign;
-                        $fieldPath = $this->convertComplexExpression($entity, $expression, false, $params);
-                    }
+                if (!$relationName) {
+                    return null;
                 }
-                break;
-            default:
-                $fieldPath = $this->toDb($entity->getEntityType()) . '.' . $this->toDb($this->sanitize($field));
+
+                $relationName = $f['relation'];
+
+                $foreign = $f['foreign'];
+
+                if (is_array($foreign)) {
+                    $wsCount = 0;
+
+                    foreach ($foreign as $i => $value) {
+                        if ($value == ' ') {
+                            $foreign[$i] = '\' \'';
+                            $wsCount ++;
+                        } else {
+                            $item =  $this->getAlias($entity, $relationName) . '.' . $this->toDb($value);
+
+                            $foreign[$i] = "IFNULL({$item}, '')";
+                        }
+                    }
+
+                    $path = 'TRIM(CONCAT(' . implode(', ', $foreign). '))';
+
+                    if ($wsCount > 1) {
+                        $path = "REPLACE({$path}, '  ', ' ')";
+                    }
+
+                    $path = "NULLIF({$path}, '')";
+                } else {
+                    $expression = $this->getAlias($entity, $relationName) . '.' . $foreign;
+                    $path = $this->convertComplexExpression($entity, $expression, false, $params);
+                }
+
+                return $path;
         }
 
-        return $fieldPath;
+        return $this->toDb($entityType) . '.' . $this->toDb($this->sanitize($attribute));
     }
 
     protected function getWherePart(
@@ -1836,7 +1895,7 @@ abstract class BaseQuery
                                             $params
                                         );
                                     } else {
-                                        $leftPart = $this->getFieldPath($entity, $field, $params);
+                                        $leftPart = $this->getAttributePath($entity, $field, $params);
                                     }
                                 }
                             }
