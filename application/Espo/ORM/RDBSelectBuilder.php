@@ -272,20 +272,6 @@ class RDBSelectBuilder implements Findable
         return $this;
     }
 
-    /**
-     * Build a query.
-     *
-     * @todo Remove?
-     */
-    public function build() : Select
-    {
-        $this->processExecutableCheck();
-
-        $params = $this->getMergedParams();
-
-        return Select::fromRaw($params);
-    }
-
     protected function getMergedParams(?array $params = null) : array
     {
         $params = $params ?? [];
