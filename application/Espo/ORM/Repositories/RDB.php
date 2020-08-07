@@ -704,10 +704,14 @@ class RDB extends Repository implements Findable, Relatable, Removable
 
     /**
      * Specify SELECT. Which attributes to select. All attributes are selected by default.
+     *
+     * @see Espo\ORM\QueryParams\SelectBuilder::select()
+     *
+     * @param array|string $select
      */
-    public function select(array $select = []) : RDBSelectBuilder
+    public function select($select = [], ?string $alias = null) : RDBSelectBuilder
     {
-        return $this->createSelectBuilder()->select($select);
+        return $this->createSelectBuilder()->select($select, $alias);
     }
 
     /**

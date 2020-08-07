@@ -52,6 +52,38 @@ class SelectBuilderTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals('Test', $params['from']);
     }
 
+    public function testSelect1()
+    {
+        $select = $this->builder
+            ->from('Test')
+            ->select(['id', 'name'])
+            ->select('test')
+            ->build();
+
+        $this->assertEquals(['id', 'name', 'test'], $select->getSelect());
+    }
+
+    public function testSelect2()
+    {
+        $select = $this->builder
+            ->from('Test')
+            ->select('test')
+            ->select(['id', 'name'])
+            ->build();
+
+        $this->assertEquals(['id', 'name'], $select->getSelect());
+    }
+
+    public function testSelect3()
+    {
+        $select = $this->builder
+            ->from('Test')
+            ->select('test', 'hello')
+            ->build();
+
+        $this->assertEquals([['test', 'hello']], $select->getSelect());
+    }
+
     public function testCloneNotSame()
     {
         $builder = new SelectBuilder();

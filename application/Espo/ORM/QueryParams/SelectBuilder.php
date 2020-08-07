@@ -29,6 +29,8 @@
 
 namespace Espo\ORM\QueryParams;
 
+use InvalidArgumentException;
+
 class SelectBuilder implements Builder
 {
     use SelectingBuilderTrait;
@@ -75,13 +77,38 @@ class SelectBuilder implements Builder
     }
 
     /**
-     * Specify SELECT. Columns and expressions to be selected. If omitted, then all entity attributes will be selected.
+     * Specify SELECT. Columns and expressions to be selected. If not called, then all entity attributes will be selected.
+     * Passing an array will reset previously set items.
+     * Passing a string will append an item.
+     *
+     * Usage options:
+     * * `select([$item1, $item2, ...])`
+     * * `select(string $expression)`
+     * * `select(string $expression, string $alias)`
+     *
+     * @param array|string $select
      */
-    public function select(array $select) : self
+    public function select($select, ?string $alias = null) : self
     {
-        $this->params['select'] = $select;
+        if (is_array($select)) {
+            $this->params['select'] = $select;
 
-        return $this;
+            return $this;
+        }
+
+        if (is_string($select)) {
+            $this->params['select'] = $this->params['select'] ?? [];
+
+            if ($alias) {
+                $this->params['select'][] = [$select, $alias];
+            } else {
+                $this->params['select'][] = $select;
+            }
+
+            return $this;
+        }
+
+        throw new InvalidArgumentException();
     }
 
     /**

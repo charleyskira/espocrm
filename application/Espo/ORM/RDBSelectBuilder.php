@@ -231,10 +231,14 @@ class RDBSelectBuilder implements Findable
 
     /**
      * Specify SELECT. Which attributes to select. All attributes are selected by default.
+     *
+     * @see Espo\ORM\QueryParams\SelectBuilder::select()
+     *
+     * @param array|string $select
      */
-    public function select(array $select) : self
+    public function select($select, ?string $alias = null) : self
     {
-        $this->builder->select($select);
+        $this->builder->select($select, $alias);
 
         return $this;
     }

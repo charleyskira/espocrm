@@ -378,7 +378,7 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
         $this->repository->order('name')->find();
     }
 
-    public function testSelect()
+    public function testSelect1()
     {
         $paramsExpected = Select::fromRaw([
             'from' => 'Test',
@@ -392,6 +392,27 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
             ->with($paramsExpected);
 
         $this->repository->select(['name', 'date'])->find();
+    }
+
+    public function testSelect2()
+    {
+        $select = $this->queryBuilder
+            ->select()
+            ->from('Test')
+            ->select(['name'])
+            ->select('date')
+            ->build();
+
+        $this->mapper
+            ->expects($this->once())
+            ->method('select')
+            ->will($this->returnValue($this->collection))
+            ->with($select);
+
+        $this->repository
+            ->select(['name'])
+            ->select('date')
+            ->find();
     }
 
     public function testFindRelated1()
