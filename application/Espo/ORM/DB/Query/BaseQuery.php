@@ -464,9 +464,7 @@ abstract class BaseQuery
         }
 
         if (!$isAggregation) {
-            $selectPart = $this->getSelectPart(
-                $entity, $params['select'], $params['distinct'], $params['skipTextColumns'], $params['maxTextColumnsLength'], $params
-            );
+            $selectPart = $this->getSelectPart($entity, $params);
 
             $orderPart = $this->getOrderPart($entity, $params['orderBy'], $params['order'], $params);
 
@@ -638,9 +636,8 @@ abstract class BaseQuery
                 }
             }
             if (count($extraSelect)) {
-                $extraSelectPart = $this->getSelectPart(
-                    $entity, $extraSelect, false
-                );
+                $extraSelectPart = $this->getSelectPart($entity, ['select' => $extraSelect]);
+
                 if ($extraSelectPart) {
                     $selectPart .= ', ' . $extraSelectPart;
                 }
@@ -1209,14 +1206,11 @@ abstract class BaseQuery
         return $part;
     }
 
-    protected function getSelectPart(
-        Entity $entity,
-        ?array $itemList = null,
-        bool $distinct = false,
-        bool $skipTextColumns = false,
-        ?int $maxTextColumnsLength = null,
-        ?array &$params = null
-    ) : string {
+    protected function getSelectPart(Entity $entity, array &$params) : string
+    {
+        $params = $params ?? [];
+
+        $itemList = $params['select'] ?? [];
 
         if (empty($itemList)) {
             $attributeList = $entity->getAttributeList();
@@ -1250,104 +1244,13 @@ abstract class BaseQuery
         $itemPairList = [];
 
         foreach ($attributeList as $attribute) {
-            $attributeType = null;
-            if (is_string($attribute)) {
-                $attributeType = $entity->getAttributeType($attribute);
-            }
+            $pair = $this->getSelectPartItemPair($entity, $params, $attribute);
 
-            if ($skipTextColumns) {
-                if ($attributeType === $entity::TEXT) {
-                    continue;
-                }
-            }
-
-            if (is_array($attribute) && count($attribute) == 2) {
-                $alias = $attribute[1];
-
-                if (stripos($attribute[0], 'VALUE:') === 0) {
-                    $part = substr($attribute[0], 6);
-
-                    if ($part !== false) {
-                        $part = $this->quote($part);
-                    } else {
-                        $part = $this->quote('');
-                    }
-
-                    $itemPairList[] = [$part, $alias];
-
-                    continue;
-                }
-
-                if (!$entity->hasAttribute($attribute[0])) {
-                    $part = $this->convertComplexExpression($entity, $attribute[0], $distinct, $params);
-
-                    $itemPairList[] = [$part, $alias];
-
-                    continue;
-                }
-
-                $fieldDefs = $entity->getAttributes()[$attribute[0]];
-
-                if (!empty($fieldDefs['select'])) {
-                    $part = $this->getAttributeSql($entity, $attribute[0], 'select', $params);
-
-                    $itemPairList[] = [$part, $alias];
-
-                    continue;
-                }
-
-                if (!empty($fieldDefs['noSelect'])) {
-                    continue;
-                }
-
-                if (!empty($fieldDefs['notStorable'])) {
-                    continue;
-                }
-
-                $part = $this->getAttributePath($entity, $attribute[0], $params);
-
-                $itemPairList[] = [$part, $alias];
-
+            if ($pair === null) {
                 continue;
             }
 
-            if (!$entity->hasAttribute($attribute)) {
-                $expression = $this->sanitizeSelectItem($attribute);
-
-                $part = $this->convertComplexExpression($entity, $expression, $distinct, $params);
-
-                $itemPairList[] = [$part, $attribute];
-
-                continue;
-            }
-
-            $fieldDefs = $entity->getAttributes()[$attribute];
-
-            if (!empty($fieldDefs['select'])) {
-                $fieldPath = $this->getAttributeSql($entity, $attribute, 'select', $params);
-
-                $itemPairList[] = [$fieldPath, $attribute];
-
-                continue;
-            }
-
-            if (!empty($fieldDefs['notStorable']) && ($fieldDefs['type'] ?? null) !== 'foreign') {
-                continue;
-            }
-
-            if ($attributeType === null) {
-                continue;
-            }
-
-            $fieldPath = $this->getAttributePath($entity, $attribute, $params);
-
-            if ($attributeType === $entity::TEXT && $maxTextColumnsLength !== null) {
-                $fieldPath = 'LEFT(' . $fieldPath . ', '. strval($maxTextColumnsLength) . ')';
-            }
-
-            $itemPairList[] = [$fieldPath, $attribute];
-
-            continue;
+            $itemPairList[] = $pair;
         }
 
         if (!count($itemPairList)) {
@@ -1370,6 +1273,101 @@ abstract class BaseQuery
         $selectPart = implode(', ', $selectPartItemList);
 
         return $selectPart;
+    }
+
+    protected function getSelectPartItemPair(Entity $entity, array $params, $attribute) : ?array
+    {
+        $maxTextColumnsLength = $params['maxTextColumnsLength'] ?? null;
+        $skipTextColumns = $params['skipTextColumns'] ?? false;
+        $distinct = $params['distinct'] ?? false;
+
+        $attributeType = null;
+
+        if (!is_array($attribute) && !is_string($attribute)) {
+            throw new RuntimeException("ORM Query: Bad select item.");
+        }
+
+        if (is_string($attribute)) {
+            $attributeType = $entity->getAttributeType($attribute);
+        }
+
+        if ($skipTextColumns) {
+            if ($attributeType === $entity::TEXT) {
+                return null;
+            }
+        }
+
+        if (is_array($attribute) && count($attribute) == 2) {
+            $alias = $attribute[1];
+
+            if (stripos($attribute[0], 'VALUE:') === 0) {
+                $part = substr($attribute[0], 6);
+
+                if ($part !== false) {
+                    $part = $this->quote($part);
+                } else {
+                    $part = $this->quote('');
+                }
+
+                return [$part, $alias];
+            }
+
+            if (!$entity->hasAttribute($attribute[0])) {
+                $part = $this->convertComplexExpression($entity, $attribute[0], $distinct, $params);
+
+                return [$part, $alias];
+            }
+
+            $fieldDefs = $entity->getAttributes()[$attribute[0]];
+
+            if (!empty($fieldDefs['select'])) {
+                $part = $this->getAttributeSql($entity, $attribute[0], 'select', $params);
+
+                return [$part, $alias];
+            }
+
+            if (!empty($fieldDefs['noSelect'])) {
+                return null;
+            }
+
+            if (!empty($fieldDefs['notStorable'])) {
+                return null;
+            }
+
+            $part = $this->getAttributePath($entity, $attribute[0], $params);
+
+            return [$part, $alias];
+        }
+
+        if (!$entity->hasAttribute($attribute)) {
+            $expression = $this->sanitizeSelectItem($attribute);
+
+            $part = $this->convertComplexExpression($entity, $expression, $distinct, $params);
+
+            return [$part, $attribute];
+        }
+
+        if ($entity->getAttributeParam($attribute, 'select')) {
+            $fieldPath = $this->getAttributeSql($entity, $attribute, 'select', $params);
+
+            return [$fieldPath, $attribute];
+        }
+
+        if ($attributeType === null) {
+            return null;
+        }
+
+        if ($entity->getAttributeParam($attribute, 'notStorable') && $attributeType !== Entity::FOREIGN) {
+            return null;
+        }
+
+        $fieldPath = $this->getAttributePath($entity, $attribute, $params);
+
+        if ($attributeType === Entity::TEXT && $maxTextColumnsLength !== null) {
+            $fieldPath = 'LEFT(' . $fieldPath . ', '. strval($maxTextColumnsLength) . ')';
+        }
+
+        return [$fieldPath, $attribute];
     }
 
     protected function getBelongsToJoinItemPart(Entity $entity, $relationName, $r = null, $alias = null)
