@@ -35,6 +35,7 @@ use Espo\ORM\{
     Repositories\RDB as Repository,
     EntityCollection,
     QueryParams\Select,
+    QueryBuilder,
 };
 
 use Espo\Core\ORM\{
@@ -58,6 +59,12 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
         $entityManager
             ->method('getMapper')
             ->will($this->returnValue($this->mapper));
+
+        $this->queryBuilder = new QueryBuilder();
+
+        $entityManager
+            ->method('getQueryBuilder')
+            ->will($this->returnValue($this->queryBuilder));
 
         $entity = $this->seed = $this->createEntity('Test', Test::class);
 
@@ -419,5 +426,53 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
             ->with($this->account, 'teams', $select);
 
         $this->repository->countRelated($this->account, 'teams');
+    }
+
+    public function testAdditionalColumns()
+    {
+        $select = $this->queryBuilder
+            ->select()
+            ->from('Team')
+            ->select(['*', ['entityTeam.deleted', 'teamDeleted']])
+            ->build();
+
+        $this->account->id = 'accountId';
+
+        $this->mapper
+            ->expects($this->once())
+            ->method('selectRelated')
+            ->will($this->returnValue(new EntityCollection()))
+            ->with($this->account, 'teams', $select);
+
+        $this->repository->findRelated($this->account, 'teams', [
+            'additionalColumns' => [
+                'deleted' => 'teamDeleted',
+            ],
+        ]);
+    }
+
+    public function testAdditionalColumnsConditions()
+    {
+        $select = $this->queryBuilder
+            ->select()
+            ->from('Team')
+            ->where([
+                ['entityTeam.teamId' => 'testId'],
+            ])
+            ->build();
+
+        $this->account->id = 'accountId';
+
+        $this->mapper
+            ->expects($this->once())
+            ->method('selectRelated')
+            ->will($this->returnValue(new EntityCollection()))
+            ->with($this->account, 'teams', $select);
+
+        $this->repository->findRelated($this->account, 'teams', [
+            'additionalColumnsConditions' => [
+                'teamId' => 'testId',
+            ],
+        ]);
     }
 }

@@ -365,17 +365,10 @@ abstract class BaseMapper implements Mapper
                 return $collection;
 
             case Entity::MANY_MANY:
-                $additionalColumnsConditions = null;
-                if (!empty($params['additionalColumnsConditions'])) {
-                    $additionalColumnsConditions = $params['additionalColumnsConditions'];
-                }
 
                 $params['joins'] = $params['joins'] ?? [];
 
-                $params['joins'][] = $this->getManyManyJoin($entity, $relationName, $additionalColumnsConditions);
-
-                // @todo Git rid of this.
-                $params['relationName'] = $relDefs['relationName'];
+                $params['joins'][] = $this->getManyManyJoin($entity, $relationName);
 
                 $params['from'] = $relEntity->getEntityType();
 

@@ -247,11 +247,26 @@ class RDB extends Repository implements Findable, Relatable, Removable
             $this->getEntityManager()->getRepository($entityType)->handleSelectParams($params);
         }
 
+        $additionalColumns = $params['additionalColumns'] ?? [];
+        unset($params['additionalColumns']);
+
+        $additionalColumnsConditions = $params['additionalColumnsConditions'] ?? [];
+        unset($params['additionalColumnsConditions']);
+
         $select = null;
 
         if ($entityType) {
             $params['from'] = $entityType;
             $select = Select::fromRaw($params);
+        }
+
+        if ($type === Entity::MANY_MANY && count($additionalColumns)) {
+            $select = $this->applyRelationAdditionalColumns($entity, $relationName, $additionalColumns, $select);
+        }
+
+        // @todo Get rid of 'additionalColumnsConditions' usage. Use 'whereClause' instead.
+        if ($type === Entity::MANY_MANY && count($additionalColumnsConditions)) {
+            $select = $this->applyRelationAdditionalColumnsConditions($entity, $relationName, $additionalColumnsConditions, $select);
         }
 
         $result = $this->getMapper()->selectRelated($entity, $relationName, $select);
@@ -274,6 +289,13 @@ class RDB extends Repository implements Findable, Relatable, Removable
             $this->getEntityManager()->getRepository($entityType)->handleSelectParams($params);
         }
 
+        $additionalColumnsConditions = $params['additionalColumnsConditions'] ?? [];
+        unset($params['additionalColumnsConditions']);
+
+        if ($type === Entity::MANY_MANY && count($additionalColumnsConditions)) {
+            $select = $this->applyRelationAdditionalColumnsConditions($entity, $relationName, $additionalColumnsConditions, $select);
+        }
+
         $select = null;
 
         if ($entityType) {
@@ -282,6 +304,56 @@ class RDB extends Repository implements Findable, Relatable, Removable
         }
 
         return (int) $this->getMapper()->countRelated($entity, $relationName, $select);
+    }
+
+    protected function applyRelationAdditionalColumns(Entity $entity, string $relationName, array $columns, Select $select) : Select
+    {
+        if (empty($columns)) {
+            return $select;
+        }
+
+        $middleName = lcfirst($entity->getRelationParam($relationName, 'relationName'));
+
+        $selectItemList = $select->getSelect();
+
+        if (empty($selectItemList)) {
+            $selectItemList[] = '*';
+        }
+
+        foreach ($columns as $column => $alias) {
+            $selectItemList[] = [
+                $middleName . '.' . $column,
+                $alias,
+            ];
+        }
+
+        $select = $this->getEntityManager()->getQueryBuilder()
+            ->clone($select)
+            ->select($selectItemList)
+            ->build();
+
+        return $select;
+    }
+
+    protected function applyRelationAdditionalColumnsConditions(
+        Entity $entity, string $relationName, array $conditions, Select $select
+    ) : Select {
+        if (empty($conditions)) {
+            return $select;
+        }
+
+        $middleName = lcfirst($entity->getRelationParam($relationName, 'relationName'));
+
+        $builder = $this->getEntityManager()->getQueryBuilder()->clone($select);
+
+        foreach ($conditions as $column => $value) {
+            $builder->where(
+                $middleName . '.' . $column,
+                $value
+            );
+        }
+
+        return $builder->build();
     }
 
     public function isRelated(Entity $entity, string $relationName, $foreign) : bool

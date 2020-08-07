@@ -326,8 +326,9 @@ class DBMapperTest extends \PHPUnit\Framework\TestCase
 
         $select = Select::fromRaw([
             'from' => 'Team',
-            'additionalColumns' => [
-                'teamId' => 'stub',
+            'select' => [
+                '*',
+                ['entityTeam.teamId', 'stub'],
             ],
         ]);
 

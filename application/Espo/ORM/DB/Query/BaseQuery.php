@@ -644,17 +644,6 @@ abstract class BaseQuery
             }
         }
 
-        if (
-            !empty($params['additionalColumns']) && is_array($params['additionalColumns']) && !empty($params['relationName'])
-        ) {
-            $alias = $this->sanitizeSelectAlias(lcfirst($params['relationName']));
-
-            foreach ($params['additionalColumns'] as $column => $field) {
-                $itemAlias = $this->sanitizeSelectAlias($field);
-                $selectPart .= ", " . $alias . "." . $this->toDb($this->sanitize($column)) . " AS `{$itemAlias}`";
-            }
-        }
-
         if (!empty($params['additionalSelectColumns']) && is_array($params['additionalSelectColumns'])) {
             foreach ($params['additionalSelectColumns'] as $column => $field) {
                 $itemAlias = $this->sanitizeSelectAlias($field);
@@ -1191,11 +1180,14 @@ abstract class BaseQuery
                 }
             }
 
+            // Some fields may need additional select items add to a query.
             if (!empty($fieldDefs[$type]['additionalSelect'])) {
                 $params['extraAdditionalSelect'] = $params['extraAdditionalSelect'] ?? [];
+
                 foreach ($fieldDefs[$type]['additionalSelect'] as $value) {
                     $value = str_replace('{alias}', $alias, $value);
                     $value = str_replace('{attribute}', $attribute, $value);
+
                     if (!in_array($value, $params['extraAdditionalSelect'])) {
                         $params['extraAdditionalSelect'][] = $value;
                     }
@@ -1212,30 +1204,32 @@ abstract class BaseQuery
 
         $itemList = $params['select'] ?? [];
 
-        if (empty($itemList)) {
-            $attributeList = $entity->getAttributeList();
-        } else {
-            $attributeList = $itemList;
-        }
+        $noSelectSpecified = !count($itemList);
 
-        // @todo Get rid of 'additionalSelect' parameter.
-        if ($params && isset($params['additionalSelect'])) {
-            foreach ($params['additionalSelect'] as $item) {
-                $attributeList[] = $item;
+        if (!$noSelectSpecified && $itemList[0] === '*') {
+            array_shift($itemList);
+
+            foreach (array_reverse($entity->getAttributeList()) as $item) {
+                array_unshift($itemList, $item);
             }
         }
 
-        foreach ($attributeList as $i => $attribute) {
-            if (is_string($attribute)) {
-                if (strpos($attribute, ':')) {
-                    $attributeList[$i] = [
-                        $attribute,
-                        $attribute
-                    ];
+        if ($noSelectSpecified) {
+            $itemList = $entity->getAttributeList();
+        }
+
+        // @todo Get rid of 'additionalSelect' parameter.
+        if (isset($params['additionalSelect'])) {
+            foreach ($params['additionalSelect'] as $item) {
+                $itemList[] = $item;
+            }
+        }
+
+        foreach ($itemList as $i => $item) {
+            if (is_string($item)) {
+                if (strpos($item, ':')) {
+                    $itemList[$i] = [$item, $item];
                     continue;
-                }
-                if ($attribute === '') {
-                    throw new RuntimeException("Bad select expression.");
                 }
                 continue;
             }
@@ -1243,8 +1237,8 @@ abstract class BaseQuery
 
         $itemPairList = [];
 
-        foreach ($attributeList as $attribute) {
-            $pair = $this->getSelectPartItemPair($entity, $params, $attribute);
+        foreach ($itemList as $item) {
+            $pair = $this->getSelectPartItemPair($entity, $params, $item);
 
             if ($pair === null) {
                 continue;

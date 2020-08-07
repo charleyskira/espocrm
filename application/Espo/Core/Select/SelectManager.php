@@ -373,19 +373,23 @@ class SelectManager
                 $key = $midKeys[1];
                 $part[$link . 'Filter' . 'Middle.' . $key] = $idsValue;
             }
+
         } else if ($relationType == 'hasMany') {
             $alias = $link . 'Filter';
             $this->addLeftJoin([$link, $alias], $result);
 
             $part[$alias . '.id'] = $idsValue;
+
         } else if ($relationType == 'belongsTo') {
             $key = $seed->getRelationParam($link, 'key');
             if (!empty($key)) {
                 $part[$key] = $idsValue;
             }
+
         } else if ($relationType == 'hasOne') {
             $this->addJoin([$link, $link . 'Filter'], $result);
             $part[$link . 'Filter' . '.id'] = $idsValue;
+
         } else {
             return;
         }
@@ -1770,21 +1774,26 @@ class SelectManager
                         $key = $midKeys[1];
                         $part[$alias . 'Middle.' . $key] = $value;
                     }
+
                 } else if ($relationType == 'hasMany') {
                     $this->addLeftJoin([$link, $alias], $result);
 
                     $part[$alias . '.id'] = $value;
+
                 } else if ($relationType == 'belongsTo') {
                     $key = $seed->getRelationParam($link, 'key');
                     if (!empty($key)) {
                         $part[$key] = $value;
                     }
+
                 } else if ($relationType == 'hasOne') {
                     $this->addLeftJoin([$link, $alias], $result);
                     $part[$alias . '.id'] = $value;
+
                 } else {
                     break;;
                 }
+
                 $this->setDistinct(true, $result);
                 break;
 
@@ -1800,30 +1809,45 @@ class SelectManager
                 $alias = $link . 'NotLinkedFilter' . strval(rand(10000, 99999));
 
                 if ($relationType == 'manyMany') {
-                    $this->addLeftJoin([$link, $alias], $result);
-                    $midKeys = $seed->getRelationParam($link, 'midKeys');
+                    $key = $seed->getRelationParam($link, 'midKeys')[1];
 
-                    if (!empty($midKeys)) {
-                        $key = $midKeys[1];
-                        $result['joinConditions'][$alias] = [$key => $value];
-                        $part[$alias . 'Middle.' . $key] = null;
-                    }
+                    $this->addLeftJoin(
+                        [
+                            $link, $alias, [$key => $value],
+                        ],
+                        $result
+                    );
+
+                    $part[$alias . 'Middle.' . $key] = null;
+
                 } else if ($relationType == 'hasMany') {
-                    $this->addLeftJoin([$link, $alias], $result);
-                    $result['joinConditions'][$alias] = ['id' => $value];
+                    $this->addLeftJoin(
+                        [
+                            $link, $alias, ['id' => $value]
+                        ],
+                        $result
+                    );
+
                     $part[$alias . '.id'] = null;
+
                 } else if ($relationType == 'belongsTo') {
                     $key = $seed->getRelationParam($link, 'key');
+
                     if (!empty($key)) {
                         $part[$key . '!='] = $value;
                     }
+
                 } else if ($relationType == 'hasOne') {
                     $this->addLeftJoin([$link, $alias], $result);
+
                     $part[$alias . '.id!='] = $value;
+
                 } else {
                     break;
                 }
+
                 $this->setDistinct(true, $result);
+
                 break;
 
             case 'arrayAnyOf':

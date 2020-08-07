@@ -50,6 +50,14 @@ class Select implements Query
         return $this->params['sth'] ?? false;
     }
 
+    /**
+     * Get select items.
+     */
+    public function getSelect() : array
+    {
+        return $this->params['select'] ?? [];
+    }
+
     protected function validateRawParams(array $params)
     {
         $this->validateRawParamsSelecting($params);

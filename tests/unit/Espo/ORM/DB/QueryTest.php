@@ -345,7 +345,7 @@ class QueryTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($expectedSql, $sql);
     }
 
-    public function _testSelectAllColumns2()
+    public function testSelectAllColumns2()
     {
         $expectedSql =
             "SELECT account.id AS `id`, account.name AS `name`, account.deleted AS `deleted` FROM `account` " .
@@ -355,6 +355,27 @@ class QueryTest extends \PHPUnit\Framework\TestCase
             ->select()
             ->from('Account')
             ->select(['*'])
+            ->where([
+                'deleted' => false,
+            ])
+            ->build();
+
+        $sql = $this->query->create($select);
+
+        $this->assertEquals($expectedSql, $sql);
+    }
+
+    public function testSelectAllColumnsWithExtra()
+    {
+        $expectedSql =
+            "SELECT account.id AS `id`, account.name AS `name`, account.deleted AS `deleted`, LOWER(account.name) AS `lowerName` " .
+            "FROM `account` " .
+            "WHERE account.deleted = 0";
+
+        $select = $this->queryBuilder
+            ->select()
+            ->from('Account')
+            ->select(['*', ['LOWER:name', 'lowerName']])
             ->where([
                 'deleted' => false,
             ])
