@@ -56,6 +56,8 @@ class UpdateBuilder implements Builder
     public function set(array $set) : self
     {
         $this->params['set'] = $set;
+
+        return $this;
     }
 
     /**

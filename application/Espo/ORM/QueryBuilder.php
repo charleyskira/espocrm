@@ -34,35 +34,67 @@ use Espo\ORM\{
     QueryParams\UpdateBuilder,
     QueryParams\DeleteBuilder,
     QueryParams\InsertBuilder,
+    QueryParams\Query,
+    QueryParams\Builder,
 };
+
+use ReflectionClass;
+use RuntimeException;
 
 /**
  * Creates query builders for specific query types.
  */
 class QueryBuilder
 {
-
     public function __construct()
     {
     }
 
+    /**
+     * Proceed with SELECT builder.
+     */
     public function select() : SelectBuilder
     {
         return new SelectBuilder();
     }
 
+    /**
+     * Proceed with UPDATE builder.
+     */
     public function update() : UpdateBuilder
     {
         return new UpdateBuilder();
     }
 
+    /**
+     * Proceed with DELETE builder.
+     */
     public function delete() : DeleteBuilder
     {
         return new DeleteBuilder();
     }
 
+    /**
+     * Proceed with INSERT builder.
+     */
     public function insert() : InsertBuilder
     {
         return new InsertBuilder();
+    }
+
+    /**
+     * Cone an existing query and proceed modifying it.
+     */
+    public function clone(Query $query) : Builder
+    {
+        $class = new ReflectionClass($query);
+
+        $methodName = ucfirst($class->getShortName());
+
+        if (!method_exists($this, $methodName)) {
+            throw new RuntimeException("Can't clone an unsupported query.");
+        }
+
+        return $this->$methodName()->clone($query);
     }
 }
