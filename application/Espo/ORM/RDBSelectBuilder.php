@@ -39,6 +39,8 @@ use Espo\ORM\{
     QueryParams\SelectBuilder,
 };
 
+use RuntimeException;
+
 /**
  * Builds select parameters for an RDB repository. Contains 'find' methods.
  */
@@ -61,11 +63,28 @@ class RDBSelectBuilder implements Findable
 
     public function from(string $entityType) : self
     {
+        if ($this->entityType && $this->entityType !== $entityType) {
+            throw new RuntimeException("Changing entity type is not allowed.");
+        }
+
+        $this->setEntityType($entityType);
+
         $this->builder->from($entityType);
 
-        $this->entityType = $entityType;
+        return $this;
+    }
 
+    protected function setEntityType(string $entityType)
+    {
+        $this->entityType = $entityType;
         $this->repository = $this->entityManager->getRepository($entityType);
+    }
+
+    public function clone(Select $query) : self
+    {
+        $this->setEntityType($query->getFrom());
+
+        $this->builder->clone($query);
 
         return $this;
     }
@@ -254,7 +273,9 @@ class RDBSelectBuilder implements Findable
     }
 
     /**
-     * Builds result select parameters.
+     * Build a query.
+     *
+     * @todo Remove?
      */
     public function build() : Select
     {

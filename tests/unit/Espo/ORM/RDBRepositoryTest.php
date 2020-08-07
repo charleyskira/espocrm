@@ -52,7 +52,7 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
     protected function setUp() : void
     {
         $entityManager = $this->entityManager = $this->getMockBuilder(EntityManager::class)->disableOriginalConstructor()->getMock();
-        $entityFactory = $this->getMockBuilder(EntityFactory::class)->disableOriginalConstructor()->getMock();
+        $entityFactory = $this->entityFactory = $this->getMockBuilder(EntityFactory::class)->disableOriginalConstructor()->getMock();
 
         $this->mapper = $this->getMockBuilder(MysqlMapper::class)->disableOriginalConstructor()->getMock();
 
@@ -77,11 +77,18 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
             ->method('create')
             ->will($this->returnValue($entity));
 
-        $this->repository = new Repository('Test', $entityManager, $entityFactory);
+        $this->repository = $this->createRepository('Test');
+    }
 
-        $entityManager
+    protected function createRepository(string $entityType)
+    {
+        $repository = new Repository($entityType, $this->entityManager, $this->entityFactory);
+
+        $this->entityManager
             ->method('getRepository')
-            ->will($this->returnValue($this->repository));
+            ->will($this->returnValue($repository));
+
+        return $repository;
     }
 
     protected function createEntity(string $entityType, string $className)
@@ -429,7 +436,7 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
             ->will($this->returnValue(new EntityCollection()))
             ->with($this->account, 'teams', $select);
 
-        $this->repository->findRelated($this->account, 'teams');
+        $this->createRepository('Account')->findRelated($this->account, 'teams');
     }
 
     public function testCountRelated1()
@@ -446,7 +453,7 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
             ->will($this->returnValue(1))
             ->with($this->account, 'teams', $select);
 
-        $this->repository->countRelated($this->account, 'teams');
+        $this->createRepository('Account')->countRelated($this->account, 'teams');
     }
 
     public function testAdditionalColumns()
@@ -465,7 +472,7 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
             ->will($this->returnValue(new EntityCollection()))
             ->with($this->account, 'teams', $select);
 
-        $this->repository->findRelated($this->account, 'teams', [
+        $this->createRepository('Account')->findRelated($this->account, 'teams', [
             'additionalColumns' => [
                 'deleted' => 'teamDeleted',
             ],
@@ -490,10 +497,35 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
             ->will($this->returnValue(new EntityCollection()))
             ->with($this->account, 'teams', $select);
 
-        $this->repository->findRelated($this->account, 'teams', [
+        $this->createRepository('Account')->findRelated($this->account, 'teams', [
             'additionalColumnsConditions' => [
                 'teamId' => 'testId',
             ],
         ]);
+    }
+
+    public function testClone1()
+    {
+        $select = $this->queryBuilder
+            ->select()
+            ->from('Test')
+            ->build();
+
+        $selectExpected = $this->queryBuilder
+            ->select()
+            ->from('Test')
+            ->select('id')
+            ->build();
+
+        $this->mapper
+            ->expects($this->once())
+            ->method('select')
+            ->will($this->returnValue(new EntityCollection()))
+            ->with($selectExpected);
+
+        $this->repository
+            ->clone($select)
+            ->select('id')
+            ->find();
     }
 }

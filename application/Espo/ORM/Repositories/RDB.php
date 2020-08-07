@@ -42,6 +42,7 @@ use Espo\ORM\{
 
 use StdClass;
 use RuntimeException;
+use InvalidArgumentException;
 
 class RDB extends Repository implements Findable, Relatable, Removable
 {
@@ -236,6 +237,10 @@ class RDB extends Repository implements Findable, Relatable, Removable
     {
         $params = $params ?? [];
 
+        if ($entity->getEntityType() !== $this->entityType) {
+            throw new InvalidArgumentException("Not supported entity type.");
+        }
+
         if (!$entity->id) {
             return null;
         }
@@ -277,6 +282,10 @@ class RDB extends Repository implements Findable, Relatable, Removable
     public function countRelated(Entity $entity, string $relationName, ?array $params = null) : int
     {
         $params = $params ?? [];
+
+        if ($entity->getEntityType() !== $this->entityType) {
+            throw new InvalidArgumentException("Not supported entity type.");
+        }
 
         if (!$entity->id) {
             return 0;
@@ -362,6 +371,10 @@ class RDB extends Repository implements Findable, Relatable, Removable
             return false;
         }
 
+        if ($entity->getEntityType() !== $this->entityType) {
+            throw new InvalidArgumentException("Not supported entity type.");
+        }
+
         if ($foreign instanceof Entity) {
             $id = $foreign->id;
         } else if (is_string($foreign)) {
@@ -424,6 +437,10 @@ class RDB extends Repository implements Findable, Relatable, Removable
             throw new RuntimeException("Bad 'foreign' value.");
         }
 
+        if ($entity->getEntityType() !== $this->entityType) {
+            throw new InvalidArgumentException("Not supported entity type.");
+        }
+
         $this->beforeRelate($entity, $relationName, $foreign, $columnData, $options);
 
         $beforeMethodName = 'beforeRelate' . ucfirst($relationName);
@@ -472,6 +489,10 @@ class RDB extends Repository implements Findable, Relatable, Removable
 
         if (! $foreign instanceof Entity && !is_string($foreign)) {
             throw new RuntimeException("Bad foreign value.");
+        }
+
+        if ($entity->getEntityType() !== $this->entityType) {
+            throw new InvalidArgumentException("Not supported entity type.");
         }
 
         $this->beforeUnrelate($entity, $relationName, $foreign, $options);
@@ -623,6 +644,20 @@ class RDB extends Repository implements Findable, Relatable, Removable
         $select = Select::fromRaw($params);
 
         return $this->getMapper()->sum($select, $attribute);
+    }
+
+    /**
+     * Clone an existing query for a further modification and usage by 'find' or 'count' methods.
+     */
+    public function clone(Select $query) : RDBSelectBuilder
+    {
+        if ($this->entityType !== $query->getFrom()) {
+            throw new RuntimeException("Can't clone a query of a different entity type.");
+        }
+
+        $builder = new RDBSelectBuilder($this->getEntityManager());
+
+        return $builder->clone($query);
     }
 
     /**
