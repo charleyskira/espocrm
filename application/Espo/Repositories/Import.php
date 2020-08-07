@@ -94,13 +94,15 @@ class Import extends \Espo\Core\Repositories\Database
             }
         }
 
-        $sql = $this->getEntityManager()->getQuery()->createDeleteQuery('ImportEntity', [
-            'whereClause' => [
+        $delete = $this->getEntityManager()->getQueryBuilder()
+            ->delete()
+            ->from('ImportEntity')
+            ->where([
                 'importId' => $entity->id,
-            ]
-        ]);
+            ])
+            ->build();
 
-        $this->getEntityManager()->getPDO()->query($sql);
+        $this->getEntityManager()->getQueryExecutor()->run($delete);
 
         parent::afterRemove($entity, $options);
     }

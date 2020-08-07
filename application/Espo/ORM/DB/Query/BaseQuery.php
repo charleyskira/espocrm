@@ -221,6 +221,7 @@ abstract class BaseQuery
 
     /**
      * @deprecated
+     * @todo Remove in v7.0.
      */
     public function createSelectQuery(string $entityType, ?array $params = null) : string
     {

@@ -97,9 +97,9 @@ class EntityManager
 
         $this->repositoryFactory = $repositoryFactory;
 
-        $this->queryExecutor = new QueryExecutor($this);
-
         $this->initQuery();
+
+        $this->queryExecutor = new QueryExecutor($this);
 
         $this->queryBuilder = new QueryBuilder();
     }
@@ -114,7 +114,8 @@ class EntityManager
     }
 
     /**
-     * Get a Query.
+     * @todo Remove in v7.0.
+     * @deprecated
      */
     public function getQuery() : Query
     {
@@ -224,7 +225,7 @@ class EntityManager
     }
 
     /**
-     * Create entity (store it in database).
+     * Create entity (store it in a database).
      *
      * @param StdClass|array $data Entity attributes.
      */
@@ -239,7 +240,7 @@ class EntityManager
     }
 
     /**
-     * Fetch an entity (from database).
+     * Fetch an entity (from a database).
      */
     public function fetchEntity(string $entityType, string $id) : ?Entity
     {
@@ -275,15 +276,6 @@ class EntityManager
     }
 
     /**
-     * Create a select builder.
-     * @todo remove
-     */
-    public function createSelectBuilder() : RDBSelectBuilder
-    {
-        return new RDBSelectBuilder($this);
-    }
-
-    /**
      * Get a query builder.
      */
     public function getQueryBuilder() : QueryBuilder
@@ -291,6 +283,9 @@ class EntityManager
         return $this->queryBuilder;
     }
 
+    /**
+     * @deprecated
+     */
     public function setMetadata(array $data)
     {
         $this->metadata->setData($data);
@@ -302,7 +297,7 @@ class EntityManager
     }
 
     /**
-     * Get an instance of PDO.
+     * Get a PDO instance.
      */
     public function getPDO() : PDO
     {
@@ -343,7 +338,7 @@ class EntityManager
     }
 
     /**
-     * Run a query. Returns a result.
+     * Run a SQL query.
      *
      * @param $rerunIfDeadlock Query will be re-run if a deadlock occurs.
      */

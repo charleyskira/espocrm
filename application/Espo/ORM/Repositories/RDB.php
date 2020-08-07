@@ -224,6 +224,9 @@ class RDB extends Repository implements Findable, Relatable, Removable
         return null;
     }
 
+    /**
+     * @todo Add QueryParams support?
+     */
     public function findByQuery(string $sql) : Collection
     {
         return $this->getMapper()->selectByQuery($this->entityType, $sql);
@@ -630,7 +633,7 @@ class RDB extends Repository implements Findable, Relatable, Removable
     /**
      * Specify SELECT. Which attributes to select. All attributes are selected by default.
      */
-    public function select(array $select) : RDBSelectBuilder
+    public function select(array $select = []) : RDBSelectBuilder
     {
         return $this->createSelectBuilder()->select($select);
     }

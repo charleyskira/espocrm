@@ -176,15 +176,16 @@ class Notification extends \Espo\Services\Record implements
 
     public function markAllRead(string $userId)
     {
-        $select = $this->entityManager->createSelectBuilder()
+        $update = $this->entityManager->getQueryBuilder()->update()
             ->from('Notification')
+            ->set(['read' => true])
             ->where([
                 'userId' => $userId,
                 'read' => false,
             ])
             ->build();
 
-        $this->entityManager->getQueryExecutor()->update($select, ['read' => true]);
+        $this->entityManager->getQueryExecutor()->run($update);
 
         return true;
     }
@@ -276,13 +277,15 @@ class Notification extends \Espo\Services\Record implements
         }
 
         if (!empty($ids)) {
-            $select = $this->entityManager->createSelectBuilder()
+            $update = $this->entityManager->getQueryBuilder()
+                ->update()
                 ->from('Notification')
+                ->set(['read' => true])
                 ->where([
                     'id' => $ids,
                 ])
                 ->build();
-            $this->entityManager->getQueryExecutor()->update($select, ['read' => true]);
+            $this->entityManager->getQueryExecutor()->run($update);
         }
 
         return new RecordCollection($collection, $count);
