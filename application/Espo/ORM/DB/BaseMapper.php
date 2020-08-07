@@ -374,7 +374,7 @@ abstract class BaseMapper implements Mapper
 
                 $params['joins'][] = $this->getManyManyJoin($entity, $relationName, $additionalColumnsConditions);
 
-                // @todo Rename the parameter?
+                // @todo Git rid of this.
                 $params['relationName'] = $relDefs['relationName'];
 
                 $params['from'] = $relEntity->getEntityType();
@@ -418,9 +418,7 @@ abstract class BaseMapper implements Mapper
                 $foreignEntityId = $entity->get($key);
 
                 if (!$foreignEntityType || !$foreignEntityId) {
-                    throw new LogicException(
-                        "Bad definition for relationship {$relationName} in {$entityType} entity."
-                    );
+                    return null;
                 }
 
                 $params['whereClause'][$foreignKey] = $foreignEntityId;

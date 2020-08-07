@@ -229,42 +229,54 @@ class RDB extends Repository implements Findable, Relatable, Removable
         return $this->getMapper()->selectByQuery($this->entityType, $sql);
     }
 
-    public function findRelated(Entity $entity, string $relationName, array $params = [])
+    public function findRelated(Entity $entity, string $relationName, ?array $params = null)
     {
+        $params = $params ?? [];
+
         if (!$entity->id) {
             return null;
         }
 
-        if ($entity->getRelationType($relationName) === Entity::BELONGS_TO_PARENT) {
-            $entityType = $entity->get($relationName . 'Type');
-        } else {
-            $entityType = $entity->getRelationParam($relationName, 'entity');
-        }
+        $type = $entity->getRelationType($relationName);
+        $entityType = $entity->getRelationParam($relationName, 'entity');
 
         if ($entityType && empty($params['skipAdditionalSelectParams'])) {
             $this->getEntityManager()->getRepository($entityType)->handleSelectParams($params);
         }
 
-        $select = Select::fromRaw($params);
+        $select = null;
+
+        if ($entityType) {
+            $params['from'] = $entityType;
+            $select = Select::fromRaw($params);
+        }
 
         $result = $this->getMapper()->selectRelated($entity, $relationName, $select);
 
         return $result;
     }
 
-    public function countRelated(Entity $entity, string $relationName, array $params = []) : int
+    public function countRelated(Entity $entity, string $relationName, ?array $params = null) : int
     {
+        $params = $params ?? [];
+
         if (!$entity->id) {
             return 0;
         }
 
-        $entityType =  $entity->getRelationParam($relationName, 'entity');
+        $type = $entity->getRelationType($relationName);
+        $entityType = $entity->getRelationParam($relationName, 'entity');
 
         if ($entityType && empty($params['skipAdditionalSelectParams'])) {
             $this->getEntityManager()->getRepository($entityType)->handleSelectParams($params);
         }
 
-        $select = Select::fromRaw($params);
+        $select = null;
+
+        if ($entityType) {
+            $params['from'] = $entityType;
+            $select = Select::fromRaw($params);
+        }
 
         return (int) $this->getMapper()->countRelated($entity, $relationName, $select);
     }
@@ -280,14 +292,19 @@ class RDB extends Repository implements Findable, Relatable, Removable
         } else if (is_string($foreign)) {
             $id = $foreign;
         } else {
+            throw new RuntimeException("Bad 'foreign' value.");
+        }
+
+        if (!$id) {
             return false;
         }
 
-        if (!$id) return false;
-
         if ($entity->getRelationType($relationName) === Entity::BELONGS_TO) {
             $foreignEntityType = $entity->getRelationParam($relationName, 'entity');
-            if (!$foreignEntityType) return false;
+
+            if (!$foreignEntityType) {
+                return false;
+            }
 
             $foreignId = $entity->get($relationName . 'Id');
 
@@ -298,17 +315,23 @@ class RDB extends Repository implements Findable, Relatable, Removable
                 }
             }
 
-            if (!$foreignId) return false;
+            if (!$foreignId) {
+                return false;
+            }
 
-            $foreignEntity = $this->getEntityManager()->getRepository($foreignEntityType)->select(['id'])->where([
-                'id' => $foreignId,
-            ])->findOne();
+            $foreignEntity = $this->getEntityManager()->getRepository($foreignEntityType)
+                ->select(['id'])
+                ->where(['id' => $foreignId])
+                ->findOne();
 
-            if (!$foreignEntity) return false;
+            if (!$foreignEntity) {
+                return false;
+            }
 
             return $foreignEntity->id === $id;
         }
 
+        // @todo Use related builder.
         return (bool) $this->countRelated($entity, $relationName, [
             'whereClause' => [
                 'id' => $id,
@@ -323,7 +346,7 @@ class RDB extends Repository implements Findable, Relatable, Removable
         }
 
         if (! $foreign instanceof Entity && !is_string($foreign)) {
-            throw new RuntimeException("Bad foreign value.");
+            throw new RuntimeException("Bad 'foreign' value.");
         }
 
         $this->beforeRelate($entity, $relationName, $foreign, $columnData, $options);

@@ -44,6 +44,8 @@ use Espo\Core\ORM\{
 
 use tests\unit\testData\Entities\Test;
 
+use Espo\Entities;
+
 class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
 {
     protected function setUp() : void
@@ -58,6 +60,9 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
             ->will($this->returnValue($this->mapper));
 
         $entity = $this->seed = $this->createEntity('Test', Test::class);
+
+        $this->account = $this->createEntity('Account', Entities\Account::class);
+        $this->team = $this->createEntity('Team', Entities\Team::class);
 
         $this->collection = $this->getMockBuilder(EntityCollection::class)->disableOriginalConstructor()->getMock();
 
@@ -380,5 +385,39 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
             ->with($paramsExpected);
 
         $this->repository->select(['name', 'date'])->find();
+    }
+
+    public function testFindRelated1()
+    {
+        $select = Select::fromRaw([
+            'from' => 'Team',
+        ]);
+
+        $this->account->id = 'accountId';
+
+        $this->mapper
+            ->expects($this->once())
+            ->method('selectRelated')
+            ->will($this->returnValue(new EntityCollection()))
+            ->with($this->account, 'teams', $select);
+
+        $this->repository->findRelated($this->account, 'teams');
+    }
+
+    public function testCountRelated1()
+    {
+        $select = Select::fromRaw([
+            'from' => 'Team',
+        ]);
+
+        $this->account->id = 'accountId';
+
+        $this->mapper
+            ->expects($this->once())
+            ->method('countRelated')
+            ->will($this->returnValue(1))
+            ->with($this->account, 'teams', $select);
+
+        $this->repository->countRelated($this->account, 'teams');
     }
 }
