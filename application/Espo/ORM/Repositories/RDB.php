@@ -225,11 +225,11 @@ class RDB extends Repository implements Findable, Relatable, Removable
     }
 
     /**
-     * @todo Add QueryParams support?
+     * Find records by a SQL query.
      */
-    public function findByQuery(string $sql) : Collection
+    public function findBySql(string $sql) : Collection
     {
-        return $this->getMapper()->selectByQuery($this->entityType, $sql);
+        return $this->getMapper()->selectBySql($this->entityType, $sql);
     }
 
     public function findRelated(Entity $entity, string $relationName, ?array $params = null)

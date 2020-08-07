@@ -229,7 +229,7 @@ class EmailNotification
 
         $sql = '' . implode(' UNION ', $sqlArr) . " ORDER BY number LIMIT 0, {$maxCount}";
 
-        $notificationList = $this->entityManager->getRepository('Notification')->findByQuery($sql);
+        $notificationList = $this->entityManager->getRepository('Notification')->findBySql($sql);
 
         foreach ($notificationList as $notification) {
             $notification->set('emailIsProcessed', true);

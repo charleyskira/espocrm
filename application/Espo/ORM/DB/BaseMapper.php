@@ -138,18 +138,18 @@ abstract class BaseMapper implements Mapper
 
         $sql = $this->query->create($select);
 
-        return $this->selectByQueryInternal($entityType, $sql, $select->isSth());
+        return $this->selectBySqlInternal($entityType, $sql, $select->isSth());
     }
 
     /**
      * Select enities from DB by a SQL query.
      */
-    public function selectByQuery(string $entityType, string $sql) : Sth2Collection
+    public function selectBySql(string $entityType, string $sql) : Sth2Collection
     {
-        return $this->selectByQueryInternal($entityType, $sql, true);
+        return $this->selectBySqlInternal($entityType, $sql, true);
     }
 
-    protected function selectByQueryInternal(string $entityType, string $sql, bool $returnSthCollection = false) : Collection
+    protected function selectBySqlInternal(string $entityType, string $sql, bool $returnSthCollection = false) : Collection
     {
         $params = $params ?? [];
 
@@ -560,7 +560,7 @@ abstract class BaseMapper implements Mapper
                     ])
                 );
 
-                $this->runQuery($sql, true);
+                $this->runSql($sql, true);
 
                 return true;
         }
@@ -720,7 +720,7 @@ abstract class BaseMapper implements Mapper
                     ])
                 );
 
-                $this->runQuery($sql, true);
+                $this->runSql($sql, true);
 
                 return;
         }
@@ -728,14 +728,14 @@ abstract class BaseMapper implements Mapper
         throw new LogicException("Relation type '{$relType}' is not supported for mass relate.");
     }
 
-    protected function runQuery(string $query, bool $rerunIfDeadlock = false)
+    protected function runSql(string $sql, bool $rerunIfDeadlock = false)
     {
         try {
-            return $this->pdo->query($query);
+            return $this->pdo->query($sql);
         } catch (Exception $e) {
             if ($rerunIfDeadlock) {
                 if (isset($e->errorInfo) && $e->errorInfo[0] == 40001 && $e->errorInfo[1] == 1213) {
-                    return $this->pdo->query($query);
+                    return $this->pdo->query($sql);
                 }
             }
             throw $e;
@@ -801,7 +801,7 @@ abstract class BaseMapper implements Mapper
                         ])
                     );
 
-                    $this->runQuery($sql, true);
+                    $this->runSql($sql, true);
                 }
 
                 $sql = $this->query->create(
@@ -817,7 +817,7 @@ abstract class BaseMapper implements Mapper
                     ])
                 );
 
-                $this->runQuery($sql, true);
+                $this->runSql($sql, true);
 
                 return true;
 
@@ -839,7 +839,7 @@ abstract class BaseMapper implements Mapper
                     ])
                 );
 
-                $this->runQuery($sql, true);
+                $this->runSql($sql, true);
 
                 return true;
 
@@ -868,7 +868,7 @@ abstract class BaseMapper implements Mapper
                     ])
                 );
 
-                $this->runQuery($sql, true);
+                $this->runSql($sql, true);
 
                 $sql = $this->query->create(
                     Update::fromRaw([
@@ -883,7 +883,7 @@ abstract class BaseMapper implements Mapper
                     ])
                 );
 
-                $this->runQuery($sql, true);
+                $this->runSql($sql, true);
 
                 return true;
 
@@ -921,7 +921,7 @@ abstract class BaseMapper implements Mapper
                     ])
                 );
 
-                $this->runQuery($sql, true);
+                $this->runSql($sql, true);
 
                 return true;
 
@@ -992,7 +992,7 @@ abstract class BaseMapper implements Mapper
                         ])
                     );
 
-                    $this->runQuery($sql, true);
+                    $this->runSql($sql, true);
 
                     return true;
                 }
@@ -1013,7 +1013,7 @@ abstract class BaseMapper implements Mapper
                     ])
                 );
 
-                $this->runQuery($sql, true);
+                $this->runSql($sql, true);
 
                 return true;
         }
@@ -1100,7 +1100,7 @@ abstract class BaseMapper implements Mapper
                     ])
                 );
 
-                $this->runQuery($sql, true);
+                $this->runSql($sql, true);
 
                 return true;
 
@@ -1137,7 +1137,7 @@ abstract class BaseMapper implements Mapper
                     ])
                 );
 
-                $this->runQuery($sql, true);
+                $this->runSql($sql, true);
 
                 return true;
 
@@ -1175,7 +1175,7 @@ abstract class BaseMapper implements Mapper
                     ])
                 );
 
-                $this->runQuery($sql, true);
+                $this->runSql($sql, true);
 
                 return true;
         }
@@ -1218,7 +1218,7 @@ abstract class BaseMapper implements Mapper
             ])
         );
 
-        $this->runQuery($sql, true);
+        $this->runSql($sql, true);
     }
 
     /**
@@ -1244,7 +1244,7 @@ abstract class BaseMapper implements Mapper
             ])
         );
 
-        $this->runQuery($sql, true);
+        $this->runSql($sql, true);
     }
 
     protected function getInsertColumnList(Entity $entity) : array
@@ -1370,7 +1370,7 @@ abstract class BaseMapper implements Mapper
             'whereClause' => $whereClause,
         ]));
 
-        $this->runQuery($sql);
+        $this->runSql($sql);
     }
 
     /**
@@ -1394,7 +1394,7 @@ abstract class BaseMapper implements Mapper
             ])
         );
 
-        $this->runQuery($sql);
+        $this->runSql($sql);
     }
 
     /**

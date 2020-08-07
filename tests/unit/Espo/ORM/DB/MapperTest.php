@@ -45,8 +45,6 @@ use Espo\Entities\{
     Job,
 };
 
-use PDO;
-
 require_once 'tests/unit/testData/DB/Entities.php';
 require_once 'tests/unit/testData/DB/MockDBResult.php';
 
@@ -133,7 +131,9 @@ class DBMapperTest extends \PHPUnit\Framework\TestCase
     public function testSelectOne()
     {
         $query =
-            "SELECT post.id AS `id`, post.name AS `name`, NULLIF(TRIM(CONCAT(IFNULL(createdBy.salutation_name, ''), IFNULL(createdBy.first_name, ''), ' ', IFNULL(createdBy.last_name, ''))), '') AS `createdByName`, post.created_by_id AS `createdById`, post.deleted AS `deleted` ".
+            "SELECT post.id AS `id`, post.name AS `name`, NULLIF(TRIM(CONCAT(IFNULL(createdBy.salutation_name, ''), " .
+            "IFNULL(createdBy.first_name, ''), ' ', IFNULL(createdBy.last_name, ''))), '') AS `createdByName`, ".
+             "post.created_by_id AS `createdById`, post.deleted AS `deleted` ".
             "FROM `post` ".
             "LEFT JOIN `user` AS `createdBy` ON post.created_by_id = createdBy.id " .
             "WHERE post.id = '1' AND post.deleted = 0";

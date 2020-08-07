@@ -33,7 +33,7 @@ use Espo\Core\Exceptions\Error;
 
 use Espo\ORM\DB\{
     Mapper,
-    Query\BaseQuery as Query,
+    Query\BaseQuery as QueryComposer,
 };
 
 use PDO;
@@ -117,7 +117,7 @@ class EntityManager
      * @todo Remove in v7.0.
      * @deprecated
      */
-    public function getQuery() : Query
+    public function getQuery() : QueryComposer
     {
         return $this->query;
     }
@@ -338,23 +338,31 @@ class EntityManager
     }
 
     /**
+     * Run a Query.
+     */
+    public function runQuery(Query $query) : PDOStatement
+    {
+        return $this->queryExecutor->run($query);
+    }
+
+    /**
      * Run a SQL query.
      *
      * @param $rerunIfDeadlock Query will be re-run if a deadlock occurs.
      */
-    public function runQuery(string $query, bool $rerunIfDeadlock = false) : PDOStatement
+    public function runSql(string $sql, bool $rerunIfDeadlock = false) : PDOStatement
     {
         $pdoStatement = null;
 
         try {
-            $pdoStatement = $this->getPDO()->query($query);
+            $pdoStatement = $this->getPDO()->query($sql);
         } catch (Exception $e) {
             if (!$rerunIfDeadlock) {
                 throw $e;
             }
 
             if (isset($e->errorInfo) && $e->errorInfo[0] == 40001 && $e->errorInfo[1] == 1213) {
-                $pdoStatement = $this->getPDO()->query($query);
+                $pdoStatement = $this->getPDO()->query($sql);
             }
 
             if (!$pdoStatement) {

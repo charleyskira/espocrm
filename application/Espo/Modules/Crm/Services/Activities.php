@@ -816,7 +816,7 @@ class Activities implements
 
         $sql = $query->limit($sql, $offset, $limit);
 
-        $collection = $this->getEntityManager()->getRepository($entityType)->findByQuery($sql);
+        $collection = $this->getEntityManager()->getRepository($entityType)->findBySql($sql);
 
         foreach ($collection as $e) {
             $service->loadAdditionalFieldsForList($e);
@@ -843,7 +843,7 @@ class Activities implements
         ];
     }
 
-    public function getActivities($scope, $id, $params = [])
+    public function getActivities(string $scope, string $id, array $params = [])
     {
         $entity = $this->getEntityManager()->getEntity($scope, $id);
         if (!$entity) {
