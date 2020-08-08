@@ -29,14 +29,13 @@
 
 namespace Espo\ORM;
 
-use Espo\Core\Exceptions\Error;
-
 use Espo\ORM\{
     Repositories\Findable,
     Collection,
     Entity,
     QueryParams\Select,
     QueryParams\SelectBuilder,
+    DB\Mapper,
 };
 
 use RuntimeException;
@@ -80,6 +79,9 @@ class RDBSelectBuilder implements Findable
         $this->repository = $this->entityManager->getRepository($entityType);
     }
 
+    /**
+     * Never should be called explicitly. Called only by an RDB repository.
+     */
     public function clone(Select $query) : self
     {
         $this->setEntityType($query->getFrom());
@@ -97,62 +99,91 @@ class RDBSelectBuilder implements Findable
     protected function processExecutableCheck()
     {
         if (!$this->isExecutable()) {
-            throw new Error("SelectBuilder: Method 'from' must be called.");
+            throw new RuntimeException("SelectBuilder: Method 'from' must be called.");
         }
     }
 
+    protected function getMapper() : Mapper
+    {
+        return $this->entityManager->getMapper();
+    }
+
+    /**
+     * @param $params @deprecated. Omit it.
+     */
     public function find(?array $params = null) : Collection
     {
         $this->processExecutableCheck();
 
-        $params = $this->getMergedParams($params);
+        $query = $this->getMergedParams($params);
 
-        return $this->repository->find($params);
+        return $this->getMapper()->select($query);
     }
 
+    /**
+     * @param $params @deprecated. Omit it.
+     */
     public function findOne(?array $params = null) : ?Entity
     {
         $this->processExecutableCheck();
 
-        $params = $this->getMergedParams($params);
+        $query = $this->getMergedParams($params);
 
-        return $this->repository->findOne($params);
+        $collection = $this->limit(0, 1)->find();
+
+        foreach ($collection as $entity) {
+            return $entity;
+        }
+
+        return null;
     }
 
+    /**
+     * @param $params @deprecated. Omit it.
+     */
     public function count(?array $params = null) : int
     {
         $this->processExecutableCheck();
 
-        $params = $this->getMergedParams($params);
+        $query = $this->getMergedParams($params);
 
-        return $this->repository->count($params);
+        return $this->getMapper()->count($query);
     }
 
+    /**
+     * @return int|float
+     */
     public function max(string $attribute)
     {
         $this->processExecutableCheck();
 
-        $params = $this->getMergedParams();
+        $query = $this->builder->build();
 
-        return $this->repository->max($attribute, $params);
+        return $this->getMapper()->max($query, $attribute);
     }
 
+    /**
+     * @return int|float
+     */
     public function min(string $attribute)
     {
         $this->processExecutableCheck();
 
-        $params = $this->getMergedParams();
+        $query = $this->builder->build();;
 
-        return $this->repository->min($attribute, $params);
+        return $this->getMapper()->min($query, $attribute);
     }
 
+    /**
+     * @return int|float
+     */
     public function sum(string $attribute)
     {
         $this->processExecutableCheck();
 
-        $params = $this->getMergedParams();
+        $query = $this->builder->build();
 
-        return $this->repository->sum($attribute, $params);
+        return $this->getMapper()->sum($query, $attribute);
     }
 
     /**
@@ -272,8 +303,16 @@ class RDBSelectBuilder implements Findable
         return $this;
     }
 
-    protected function getMergedParams(?array $params = null) : array
+    /**
+     * For backward compatibility.
+     * @todo Remove.
+     */
+    protected function getMergedParams(?array $params = null) : Select
     {
+        if (!$params || empty($params)) {
+            return $this->builder->build();
+        }
+
         $params = $params ?? [];
 
         $builtParams = $this->builder->build()->getRawParams();
@@ -319,6 +358,6 @@ class RDBSelectBuilder implements Findable
 
         $params = array_replace_recursive($builtParams, $params);
 
-        return $params;
+        return Select::fromRaw($params);
     }
 }

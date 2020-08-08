@@ -97,6 +97,9 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
         return new $className($entityType, [], $this->entityManager);
     }
 
+    /**
+     * @deprecated
+     */
     public function testFind()
     {
         $params = [
@@ -121,7 +124,7 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
         $this->repository->find($params);
     }
 
-    public function testFindOne()
+    public function testFindOne1()
     {
         $params = [
             'whereClause' => [
@@ -145,6 +148,95 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
             ->with($paramsExpected);
 
         $this->repository->findOne($params);
+    }
+
+    public function testFindOne2()
+    {
+        $select = $this->queryBuilder
+            ->select()
+            ->from('Test')
+            ->where(['name' => 'test'])
+            ->limit(0, 1)
+            ->build();
+
+        $this->mapper
+            ->expects($this->once())
+            ->method('select')
+            ->will($this->returnValue($this->collection))
+            ->with($select);
+
+        $this->repository->where(['name' => 'test'])->findOne();
+    }
+
+    /**
+     * @deprecated
+     */
+    public function testCount1()
+    {
+        $select = $this->queryBuilder
+            ->select()
+            ->from('Test')
+            ->where(['name' => 'test'])
+            ->build();
+
+        $this->mapper
+            ->expects($this->once())
+            ->method('count')
+            ->will($this->returnValue(1))
+            ->with($select);
+
+        $this->repository->count([
+            'whereClause' => ['name' => 'test'],
+        ]);
+    }
+
+    public function testCount2()
+    {
+        $select = $this->queryBuilder
+            ->select()
+            ->from('Test')
+            ->where(['name' => 'test'])
+            ->build();
+
+        $this->mapper
+            ->expects($this->once())
+            ->method('count')
+            ->will($this->returnValue(1))
+            ->with($select);
+
+        $this->repository->where(['name' => 'test'])->count();
+    }
+
+    public function testCount3()
+    {
+        $select = $this->queryBuilder
+            ->select()
+            ->from('Test')
+            ->build();
+
+        $this->mapper
+            ->expects($this->once())
+            ->method('count')
+            ->will($this->returnValue(1))
+            ->with($select);
+
+        $this->repository->count();
+    }
+
+    public function testMax1()
+    {
+        $select = $this->queryBuilder
+            ->select()
+            ->from('Test')
+            ->build();
+
+        $this->mapper
+            ->expects($this->once())
+            ->method('max')
+            ->will($this->returnValue(1))
+            ->with($select, 'test');
+
+        $this->repository->max('test');
     }
 
     public function testWhere1()

@@ -35,6 +35,8 @@ use Espo\ORM\{
 };
 
 use IteratorAggregate;
+use Countable;
+use PDO;
 
 /**
  * Reasonable to use when selecting a large number of records.

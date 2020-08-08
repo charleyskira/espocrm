@@ -63,14 +63,12 @@ class RDB extends Repository implements Findable, Relatable, Removable
 
     protected function getMapper() : Mapper
     {
-        if (empty($this->mapper)) {
-            $this->mapper = $this->entityManager->getMapper('RDB');
-        }
-        return $this->mapper;
+        return $this->entityManager->getMapper();
     }
 
     /**
      * @deprecated
+     * @todo Remove in 6.0.
      */
     public function handleSelectParams(&$params)
     {
@@ -96,26 +94,15 @@ class RDB extends Repository implements Findable, Relatable, Removable
     /**
      * Fetch an entity by ID.
      */
-    public function getById(string $id, ?array $params = null) : ?Entity
+    public function getById(string $id) : ?Entity
     {
-        $params = $params ?? [];
-
-        if (empty($params['skipAdditionalSelectParams'])) {
-            $this->handleSelectParams($params);
-        }
-
-        $builder = $this->entityManager->getQueryBuilder()
+        $select = $this->entityManager->getQueryBuilder()
             ->select()
             ->from($this->entityType)
             ->where([
                 'id' => $id,
-            ]);
-
-        if (!empty($params['withDeleted'])) {
-            $builder->withDeleted();
-        }
-
-        $select = $builder->build();
+            ])
+            ->build();
 
         return $this->getMapper()->selectOne($select);
     }
@@ -125,6 +112,7 @@ class RDB extends Repository implements Findable, Relatable, Removable
         if (is_null($id)) {
             return $this->getNew();
         }
+
         return $this->getById($id);
     }
 
@@ -196,26 +184,28 @@ class RDB extends Repository implements Findable, Relatable, Removable
         $this->getMapper()->deleteFromDb($this->entityType, $id, $onlyDeleted);
     }
 
-    public function find(?array $params = null) : Collection
+    /**
+     * @param $params @deprecated Omit it.
+     */
+    public function find(?array $params = []) : Collection
     {
-        $params = $params ?? [];
+        // @todo Remove.
+        if (empty($query['skipAdditionalSelectParams'])) {
+            $this->handleSelectParams($query);
+        }
 
+        return $this->createSelectBuilder()->find($params);
+    }
+
+    /**
+     * @param $params @deprecated Omit it.
+     */
+    public function findOne(?array $params = []) : ?Entity
+    {
+        // @todo Remove.
         if (empty($params['skipAdditionalSelectParams'])) {
             $this->handleSelectParams($params);
         }
-
-        $params['from'] = $this->entityType;
-
-        $select = Select::fromRaw($params);
-
-        $collection = $this->getMapper()->select($select);
-
-        return $collection;
-    }
-
-    public function findOne(?array $params = null) : ?Entity
-    {
-        $params = $params ?? [];
 
         $collection = $this->limit(0, 1)->find($params);
 
@@ -234,6 +224,9 @@ class RDB extends Repository implements Findable, Relatable, Removable
         return $this->getMapper()->selectBySql($this->entityType, $sql);
     }
 
+    /**
+     * @todo Write RDBRelatedSelectBuilder
+     */
     public function findRelated(Entity $entity, string $relationName, ?array $params = null)
     {
         $params = $params ?? [];
@@ -280,6 +273,9 @@ class RDB extends Repository implements Findable, Relatable, Removable
         return $result;
     }
 
+    /**
+     * @todo Write RDBRelatedSelectBuilder
+     */
     public function countRelated(Entity $entity, string $relationName, ?array $params = null) : int
     {
         $params = $params ?? [];
@@ -366,6 +362,9 @@ class RDB extends Repository implements Findable, Relatable, Removable
         return $builder->build();
     }
 
+    /**
+     * @todo Write RDBRelatedSelectBuilder
+     */
     public function isRelated(Entity $entity, string $relationName, $foreign) : bool
     {
         if (!$entity->id) {
@@ -428,6 +427,9 @@ class RDB extends Repository implements Findable, Relatable, Removable
         ]);
     }
 
+    /**
+     * @todo Write RDBRelatedSelectBuilder
+     */
     public function relate(Entity $entity, string $relationName, $foreign, $columnData = null, array $options = [])
     {
         if (!$entity->id) {
@@ -482,6 +484,9 @@ class RDB extends Repository implements Findable, Relatable, Removable
         return $result;
     }
 
+    /**
+     * @todo Write RDBRelatedSelectBuilder
+     */
     public function unrelate(Entity $entity, string $relationName, $foreign, array $options = [])
     {
         if (!$entity->id) {
@@ -562,6 +567,7 @@ class RDB extends Repository implements Findable, Relatable, Removable
 
     /**
      * Update relationship columns.
+     * @todo Write RDBRelatedSelectBuilder
      */
     public function updateRelation(Entity $entity, string $relationName, $foreign, $columnData)
     {
@@ -590,6 +596,9 @@ class RDB extends Repository implements Findable, Relatable, Removable
         return $this->getMapper()->updateRelation($entity, $relationName, $id, $columnData);
     }
 
+    /**
+     * @todo Write RDBRelatedSelectBuilder
+     */
     public function massRelate(Entity $entity, string $relationName, array $params = [], array $options = [])
     {
         if (!$entity->id) {
@@ -605,46 +614,43 @@ class RDB extends Repository implements Findable, Relatable, Removable
         $this->afterMassRelate($entity, $relationName, $params, $options);
     }
 
-    public function count(?array $params = null) : int
+    /**
+     * @param $params @deprecated Omit it.
+     */
+    public function count(array $params = []) : int
     {
-        $params = $params ?? [];
-
-        if (empty($params['skipAdditionalSelectParams'])) {
+        // @todo Remove it.
+        if (is_array($params) && empty($params['skipAdditionalSelectParams'])) {
             $this->handleSelectParams($params);
         }
 
-        $select = Select::fromRaw($params);
-
-        $count = $this->getMapper()->count($select);
-
-        return (int) $count;
+        return $this->createSelectBuilder()->count($params);
     }
 
-    public function max(string $attribute, ?array $params = null)
+    /**
+     * @todo Remove aggregation functions?
+     * @return int|float
+     */
+    public function max(string $attribute)
     {
-        $params = $params ?? [];
 
-        $select = Select::fromRaw($params);
-
-        return $this->getMapper()->max($select, $attribute);
+         return $this->createSelectBuilder()->max($attribute);
     }
 
-    public function min(string $attribute, ?array $params = null)
+    /**
+     * @return int|float
+     */
+    public function min(string $attribute, Select $query = null)
     {
-        $params = $params ?? [];
-
-        $select = Select::fromRaw($params);
-
-        return $this->getMapper()->min($select, $attribute);
+        return $this->createSelectBuilder()->min($attribute);
     }
 
-    public function sum(string $attribute, ?array $params = null)
+    /**
+     * @return int|float
+     */
+    public function sum(string $attribute, Select $query = null)
     {
-        $params = $params ?? [];
-
-        $select = Select::fromRaw($params);
-
-        return $this->getMapper()->sum($select, $attribute);
+        return $this->createSelectBuilder()->sum($attribute);
     }
 
     /**
@@ -787,6 +793,7 @@ class RDB extends Repository implements Findable, Relatable, Removable
     protected function createSelectBuilder() : RDBSelectBuilder
     {
         $builder = new RDBSelectBuilder($this->entityManager);
+
         $builder->from($this->getEntityType());
 
         return $builder;

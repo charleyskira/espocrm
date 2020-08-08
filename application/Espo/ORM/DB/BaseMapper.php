@@ -115,17 +115,40 @@ abstract class BaseMapper implements Mapper
 
     public function max(Select $select, string $attribute)
     {
-        return $this->aggregate($select, 'MAX', $attribute);
+         $value =  $this->aggregate($select, 'MAX', $attribute);
+
+         return $this->castToNumber($value);
     }
 
     public function min(Select $select, string $attribute)
     {
-        return $this->aggregate($select, 'MIN', $attribute);
+        $value = $this->aggregate($select, 'MIN', $attribute);
+
+        return $this->castToNumber($value);
     }
 
     public function sum(Select $select, string $attribute)
     {
-        return $this->aggregate($select, 'SUM', $attribute);
+        $value = $this->aggregate($select, 'SUM', $attribute);
+
+        return $this->castToNumber($value);
+    }
+
+    protected function castToNumber($value)
+    {
+        if (is_int($value) || is_float($value)) {
+            return $value;
+        }
+
+        if (!is_string($value)) {
+            return 0;
+        }
+
+        if (strpos($value, '.') !== false) {
+            return (float) $value;
+        }
+
+        return (int) $value;
     }
 
     /**

@@ -46,6 +46,9 @@ trait SelectingTrait
         $from = $params['from'] ?? null;
 
         if (!$from || !is_string($from)) {
+            $e = new \Exception;
+            var_dump($e->getTraceAsString());
+            die;
             throw new RuntimeException("Select params: Missing 'from'.");
         }
     }
