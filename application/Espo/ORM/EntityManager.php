@@ -52,6 +52,8 @@ class EntityManager
 
     protected $entityFactory;
 
+    protected $collectionFactory;
+
     protected $repositoryFactory;
 
     protected $mappers = [];
@@ -102,6 +104,8 @@ class EntityManager
         $this->queryExecutor = new QueryExecutor($this);
 
         $this->queryBuilder = new QueryBuilder();
+
+        $this->collectionFactory = new CollectionFactory($this);
     }
 
     protected function initQuery()
@@ -151,7 +155,7 @@ class EntityManager
 
         if (empty($this->mappers[$className])) {
             $this->mappers[$className] = new $className(
-                $this->getPDO(), $this->entityFactory, $this->getQuery(), $this->metadata
+                $this->getPDO(), $this->entityFactory, $this->collectionFactory, $this->getQuery(), $this->metadata
             );
         }
 
@@ -285,6 +289,7 @@ class EntityManager
 
     /**
      * @deprecated
+     * @todo Remove.
      */
     public function setMetadata(array $data)
     {
@@ -309,24 +314,21 @@ class EntityManager
     }
 
     /**
-     * Create a collection. Entity type can be omitted.
+     * Create a collection. An entity type can be omitted.
      */
     public function createCollection(?string $entityType = null, array $data = []) : EntityCollection
     {
-        return new EntityCollection($data, $entityType, $this->entityFactory);
-    }
-
-    /**
-     * Create an STH collection. An STH collection is preferable when a select query returns a large number of rows.
-     */
-    public function createSthCollection(string $entityType, array $selectParams = []) : SthCollection
-    {
-        return new SthCollection($entityType, $this, $selectParams);
+        return $this->collectionFactory->create($data, $entityType);
     }
 
     public function getEntityFactory() : EntityFactory
     {
         return $this->entityFactory;
+    }
+
+    public function getCollectionFactory() : CollectionFactory
+    {
+        return $this->collectionFactory;
     }
 
     /**

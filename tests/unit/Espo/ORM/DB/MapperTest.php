@@ -31,6 +31,7 @@ use Espo\ORM\{
     Metadata,
     EntityManager,
     EntityFactory,
+    CollectionFactory,
     EntityCollection,
     DB\Query\MysqlQuery as Query,
     DB\MysqlMapper,
@@ -90,13 +91,27 @@ class DBMapperTest extends \PHPUnit\Framework\TestCase
                 }
             ));
 
+        $entityFactory = $this->entityFactory;
+
+        $this->collectionFactory = $this->getMockBuilder(CollectionFactory::class)->disableOriginalConstructor()->getMock();
+        $this->collectionFactory
+            ->expects($this->any())
+            ->method('create')
+            ->will($this->returnCallback(
+                function () use ($entityFactory) {
+                    $args = func_get_args();
+                    $entityType = $args[0] ?? null;
+                    $dataList = $args[1] ?? [];
+
+                    return new EntityCollection($dataList, $entityType, $entityFactory);
+                }
+            ));
+
         $this->metadata = $this->getMockBuilder('Espo\\ORM\\Metadata')->disableOriginalConstructor()->getMock();
 
         $this->query = new Query($this->pdo, $this->entityFactory, $this->metadata);
 
-        $this->db = new MysqlMapper($this->pdo, $this->entityFactory, $this->query, $this->metadata);
-
-        $entityFactory = $this->entityFactory;
+        $this->db = new MysqlMapper($this->pdo, $this->entityFactory, $this->collectionFactory, $this->query, $this->metadata);
 
         $this->post = $entityFactory->create('Post');
         $this->comment = $entityFactory->create('Comment');

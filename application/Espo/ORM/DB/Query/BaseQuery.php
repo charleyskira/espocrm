@@ -1269,7 +1269,7 @@ abstract class BaseQuery
         return $selectPart;
     }
 
-    protected function getSelectPartItemPair(Entity $entity, array $params, $attribute) : ?array
+    protected function getSelectPartItemPair(Entity $entity, array &$params, $attribute) : ?array
     {
         $maxTextColumnsLength = $params['maxTextColumnsLength'] ?? null;
         $skipTextColumns = $params['skipTextColumns'] ?? false;

@@ -64,7 +64,7 @@ class RDB extends Repository implements Findable, Relatable, Removable
     protected function getMapper() : Mapper
     {
         if (empty($this->mapper)) {
-            $this->mapper = $this->getEntityManager()->getMapper('RDB');
+            $this->mapper = $this->entityManager->getMapper('RDB');
         }
         return $this->mapper;
     }
@@ -104,7 +104,7 @@ class RDB extends Repository implements Findable, Relatable, Removable
             $this->handleSelectParams($params);
         }
 
-        $builder = $this->getQueryBuilder()
+        $builder = $this->entityManager->getQueryBuilder()
             ->select()
             ->where([
                 'id' => $id,
@@ -249,7 +249,7 @@ class RDB extends Repository implements Findable, Relatable, Removable
         $entityType = $entity->getRelationParam($relationName, 'entity');
 
         if ($entityType && empty($params['skipAdditionalSelectParams'])) {
-            $this->getEntityManager()->getRepository($entityType)->handleSelectParams($params);
+            $this->entityManager->getRepository($entityType)->handleSelectParams($params);
         }
 
         $additionalColumns = $params['additionalColumns'] ?? [];
@@ -295,7 +295,7 @@ class RDB extends Repository implements Findable, Relatable, Removable
         $entityType = $entity->getRelationParam($relationName, 'entity');
 
         if ($entityType && empty($params['skipAdditionalSelectParams'])) {
-            $this->getEntityManager()->getRepository($entityType)->handleSelectParams($params);
+            $this->entityManager->getRepository($entityType)->handleSelectParams($params);
         }
 
         $additionalColumnsConditions = $params['additionalColumnsConditions'] ?? [];
@@ -336,7 +336,7 @@ class RDB extends Repository implements Findable, Relatable, Removable
             ];
         }
 
-        $select = $this->getEntityManager()->getQueryBuilder()
+        $select = $this->entityManager->getQueryBuilder()
             ->clone($select)
             ->select($selectItemList)
             ->build();
@@ -353,7 +353,7 @@ class RDB extends Repository implements Findable, Relatable, Removable
 
         $middleName = lcfirst($entity->getRelationParam($relationName, 'relationName'));
 
-        $builder = $this->getEntityManager()->getQueryBuilder()->clone($select);
+        $builder = $this->entityManager->getQueryBuilder()->clone($select);
 
         foreach ($conditions as $column => $value) {
             $builder->where(
@@ -407,7 +407,7 @@ class RDB extends Repository implements Findable, Relatable, Removable
                 return false;
             }
 
-            $foreignEntity = $this->getEntityManager()->getRepository($foreignEntityType)
+            $foreignEntity = $this->entityManager->getRepository($foreignEntityType)
                 ->select(['id'])
                 ->where(['id' => $foreignId])
                 ->findOne();
@@ -655,7 +655,7 @@ class RDB extends Repository implements Findable, Relatable, Removable
             throw new RuntimeException("Can't clone a query of a different entity type.");
         }
 
-        $builder = new RDBSelectBuilder($this->getEntityManager());
+        $builder = new RDBSelectBuilder($this->entityManager);
 
         return $builder->clone($query);
     }
@@ -759,12 +759,12 @@ class RDB extends Repository implements Findable, Relatable, Removable
 
     protected function getPDO()
     {
-        return $this->getEntityManager()->getPDO();
+        return $this->entityManager->getPDO();
     }
 
     protected function lockTable()
     {
-        $tableName = $this->getEntityManager()->getQuery()->toDb($this->entityType);
+        $tableName = $this->entityManager->getQuery()->toDb($this->entityType);
 
         // @todo Use Query to get SQL. Transaction query params.
         $this->getPDO()->query("LOCK TABLES `{$tableName}` WRITE");
@@ -785,7 +785,7 @@ class RDB extends Repository implements Findable, Relatable, Removable
 
     protected function createSelectBuilder() : RDBSelectBuilder
     {
-        $builder = new RDBSelectBuilder($this->getEntityManager());
+        $builder = new RDBSelectBuilder($this->entityManager);
         $builder->from($this->getEntityType());
 
         return $builder;

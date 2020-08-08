@@ -80,7 +80,6 @@ class Notification extends \Espo\Services\Record implements
 
         $collection = $this->entityManager->createCollection();
 
-
         $userList = $this->getEntityManager()->getRepository('User')
             ->select(['id'])
             ->where([

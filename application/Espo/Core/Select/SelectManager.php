@@ -546,6 +546,9 @@ class SelectManager
         if (empty($result)) {
             $result = [];
         }
+        if (empty($result['from'])) {
+            $result['from'] = $this->entityType;
+        }
         if (empty($result['joins'])) {
             $result['joins'] = [];
         }

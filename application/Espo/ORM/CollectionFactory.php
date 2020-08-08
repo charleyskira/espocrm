@@ -30,36 +30,33 @@
 namespace Espo\ORM;
 
 use Espo\ORM\{
-    DB\Query\BaseQuery as Query,
+    QueryParams\Select,
 };
 
-use PDO;
-
-class Sth2Collection extends SthCollection
+/**
+ * Creates collections.
+ */
+class CollectionFactory
 {
-    public function __construct(
-        string $entityType, EntityFactory $entityFactory, Query $query, PDO $pdo, array $selectParams = []
-    ) {
-        $this->selectParams = $selectParams;
-        $this->entityType = $entityType;
+    protected $entityManager;
 
-        $this->entityFactory = $entityFactory;
-        $this->query = $query;
-        $this->pdo = $pdo;
+    public function __construct(EntityManager $entityManager)
+    {
+        $this->entityManager = $entityManager;
     }
 
-    protected function getQueryComposer() : Query
+    public function create(?string $entityType = null, array $data = []) : EntityCollection
     {
-        return $this->query;
+        return new EntityCollection($data, $entityType, $this->entityManager->getEntityFactory());
     }
 
-    protected function getPdo() : PDO
+    public function createFromSql(string $entityType, string $sql) : SthCollection
     {
-        return $this->pdo;
+        return SthCollection::fromSql($entityType, $sql, $this->entityManager);
     }
 
-    protected function getEntityFactory() : EntityFactory
+    public function createFromQuery(Select $query) : SthCollection
     {
-        return $this->entityFactory;
+        return SthCollection::fromQuery($query, $this->entityManager);
     }
 }

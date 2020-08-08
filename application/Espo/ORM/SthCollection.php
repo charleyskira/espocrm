@@ -31,20 +31,25 @@ namespace Espo\ORM;
 
 use Espo\ORM\{
     QueryParams\Select,
+    DB\Query\BaseQuery as QueryComposer,
 };
+
+use IteratorAggregate;
 
 /**
  * Reasonable to use when selecting a large number of records.
  * It doesn't allocate a memory for every entity.
  * Entities are fetched on each iteration while traversing a collection.
+ *
+ * STH stands for Statement Handle.
  */
-class SthCollection implements \IteratorAggregate, Collection
+class SthCollection implements Collection, IteratorAggregate, Countable
 {
-    protected $entityManager = null;
+    protected $entityManager;
 
     protected $entityType;
 
-    protected $selectParams = null;
+    protected $query = null;
 
     private $sth = null;
 
@@ -52,65 +57,52 @@ class SthCollection implements \IteratorAggregate, Collection
 
     protected $isFetched = false;
 
-    public function __construct(string $entityType, EntityManager $entityManager = null, array $selectParams = [])
+    protected function __construct(EntityManager $entityManager)
     {
-        $this->selectParams = $selectParams;
-        $this->entityType = $entityType;
         $this->entityManager = $entityManager;
     }
 
-    protected function getQuery()
+    protected function getQueryComposer() : QueryComposer
     {
         return $this->entityManager->getQuery();
     }
 
-    protected function getPdo()
-    {
-        return $this->entityManager->getPdo();
-    }
-
-    protected function getEntityFactory()
+    protected function getEntityFactory() : EntityFactory
     {
         return $this->entityManager->getEntityFactory();
     }
 
-    /**
-     * Get select parameters.
-     */
-    public function setSelectParams(array $selectParams)
-    {
-        $this->selectParams = $selectParams;
-    }
-
-    /**
-     * Set an SQL query.
-     */
-    public function setQuery(?string $sql)
+    protected function setSql(string $sql)
     {
         $this->sql = $sql;
     }
 
-    /**
-     * Run an SQL query.
-     */
-    public function executeQuery()
+    protected function getPDO() : PDO
     {
-        if (!$this->sql) {
-            $this->sql = $this->getQuery()->create($this->getSelectQueryParams());
-        }
+        return $this->entityManager->getPDO();
+    }
 
-        $sth = $this->getPDO()->prepare($this->sql);
-        $sth->execute();
+    protected function executeQuery()
+    {
+        $sql = $this->getSql();
+
+        $sth = $this->getPDO()->query($sql);
 
         $this->sth = $sth;
     }
 
-    protected function getSelectQueryParams() : Select
+    protected function getSql() : string
     {
-        $params = $this->selectParams;
-        $params['from'] = $this->entityType;
+        if (!$this->sql) {
+            $this->sql = $this->getQueryComposer()->create($this->getQuery());
+        }
 
-        return Select::fromRaw($params);
+        return $this->sql;
+    }
+
+    protected function getQuery() : Select
+    {
+        return $this->query;
     }
 
     public function getIterator()
@@ -119,11 +111,13 @@ class SthCollection implements \IteratorAggregate, Collection
             if (isset($this->sth)) {
                 $this->sth->execute();
             }
+
             while ($row = $this->fetchRow()) {
                 $entity = $this->getEntityFactory()->create($this->entityType);
                 $entity->set($row);
                 $entity->setAsFetched();
                 $this->prepareEntity($entity);
+
                 yield $entity;
             }
         })();
@@ -134,7 +128,24 @@ class SthCollection implements \IteratorAggregate, Collection
         if (!$this->sth) {
             $this->executeQuery();
         }
+
         return $this->sth->fetch(\PDO::FETCH_ASSOC);
+    }
+
+    public function count() : int
+    {
+        if (!$this->sth) {
+            $this->executeQuery();
+        }
+
+        $rowCount = $this->sth->rowCount();
+
+        // MySQL may not return a row count for select queries.
+        if ($rowCount) {
+            return $rowCount;
+        }
+
+        return count($this->getValueMapList());
     }
 
     protected function prepareEntity(Entity $entity)
@@ -193,5 +204,29 @@ class SthCollection implements \IteratorAggregate, Collection
     public function getEntityType() : string
     {
         return $this->entityType;
+    }
+
+    public static function fromQuery(Select $query, EntityManager $entityManager) : self
+    {
+        $obj = new self($entityManager);
+
+        $obj->entityType = $query->getFrom();
+        $obj->query = $query;
+
+        $obj->setAsFetched();
+
+        return $obj;
+    }
+
+    public static function fromSql(string $entityType, string $sql, EntityManager $entityManager) : self
+    {
+        $obj = new self($entityManager);
+
+        $obj->entityType = $entityType;
+        $obj->sql = $sql;
+
+        $obj->setAsFetched();
+
+        return $obj;
     }
 }

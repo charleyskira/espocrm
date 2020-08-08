@@ -2095,7 +2095,10 @@ class Record implements Crud,
 
             $this->getEntityManager()->getRepository($this->getEntityType())->handleSelectParams($selectParams);
 
-            $collection = $this->getEntityManager()->createSthCollection($this->getEntityType(), $selectParams);
+            $collection = $this->getEntityManager()->getCollectionFactroy()->createFromQuery(
+                $this->getEntityType(),
+                SelectQuery::fromRaw($selectParams)
+            );
         }
 
         $attributeListToSkip = [

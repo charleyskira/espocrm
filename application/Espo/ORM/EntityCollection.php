@@ -29,10 +29,15 @@
 
 namespace Espo\ORM;
 
+use Iterator;
+use Countable;
+use ArrayAccess;
+use SeekableIterator;
+
 /**
  * A standard collection of entities. It allocates a memory for all entities.
  */
-class EntityCollection implements \Iterator, \Countable, \ArrayAccess, \SeekableIterator, Collection
+class EntityCollection implements Collection, Iterator, Countable, ArrayAccess, SeekableIterator
 {
     private $entityFactory = null;
 

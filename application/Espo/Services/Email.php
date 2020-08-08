@@ -643,7 +643,7 @@ class Email extends Record implements
             ])
             ->build();
 
-        $this->entityManager->getQueryExecutor()->run($update]);
+        $this->entityManager->getQueryExecutor()->run($update);
 
         $this->markNotificationAsRead($id, $userId);
 

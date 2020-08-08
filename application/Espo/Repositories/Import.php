@@ -29,11 +29,14 @@
 
 namespace Espo\Repositories;
 
-use Espo\ORM\Entity;
+use Espo\ORM\{
+    Entity,
+    Collection,
+};
 
 class Import extends \Espo\Core\Repositories\Database
 {
-    public function findRelated(Entity $entity, string $relationName, array $params = []) : \Traversable
+    public function findRelated(Entity $entity, string $relationName, ?array $params = [])
     {
         $entityType = $entity->get('entityType');
 
@@ -76,7 +79,7 @@ class Import extends \Espo\Core\Repositories\Database
         ];
     }
 
-    public function countRelated(Entity $entity, string $relationName, array $params = []) : int
+    public function countRelated(Entity $entity, string $relationName, ?array $params = null) : int
     {
         $entityType = $entity->get('entityType');
 

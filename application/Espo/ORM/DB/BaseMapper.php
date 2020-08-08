@@ -33,10 +33,11 @@ use Espo\ORM\{
     Entity,
     Collection,
     EntityFactory,
+    CollectionFactory,
     Metadata,
-    DB\Query\BaseQuery as Query,
+    DB\Query\BaseQuery as QueryComposer,
     EntityCollection,
-    Sth2Collection,
+    SthCollection,
     QueryParams\Select,
     QueryParams\Update,
     QueryParams\Delete,
@@ -65,15 +66,13 @@ abstract class BaseMapper implements Mapper
 
     protected $aliasesCache = [];
 
-    protected $collectionClass = EntityCollection::class;
-
-    protected $sthCollectionClass = Sth2Collection::class;
-
-    public function __construct(PDO $pdo, EntityFactory $entityFactory, Query $query, Metadata $metadata)
-    {
+    public function __construct(
+        PDO $pdo, EntityFactory $entityFactory, CollectionFactory $collectionFactory, QueryComposer $query, Metadata $metadata
+    ) {
         $this->pdo = $pdo;
         $this->query = $query;
         $this->entityFactory = $entityFactory;
+        $this->collectionFactory = $collectionFactory;
         $this->metadata = $metadata;
 
         $this->helper = new Helper($metadata);
@@ -144,7 +143,7 @@ abstract class BaseMapper implements Mapper
     /**
      * Select enities from DB by a SQL query.
      */
-    public function selectBySql(string $entityType, string $sql) : Sth2Collection
+    public function selectBySql(string $entityType, string $sql) : SthCollection
     {
         return $this->selectBySqlInternal($entityType, $sql, true);
     }
@@ -154,11 +153,7 @@ abstract class BaseMapper implements Mapper
         $params = $params ?? [];
 
         if ($returnSthCollection) {
-            $collection = $this->createSthCollection($entityType);
-            $collection->setQuery($sql);
-            $collection->setAsFetched();
-
-            return $collection;
+            return $this->collectionFactory->createFromSql($entityType, $sql);
         }
 
         $dataList = [];
@@ -167,33 +162,21 @@ abstract class BaseMapper implements Mapper
             $dataList = $ps->fetchAll();
         }
 
-        $collection = $this->createCollection($entityType, $dataList);
+        $collection = $this->collectionFactory->create($entityType, $dataList);
         $collection->setAsFetched();
 
         return $collection;
     }
 
-    protected function createCollection(string $entityType, ?array $dataList = [])
-    {
-        return new $this->collectionClass($dataList, $entityType, $this->entityFactory);
-    }
-
-    protected function createSthCollection(string $entityType)
-    {
-        return new $this->sthCollectionClass($entityType, $this->entityFactory, $this->query, $this->pdo);;
-    }
-
     public function aggregate(Select $select, string $aggregation, string $aggregationBy)
     {
-        /*$params = $params ?? [];
-
-        $entityType = $entityType['from'];
+        $entityType = $select->getFrom();
 
         $entity = $this->entityFactory->create($entityType);
 
         if (empty($aggregation) || !$entity->hasAttribute($aggregationBy)) {
-            return null;
-        }*/
+            throw new RuntimeException();
+        }
 
         $params = $select->getRawParams();
 
@@ -326,11 +309,7 @@ abstract class BaseMapper implements Mapper
 
                 if (!$returnTotalCount) {
                     if (!empty($params['returnSthCollection']) && $relType !== Entity::HAS_ONE) {
-                        $collection = $this->createSthCollection($relEntity->getEntityType());
-                        $collection->setQuery($sql);
-                        $collection->setAsFetched();
-
-                        return $collection;
+                        return $this->collectionFactory->createFromSql($relEntity->getEntityType(), $sql);
                     }
                 }
 
@@ -359,7 +338,7 @@ abstract class BaseMapper implements Mapper
                     return null;
                 }
 
-                $collection = $this->createCollection($relEntity->getEntityType(), $resultDataList);
+                $collection = $this->collectionFactory->create($relEntity->getEntityType(), $resultDataList);
                 $collection->setAsFetched();
 
                 return $collection;
@@ -378,11 +357,7 @@ abstract class BaseMapper implements Mapper
 
                 if (!$returnTotalCount) {
                     if (!empty($params['returnSthCollection'])) {
-                        $collection = $this->createSthCollection($relEntity->getEntityType());
-                        $collection->setQuery($sql);
-                        $collection->setAsFetched();
-
-                        return $collection;
+                        return $this->collectionFactory->createFromSql($relEntity->getEntityType(), $sql);
                     }
                 }
 
@@ -401,7 +376,7 @@ abstract class BaseMapper implements Mapper
 
                 $resultDataList = $ps->fetchAll();
 
-                $collection = $this->createCollection($relEntity->getEntityType(), $resultDataList);
+                $collection = $this->collectionFactory->create($relEntity->getEntityType(), $resultDataList);
                 $collection->setAsFetched();
 
                 return $collection;
