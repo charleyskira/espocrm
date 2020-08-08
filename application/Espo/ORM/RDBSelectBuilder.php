@@ -80,7 +80,7 @@ class RDBSelectBuilder implements Findable
     }
 
     /**
-     * Never should be called directly. Called only by an RDB repository.
+     * Should not be called directly. Called by an RDB repository.
      */
     public function clone(Select $query) : self
     {
