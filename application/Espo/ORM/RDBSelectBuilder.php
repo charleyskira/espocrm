@@ -127,9 +127,12 @@ class RDBSelectBuilder implements Findable
     {
         $this->processExecutableCheck();
 
-        $query = $this->getMergedParams($params);
-
-        $collection = $this->limit(0, 1)->find();
+        if ($params !== null) {
+            $query = $this->getMergedParams($params);
+            $collection = $this->repository->clone($query)->limit(0, 1)->find();
+        } else {
+            $collection = $this->limit(0, 1)->find();
+        }
 
         foreach ($collection as $entity) {
             return $entity;

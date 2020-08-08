@@ -168,6 +168,27 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
         $this->repository->where(['name' => 'test'])->findOne();
     }
 
+    public function testFindOne3()
+    {
+        $select = $this->queryBuilder
+            ->select()
+            ->distinct()
+            ->from('Test')
+            ->where(['name' => 'test'])
+            ->limit(0, 1)
+            ->build();
+
+        $this->mapper
+            ->expects($this->once())
+            ->method('select')
+            ->will($this->returnValue($this->collection))
+            ->with($select);
+
+        $this->repository->distinct()->findOne([
+            'whereClause' => ['name' => 'test'],
+        ]);
+    }
+
     /**
      * @deprecated
      */
