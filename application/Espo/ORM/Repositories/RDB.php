@@ -106,6 +106,7 @@ class RDB extends Repository implements Findable, Relatable, Removable
 
         $builder = $this->entityManager->getQueryBuilder()
             ->select()
+            ->from($this->entityType)
             ->where([
                 'id' => $id,
             ]);

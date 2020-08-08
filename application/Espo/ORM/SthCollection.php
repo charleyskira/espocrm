@@ -55,7 +55,7 @@ class SthCollection implements Collection, IteratorAggregate, Countable
 
     private $sql = null;
 
-    protected $isFetched = false;
+    protected $entityList = [];
 
     protected function __construct(EntityManager $entityManager)
     {
@@ -86,7 +86,9 @@ class SthCollection implements Collection, IteratorAggregate, Countable
     {
         $sql = $this->getSql();
 
-        $sth = $this->getPDO()->query($sql);
+        $sth = $this->getPDO()->prepare($sql);
+
+        $sth->execute();
 
         $this->sth = $sth;
     }
@@ -114,29 +116,36 @@ class SthCollection implements Collection, IteratorAggregate, Countable
 
             while ($row = $this->fetchRow()) {
                 $entity = $this->getEntityFactory()->create($this->entityType);
+
                 $entity->set($row);
                 $entity->setAsFetched();
+
                 $this->prepareEntity($entity);
+
+                $this->entityList[] = $entity;
 
                 yield $entity;
             }
         })();
     }
 
-    protected function fetchRow()
+    protected function executeQueryIfNotExecuted()
     {
         if (!$this->sth) {
             $this->executeQuery();
         }
+    }
+
+    protected function fetchRow()
+    {
+        $this->executeQueryIfNotExecuted();
 
         return $this->sth->fetch(\PDO::FETCH_ASSOC);
     }
 
     public function count() : int
     {
-        if (!$this->sth) {
-            $this->executeQuery();
-        }
+        $this->executeQueryIfNotExecuted();
 
         $rowCount = $this->sth->rowCount();
 
@@ -174,28 +183,13 @@ class SthCollection implements Collection, IteratorAggregate, Countable
         return $this->toArray(true);
     }
 
-    /**
-     * Mark as fetched from DB.
-     */
-    public function setAsFetched()
-    {
-        $this->isFetched = true;
-    }
 
     /**
-     * Mark as not fetched from DB.
-     */
-    public function setAsNotFetched()
-    {
-        $this->isFetched = false;
-    }
-
-    /**
-     * Is fetched from DB.
+     * Whether Is fetched from DB. SthCollection is always fetched.
      */
     public function isFetched() : bool
     {
-        return $this->isFetched;
+        return true;
     }
 
     /**
@@ -213,8 +207,6 @@ class SthCollection implements Collection, IteratorAggregate, Countable
         $obj->entityType = $query->getFrom();
         $obj->query = $query;
 
-        $obj->setAsFetched();
-
         return $obj;
     }
 
@@ -224,8 +216,6 @@ class SthCollection implements Collection, IteratorAggregate, Countable
 
         $obj->entityType = $entityType;
         $obj->sql = $sql;
-
-        $obj->setAsFetched();
 
         return $obj;
     }

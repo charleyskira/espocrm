@@ -1667,6 +1667,7 @@ class Activities implements
     public function getUpcomingActivities($userId, $params = [], $entityTypeList = null, $futureDays = null)
     {
         $user = $this->getEntityManager()->getEntity('User', $userId);
+
         $this->accessCheck($user);
 
         if (!$entityTypeList) {
@@ -1682,6 +1683,8 @@ class Activities implements
         $taskBeforeString = (new \DateTime())->modify('+' . $upcomingTaskFutureDays . ' days')->format('Y-m-d H:i:s');
 
         $unionPartList = [];
+
+
         foreach ($entityTypeList as $entityType) {
             if (!$this->getMetadata()->get(['scopes', $entityType, 'activity']) && $entityType !== 'Task') continue;
             if (!$this->getAcl()->checkScope($entityType, 'read')) continue;
@@ -1771,7 +1774,6 @@ class Activities implements
                     ]
                 ], $selectParams);
             }
-
             $sql = $this->getEntityManager()->getQuery()->createSelectQuery($entityType, $selectParams);
 
             $unionPartList[] = '' . $sql . '';
@@ -1817,7 +1819,7 @@ class Activities implements
 
         return [
             'total' => $totalCount,
-            'list' => $entityDataList
+            'list' => $entityDataList,
         ];
     }
 }

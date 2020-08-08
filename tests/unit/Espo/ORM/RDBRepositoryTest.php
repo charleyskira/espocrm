@@ -36,6 +36,7 @@ use Espo\ORM\{
     EntityCollection,
     QueryParams\Select,
     QueryBuilder,
+    Entity,
 };
 
 use Espo\Core\ORM\{
@@ -527,5 +528,24 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
             ->clone($select)
             ->select('id')
             ->find();
+    }
+
+    public function testGetById1()
+    {
+        $select = $this->queryBuilder
+            ->select()
+            ->from('Test')
+            ->where(['id' => '1'])
+            ->build();
+
+        $entity = $this->getMockBuilder(Entity::class)->getMock();
+
+        $this->mapper
+            ->expects($this->once())
+            ->method('selectOne')
+            ->will($this->returnValue($entity))
+            ->with($select);
+
+        $this->repository->getById('1');
     }
 }

@@ -305,4 +305,19 @@ class EntityCollection implements Collection, Iterator, Countable, ArrayAccess, 
     {
         return $this->isFetched;
     }
+
+    public static function fromSthCollection(SthCollection $sthCollection) : self
+    {
+        $entityList = [];
+
+        foreach ($sthCollection as $entity) {
+            $entityList[] = $entity;
+        }
+
+        $obj = new EntityCollection($entityList, $sthCollection->getEntityType());
+
+        $obj->setAsFetched();
+
+        return $obj;
+    }
 }

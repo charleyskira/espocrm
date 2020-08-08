@@ -736,7 +736,9 @@ class Stream
 
         $sql = $this->entityManager->getQuery()->limit($sql, $offset, $maxSize + 1);
 
-        $collection = $this->entityManager->getRepository('Note')->findBySql($sql);
+        $sthCollection = $this->entityManager->getRepository('Note')->findBySql($sql);
+
+        $collection = $this->entityManager->getCollectionFactory()->createFromSthCollection($sthCollection);
 
         foreach ($collection as $e) {
             $this->loadNoteAdditionalFields($e);
@@ -1093,7 +1095,9 @@ class Stream
 
         $sql = $this->entityManager->getQuery()->create($select);
 
-        $collection = $this->entityManager->getRepository('Note')->findBySql($sql);
+        $sthCollection = $this->entityManager->getRepository('Note')->findBySql($sql);
+
+        $collection = $this->entityManager->getCollectionFactory()->createFromSthCollection($sthCollection);
 
         foreach ($collection as $e) {
             $this->loadNoteAdditionalFields($e);

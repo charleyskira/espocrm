@@ -59,4 +59,9 @@ class CollectionFactory
     {
         return SthCollection::fromQuery($query, $this->entityManager);
     }
+
+    public function createFromSthCollection(SthCollection $sthCollection) : EntityCollection
+    {
+        return EntityCollection::fromSthCollection($sthCollection);
+    }
 }
