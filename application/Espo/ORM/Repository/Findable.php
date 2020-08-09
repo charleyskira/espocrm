@@ -27,7 +27,7 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\ORM\Repositories;
+namespace Espo\ORM\Repository;
 
 use Espo\ORM\{
     Entity,

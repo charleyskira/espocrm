@@ -27,54 +27,16 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\ORM;
+namespace Espo\ORM\Repository;
 
-/**
- * An access point for fetching and storing records.
- */
-abstract class Repository
+use Espo\ORM\{
+    Entity,
+};
+
+interface Removable
 {
-    protected $entityFactory;
-
-    protected $entityManager;
-
-    protected $seed;
-
-    protected $entityClassName;
-
-    protected $entityType;
-
-    public function __construct(string $entityType, EntityManager $entityManager, EntityFactory $entityFactory)
-    {
-        $this->entityType = $entityType;
-        $this->entityFactory = $entityFactory;
-        $this->seed = $this->entityFactory->create($entityType);
-        $this->entityClassName = get_class($this->seed);
-        $this->entityManager = $entityManager;
-    }
-
-    protected function getEntityFactory() : EntityFactory
-    {
-        return $this->entityFactory;
-    }
-
-    protected function getEntityManager() : EntityManager
-    {
-        return $this->entityManager;
-    }
-
-    public function getEntityType() : string
-    {
-        return $this->entityType;
-    }
-
     /**
-     * Get entity. If $id is NULL, a new entity is returned.
+     * Remove a record (mark as deleted).
      */
-    abstract public function get(?string $id = null) : ?Entity;
-
-    /**
-     * Store entity.
-     */
-    abstract public function save(Entity $entity);
+    public function remove(Entity $entity);
 }

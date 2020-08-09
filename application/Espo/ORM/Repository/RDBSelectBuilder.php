@@ -27,12 +27,12 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\ORM;
+namespace Espo\ORM\Repository;
 
 use Espo\ORM\{
-    Repositories\Findable,
     Collection,
     Entity,
+    EntityManager,
     QueryParams\Select,
     QueryParams\SelectBuilder,
     DB\Mapper,
@@ -129,6 +129,7 @@ class RDBSelectBuilder implements Findable
 
         if ($params !== null) {
             $query = $this->getMergedParams($params);
+
             $collection = $this->repository->clone($query)->limit(0, 1)->find();
         } else {
             $collection = $this->limit(0, 1)->find();

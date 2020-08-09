@@ -27,16 +27,14 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\ORM\Repositories;
+namespace Espo\ORM\Repository;
 
 use Espo\ORM\{
     EntityManager,
     EntityFactory,
     Collection,
     Entity,
-    Repository,
     DB\Mapper,
-    RDBSelectBuilder as RDBSelectBuilder,
     QueryParams\Select,
 };
 
@@ -44,7 +42,7 @@ use StdClass;
 use RuntimeException;
 use InvalidArgumentException;
 
-class RDB extends Repository implements Findable, Relatable, Removable
+class RDBRepository extends Repository implements Findable, Relatable, Removable
 {
     protected $mapper;
 
@@ -56,9 +54,9 @@ class RDB extends Repository implements Findable, Relatable, Removable
         $this->entityName = $entityType;
 
         $this->entityFactory = $entityFactory;
-        $this->seed = $this->entityFactory->create($entityType);
-        $this->entityClassName = get_class($this->seed);
         $this->entityManager = $entityManager;
+
+        $this->seed = $this->entityFactory->create($entityType);
     }
 
     protected function getMapper() : Mapper

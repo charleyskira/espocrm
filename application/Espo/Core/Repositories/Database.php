@@ -30,7 +30,7 @@
 namespace Espo\Core\Repositories;
 
 use Espo\ORM\{
-    Repositories\RDB,
+    Repository\RDBRepository,
     Entity,
 };
 
@@ -46,7 +46,7 @@ use Espo\Core\{
     ApplicationState,
 };
 
-class Database extends RDB
+class Database extends RDBRepository
 {
     protected $hooksDisabled = false;
 

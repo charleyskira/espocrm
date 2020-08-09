@@ -27,9 +27,36 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\ORM;
+namespace Espo\ORM\Repository;
 
-interface RepositoryFactory
+use Espo\ORM\{
+    Entity,
+};
+
+interface Relatable
 {
-    public function create(string $name) : object;
+    /**
+     * Find records records matching specific parameters.
+     */
+    public function findRelated(Entity $entity, string $relationName, array $params);
+
+    /**
+     * A number of related records matching specific parameters.
+     */
+    public function countRelated(Entity $entity, string $relationName, array $params = []) : int;
+
+    /**
+     * Whether records are related.
+     */
+    public function isRelated(Entity $entity, string $relationName, $foreign) : bool;
+
+    /**
+     * Relate records.
+     */
+    public function relate(Entity $entity, string $relationName, $foreign);
+
+    /**
+     * Unrelate records.
+     */
+    public function unrelate(Entity $entity, string $relationName, $foreign);
 }

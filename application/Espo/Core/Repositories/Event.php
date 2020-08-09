@@ -34,7 +34,7 @@ use Espo\Core\Utils\Util;
 
 use Espo\Core\Di;
 
-class Event extends \Espo\Core\Repositories\Database implements
+class Event extends Database implements
     Di\DateTimeAware,
     Di\ConfigAware
 {

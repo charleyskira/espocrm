@@ -31,9 +31,11 @@ namespace Espo\ORM;
 
 use Espo\Core\Exceptions\Error;
 
-use Espo\ORM\DB\{
-    Mapper,
-    Query\BaseQuery as QueryComposer,
+use Espo\ORM\{
+    DB\Mapper,
+    DB\Query\BaseQuery as QueryComposer,
+    Repository\RepositoryFactory,
+    Repository\Repository,
 };
 
 use PDO;
