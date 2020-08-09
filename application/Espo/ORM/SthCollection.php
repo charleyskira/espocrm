@@ -30,7 +30,7 @@
 namespace Espo\ORM;
 
 use Espo\ORM\{
-    QueryParams\Select,
+    QueryParams\Select as SelectQuery,
     QueryComposer\QueryComposer as QueryComposer,
 };
 
@@ -98,13 +98,13 @@ class SthCollection implements Collection, IteratorAggregate, Countable
     protected function getSql() : string
     {
         if (!$this->sql) {
-            $this->sql = $this->getQueryComposer()->create($this->getQueryComposer());
+            $this->sql = $this->getQueryComposer()->compose($this->getQuery());
         }
 
         return $this->sql;
     }
 
-    protected function getQueryComposer() : Select
+    protected function getQuery() : SelectQuery
     {
         return $this->query;
     }
@@ -202,7 +202,7 @@ class SthCollection implements Collection, IteratorAggregate, Countable
         return $this->entityType;
     }
 
-    public static function fromQuery(Select $query, EntityManager $entityManager) : self
+    public static function fromQuery(SelectQuery $query, EntityManager $entityManager) : self
     {
         $obj = new self($entityManager);
 

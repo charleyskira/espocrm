@@ -49,7 +49,7 @@ class QueryExecutor
 
     public function run(Query $query) : PDOStatement
     {
-        $sql = $this->entityManager->getQueryComposer()->create($query);
+        $sql = $this->entityManager->getQueryComposer()->compose($query);
 
         return $this->entityManager->runSql($sql, true);
     }

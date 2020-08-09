@@ -29,7 +29,14 @@
 
 namespace Espo\ORM\QueryComposer;
 
+use Espo\ORM\{
+    QueryParams\Query as Query
+};
+
 interface QueryComposer
 {
-    // @todo add compose method
+    /**
+     * Compose a SQL query by a given query parameters.
+     */
+    public function compose(Query $query) : string;
 }

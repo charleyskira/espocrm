@@ -34,11 +34,11 @@ use Espo\ORM\{
     EntityFactory,
     Metadata,
     Mapper\Helper,
-    QueryParams\Query as QueryParams,
-    QueryParams\Select as SelectParams,
-    QueryParams\Update as UpdateParams,
-    QueryParams\Insert as InsertParams,
-    QueryParams\Delete as DeleteParams,
+    QueryParams\Query as Query,
+    QueryParams\Select as SelectQuery,
+    QueryParams\Update as UpdateQuery,
+    QueryParams\Insert as InsertQuery,
+    QueryParams\Delete as DeleteQuery,
 };
 
 use PDO;
@@ -169,51 +169,51 @@ abstract class BaseQueryComposer implements QueryComposer
     }
 
     /**
-     * Composes a SQL query by a given query parameters.
+     * {@inheritdoc}
      */
-    public function create(QueryParams $queryParams) : string
+    public function compose(Query $query) : string
     {
-        if ($queryParams instanceof SelectParams) {
-            return $this->createSelect($queryParams);
+        if ($query instanceof SelectQuery) {
+            return $this->composeSelect($query);
         }
 
-        if ($queryParams instanceof UpdateParams) {
-            return $this->createUpdate($queryParams);
+        if ($query instanceof UpdateQuery) {
+            return $this->composeUpdate($query);
         }
 
-        if ($queryParams instanceof InsertParams) {
-            return $this->createInsert($queryParams);
+        if ($query instanceof InsertQuery) {
+            return $this->composeInsert($query);
         }
 
-        if ($queryParams instanceof DeleteParams) {
-            return $this->createDelete($queryParams);
+        if ($query instanceof DeleteQuery) {
+            return $this->composeDelete($query);
         }
 
-        throw new LogicException("ORM Query: Query params could not be handled.");
+        throw new RuntimeException("ORM Query: Query params could not be handled.");
     }
 
-    protected function createSelect(SelectParams $queryParam) : string
+    protected function composeSelect(SelectQuery $queryParam) : string
     {
         $params = $queryParam->getRawParams();
 
         return $this->createSelectQueryInternal($params);
     }
 
-    protected function createUpdate(UpdateParams $queryParam) : string
+    protected function composeUpdate(UpdateQuery $queryParam) : string
     {
         $params = $queryParam->getRawParams();
 
         return $this->createUpdateQuery($params);
     }
 
-    protected function createDelete(DeleteParams $queryParam) : string
+    protected function composeDelete(DeleteQuery $queryParam) : string
     {
         $params = $queryParam->getRawParams();
 
         return $this->createDeleteQuery($params);
     }
 
-    protected function createInsert(InsertParams $queryParam) : string
+    protected function composeInsert(InsertQuery $queryParam) : string
     {
         $params = $queryParam->getRawParams();
 
@@ -230,7 +230,7 @@ abstract class BaseQueryComposer implements QueryComposer
 
         $params['from'] = $entityType;
 
-        return $this->create(SelectParams::fromRaw($params));
+        return $this->compose(SelectQuery::fromRaw($params));
     }
 
     protected function createDeleteQuery(array $params = null) : string

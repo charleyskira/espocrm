@@ -1093,7 +1093,7 @@ class Stream
 
         $select = Select::fromRaw($selectParams);
 
-        $sql = $this->entityManager->getQueryComposer()->create($select);
+        $sql = $this->entityManager->getQueryComposer()->compose($select);
 
         $sthCollection = $this->entityManager->getRepository('Note')->findBySql($sql);
 

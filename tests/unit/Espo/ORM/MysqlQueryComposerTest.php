@@ -121,7 +121,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testDelete1()
     {
-        $sql = $this->query->create(Delete::fromRaw([
+        $sql = $this->query->compose(Delete::fromRaw([
             'from' => 'Account',
             'whereClause' => [
                 'name' => 'test',
@@ -137,7 +137,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testDeleteWithLimit()
     {
-        $sql = $this->query->create(Delete::fromRaw([
+        $sql = $this->query->compose(Delete::fromRaw([
             'from' => 'Account',
             'whereClause' => [
                 'name' => 'test',
@@ -157,7 +157,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testDeleteWithDeleted()
     {
-        $sql = $this->query->create(Delete::fromRaw([
+        $sql = $this->query->compose(Delete::fromRaw([
             'from' => 'Account',
             'whereClause' => [
                 'name' => 'test',
@@ -174,7 +174,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testUpdateQuery1()
     {
-        $sql = $this->query->create(Update::fromRaw([
+        $sql = $this->query->compose(Update::fromRaw([
             'from' => 'Account',
             'whereClause' => [
                 'name' => 'test',
@@ -195,7 +195,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testUpdateQueryWithJoin()
     {
-        $sql = $this->query->create(Update::fromRaw([
+        $sql = $this->query->compose(Update::fromRaw([
             'from' => 'Comment',
             'whereClause' => [
                 'name' => 'test',
@@ -217,7 +217,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testUpdateQueryWithOrder()
     {
-        $sql = $this->query->create(Update::fromRaw([
+        $sql = $this->query->compose(Update::fromRaw([
             'from' => 'Account',
             'whereClause' => [
                 'name' => 'test',
@@ -240,7 +240,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testUpdateQueryWithLimit()
     {
-        $sql = $this->query->create(Update::fromRaw([
+        $sql = $this->query->compose(Update::fromRaw([
             'from' => 'Account',
             'whereClause' => [
                 'name' => 'test',
@@ -265,7 +265,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testInsertQuery1()
     {
-        $sql = $this->query->create(Insert::fromRaw([
+        $sql = $this->query->compose(Insert::fromRaw([
             'into' => 'Account',
             'columns' => ['id', 'name'],
             'values' => [
@@ -282,7 +282,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testInsertQuery2()
     {
-        $sql = $this->query->create(Insert::fromRaw([
+        $sql = $this->query->compose(Insert::fromRaw([
             'into' => 'Account',
             'columns' => ['id', 'name'],
             'values' => [
@@ -305,7 +305,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testInsertUpdate()
     {
-        $sql = $this->query->create(Insert::fromRaw([
+        $sql = $this->query->compose(Insert::fromRaw([
             'into' => 'Account',
             'columns' => ['id', 'name'],
             'values' => [
@@ -336,7 +336,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
             ->limit(10, 20)
             ->build();
 
-        $sql = $this->query->create($select);
+        $sql = $this->query->compose($select);
 
         $expectedSql =
             "SELECT account.id AS `id`, account.name AS `name`, account.deleted AS `deleted` FROM `account` " .
@@ -360,7 +360,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
             ])
             ->build();
 
-        $sql = $this->query->create($select);
+        $sql = $this->query->compose($select);
 
         $this->assertEquals($expectedSql, $sql);
     }
@@ -381,14 +381,14 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
             ])
             ->build();
 
-        $sql = $this->query->create($select);
+        $sql = $this->query->compose($select);
 
         $this->assertEquals($expectedSql, $sql);
     }
 
     public function testSelectSkipTextColumns()
     {
-        $sql = $this->query->create(
+        $sql = $this->query->compose(
             Select::fromRaw([
                 'from' => 'Article',
                 'orderBy' => 'name',
@@ -408,7 +408,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testSelectWithBelongsToJoin()
     {
-        $sql = $this->query->create(
+        $sql = $this->query->compose(
             Select::fromRaw([
                 'from' => 'Comment',
             ])
@@ -424,7 +424,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testSelectWithSpecifiedColumns()
     {
-        $sql = $this->query->create(
+        $sql = $this->query->compose(
             Select::fromRaw([
                 'from' => 'Comment',
                 'select' => ['id', 'name']
@@ -437,7 +437,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
         $this->assertEquals($expectedSql, $sql);
 
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Comment',
             'select' => ['id', 'name', 'postName'],
         ]));
@@ -449,7 +449,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
         $this->assertEquals($expectedSql, $sql);
 
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Comment',
             'select' => array('id', 'name', 'postName'),
             'leftJoins' => array('post'),
@@ -461,7 +461,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
         $this->assertEquals($expectedSql, $sql);
 
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Comment',
             'select' => array('id', 'name'),
             'leftJoins' => array('post')
@@ -476,7 +476,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testSelectUseIndex()
     {
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Account',
             'select' => ['id', 'name'],
             'useIndex' => 'name',
@@ -487,7 +487,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
         $this->assertEquals($expectedSql, $sql);
 
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Account',
             'select' => ['id', 'name'],
             'useIndex' => ['name'],
@@ -501,7 +501,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testWithSpecifiedFunction()
     {
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Comment',
             'select' => array('id', 'postId', 'post.name', 'COUNT:id'),
             'leftJoins' => array('post'),
@@ -515,7 +515,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($expectedSql, $sql);
 
 
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Comment',
             'select' => array('id', 'COUNT:id', 'MONTH:post.createdAt'),
             'leftJoins' => array('post'),
@@ -531,7 +531,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testSelectWithJoinChildren()
     {
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Post',
             'select' => ['id', 'name'],
             'leftJoins' => [['notes', 'notesLeft']]
@@ -547,7 +547,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testJoinConditions1()
     {
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Post',
             'select' => ['id', 'name'],
             'leftJoins' => [['notes', 'notesLeft', ['notesLeft.name!=' => null]]]
@@ -564,7 +564,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testJoinConditions2()
     {
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Post',
             'select' => ['id', 'name'],
             'leftJoins' => [['notes', 'notesLeft', ['notesLeft.name=:' => 'post.name']]]
@@ -581,7 +581,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testJoinConditions3()
     {
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Note',
             'select' => ['id'],
             'leftJoins' => [['post', 'post', [
@@ -600,7 +600,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testJoinConditions4()
     {
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Note',
             'select' => ['id'],
             'leftJoins' => [['post', 'post', [
@@ -620,7 +620,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testJoinTable()
     {
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Post',
             'select' => ['id', 'name'],
             'leftJoins' => [['NoteTable', 'note', ['note.parentId=:' => 'post.id', 'note.parentType' => 'Post']]]
@@ -637,7 +637,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testJoinOnlyMiddle()
     {
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Post',
             'select' => ['id'],
             'leftJoins' => [['tags', null, null, ['onlyMiddle' => true]]]
@@ -653,7 +653,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testWhereNotValue1()
     {
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Post',
             'select' => ['id', 'name'],
             'whereClause' => [
@@ -670,7 +670,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testWhereNotValue2()
     {
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Post',
             'select' => ['id', 'name'],
             'whereClause' => [
@@ -688,7 +688,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testSelectWithSubquery()
     {
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Post',
             'select' => ['id', 'name'],
             'whereClause' => array(
@@ -707,7 +707,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
         $expectedSql = "SELECT post.id AS `id`, post.name AS `name` FROM `post` WHERE post.id IN (SELECT post.id AS `id` FROM `post` WHERE post.name = 'test' AND post.deleted = 0) AND post.deleted = 0";
         $this->assertEquals($expectedSql, $sql);
 
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Post',
             'select' => ['id', 'name'],
             'whereClause' => array(
@@ -727,7 +727,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($expectedSql, $sql);
 
 
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Post',
             'select' => ['id', 'name'],
             'whereClause' => array(
@@ -744,7 +744,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testGroupBy()
     {
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Comment',
             'select' => ['COUNT:id', 'QUARTER:comment.createdAt'],
             'groupBy' => ['QUARTER:comment.createdAt']
@@ -756,7 +756,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($expectedSql, $sql);
 
 
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Comment',
             'select' => ['COUNT:id', 'YEAR_5:comment.createdAt'],
             'groupBy' => ['YEAR_5:comment.createdAt']
@@ -768,7 +768,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($expectedSql, $sql);
 
 
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Comment',
             'select' => ['COUNT:id', 'QUARTER_4:comment.createdAt'],
             'groupBy' => ['QUARTER_4:comment.createdAt']
@@ -783,7 +783,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testOrderBy()
     {
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Comment',
             'select' => array('COUNT:id', 'YEAR:post.createdAt'),
             'leftJoins' => array('post'),
@@ -798,7 +798,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
             "ORDER BY 2 ASC";
         $this->assertEquals($expectedSql, $sql);
 
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Comment',
             'select' => array('COUNT:id', 'post.name'),
             'leftJoins' => array('post'),
@@ -814,7 +814,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
             "ORDER BY FIELD(post.name, 'Hello', 'Test') DESC";
         $this->assertEquals($expectedSql, $sql);
 
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Comment',
             'select' => array('COUNT:id', 'YEAR:post.createdAt', 'post.name'),
             'leftJoins' => array('post'),
@@ -835,7 +835,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testForeign()
     {
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Comment',
             'select' => array('COUNT:comment.id', 'postId', 'postName'),
             'leftJoins' => array('post'),
@@ -854,7 +854,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testInArray()
     {
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Comment',
             'select' => ['id'],
             'whereClause' => array(
@@ -866,7 +866,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
             "WHERE comment.id IN ('id_1') AND comment.deleted = 0";
         $this->assertEquals($expectedSql, $sql);
 
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Comment',
             'select' => ['id'],
             'whereClause' => array(
@@ -878,7 +878,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
             "WHERE comment.id NOT IN ('id_1') AND comment.deleted = 0";
         $this->assertEquals($expectedSql, $sql);
 
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Comment',
             'select' => ['id'],
             'whereClause' => array(
@@ -890,7 +890,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
             "WHERE 0 AND comment.deleted = 0";
         $this->assertEquals($expectedSql, $sql);
 
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Comment',
             'select' => ['id'],
             'whereClause' => array(
@@ -906,7 +906,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testFunction1()
     {
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Comment',
             'select' => ['id'],
             'whereClause' => [
@@ -921,7 +921,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testFunction2()
     {
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Comment',
             'select' => ['id'],
             'whereClause' => [
@@ -936,7 +936,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testFunction3()
     {
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Comment',
             'select' => ['id'],
             'whereClause' => [
@@ -951,7 +951,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testFunction4()
     {
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Comment',
             'select' => ['id'],
             'whereClause' => [
@@ -966,7 +966,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testFunction5()
     {
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Comment',
             'select' => ['id', ['FLOOR:3.5', 'FLOOR:3.5']],
             'whereClause' => [
@@ -980,7 +980,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testFunction6()
     {
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Comment',
             'select' => ['id', ['ROUND:3.5,1', 'ROUND:3.5,1']],
             'whereClause' => []
@@ -993,7 +993,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testFunction7()
     {
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Comment',
             'select' => ['id', 'ROUND:3.5,1'],
             'whereClause' => []
@@ -1006,7 +1006,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testFunction8()
     {
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Comment',
             'select' => ['id', ["CONCAT:(',test',\"+\",'\"', \"'\")", 'value']]
         ]));
@@ -1018,7 +1018,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testFunction9()
     {
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Comment',
             'select' => ['id', ["COALESCE:(name,FALSE,true,null)", 'value']]
         ]));
@@ -1030,7 +1030,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testFunction10()
     {
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Comment',
             'select' => ['id', ["IF:(LIKE:(name,'%test%'),'1','0')", 'value']]
         ]));
@@ -1042,7 +1042,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testFunction11()
     {
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Comment',
             'select' => [["IS_NULL:(name)", 'value1'], ["IS_NOT_NULL:(name)", 'value2']],
             'withDeleted' => true
@@ -1054,7 +1054,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testFunction12()
     {
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Comment',
             'select' => ["IF:(OR:('1','0'),'1',' ')"],
             'withDeleted' => true
@@ -1066,7 +1066,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testFunction13()
     {
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Comment',
             'select' => ["IN:(name,'1','0')"],
             'withDeleted' => true
@@ -1078,7 +1078,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testFunction14()
     {
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Comment',
             'select' => ["NOT:(name)"],
             'withDeleted' => true
@@ -1090,7 +1090,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testFunction15()
     {
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Comment',
             'select' => ["MUL:(2,2.5,SUB:(3,1))"],
             'withDeleted' => true
@@ -1102,7 +1102,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testFunction16()
     {
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Comment',
             'select' => ["NOW:()"],
             'withDeleted' => true
@@ -1114,7 +1114,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testFunction17()
     {
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Comment',
             'select' => [["TIMESTAMPDIFF_YEAR:('2016-10-10', '2018-10-10')", 'test']],
             'withDeleted' => true
@@ -1126,7 +1126,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testFunction18()
     {
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Comment',
             'select' => [["IFNULL:(name, '')", 'test']],
             'withDeleted' => true
@@ -1138,7 +1138,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testFunctionTZ1()
     {
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Comment',
             'select' => ['id', "MONTH_NUMBER:TZ:(comment.created_at,-3.5)"],
             'whereClause' => []
@@ -1151,7 +1151,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testFunctionTZ2()
     {
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Comment',
             'select' => ['id', "MONTH_NUMBER:TZ:(comment.created_at,0)"],
             'whereClause' => []
@@ -1164,7 +1164,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testHaving()
     {
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Comment',
             'select' => ['COUNT:comment.id', 'postId', 'postName'],
             'leftJoins' => ['post'],
@@ -1188,7 +1188,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testWhere1()
     {
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Comment',
             'select' => ['id'],
             'whereClause' => [
@@ -1206,7 +1206,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testMatch1()
     {
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Article',
             'select' => ['id', 'name'],
             'whereClause' => [
@@ -1224,7 +1224,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testMatch2()
     {
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Article',
             'select' => ['id', 'name'],
             'whereClause' => [
@@ -1241,7 +1241,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testMatch3()
     {
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Article',
             'select' => ['id', 'MATCH_BOOLEAN:description:test'],
             'whereClause' => [
@@ -1262,7 +1262,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testMatch4()
     {
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Article',
             'select' => ['id', ['MATCH_BOOLEAN:description:test', 'relevance']],
             'whereClause' => [
@@ -1283,7 +1283,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testMatch5()
     {
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Article',
             'select' => ['id', 'name'],
             'whereClause' => [
@@ -1300,7 +1300,7 @@ class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 
     public function testMatch6()
     {
-        $sql = $this->query->create(Select::fromRaw([
+        $sql = $this->query->compose(Select::fromRaw([
             'from' => 'Article',
             'select' => ['id', 'name'],
             'whereClause' => [
