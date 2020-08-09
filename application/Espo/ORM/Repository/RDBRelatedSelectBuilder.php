@@ -64,6 +64,8 @@ class RDBRelatedSelectBuilder implements Findable
 
     protected $additionalSelect = [];
 
+    protected $selectIsAdded = false;
+
     public function __construct(EntityManager $entityManager, string $entityType, string $relationName)
     {
         $this->entityManager = $entityManager;
@@ -159,12 +161,26 @@ class RDBRelatedSelectBuilder implements Findable
         return $this;
     }
 
+    protected function addAdditionalSelect()
+    {
+        $select = $this->builder->build()->getSelect();
+
+        if (!count($select)) {
+            $this->builder->select('*');
+        }
+
+        foreach ($this->additionalSelect as $item) {
+            $this->builder->select($item[0], $item[1]);
+        }
+    }
+
     /**
      * @param $params @deprecated. Omit it.
      * @return ?Collection|Entity
      */
     public function find(?array $params = null)
     {
+        $this->addAdditionalSelect();
     }
 
     /**
