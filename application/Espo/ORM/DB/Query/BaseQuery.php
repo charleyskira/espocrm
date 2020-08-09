@@ -33,7 +33,7 @@ use Espo\ORM\{
     Entity,
     EntityFactory,
     Metadata,
-    DB\Helper,
+    Mapper\Helper,
     DB\Query\Functions,
     QueryParams\Query as QueryParams,
     QueryParams\Select as SelectParams,

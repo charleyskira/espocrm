@@ -34,7 +34,7 @@ use Espo\ORM\{
     EntityFactory,
     Collection,
     Entity,
-    DB\Mapper,
+    Mapper\Mapper,
     QueryParams\Select,
 };
 

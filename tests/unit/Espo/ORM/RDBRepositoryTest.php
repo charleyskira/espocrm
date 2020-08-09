@@ -30,7 +30,7 @@
 require_once 'tests/unit/testData/DB/Entities.php';
 
 use Espo\ORM\{
-    DB\MysqlMapper,
+    Mapper\MysqlMapper,
     DB\Query\Mysql as Query,
     Repository\RDBRepository as Repository,
     EntityCollection,

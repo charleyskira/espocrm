@@ -35,7 +35,7 @@ use Espo\ORM\{
     EntityManager,
     QueryParams\Select,
     QueryParams\SelectBuilder,
-    DB\Mapper,
+    Mapper\Mapper,
 };
 
 use RuntimeException;

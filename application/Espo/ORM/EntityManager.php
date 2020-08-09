@@ -32,7 +32,7 @@ namespace Espo\ORM;
 use Espo\Core\Exceptions\Error;
 
 use Espo\ORM\{
-    DB\Mapper,
+    Mapper\Mapper,
     DB\Query\BaseQuery as QueryComposer,
     Repository\RepositoryFactory,
     Repository\Repository,
@@ -135,7 +135,7 @@ class EntityManager
         switch ($name) {
             case 'RDB':
                 $platform = $this->params['platform'];
-                $className = 'Espo\\ORM\\DB\\' . ucfirst($platform) . 'Mapper';
+                $className = 'Espo\\ORM\\Mapper\\' . ucfirst($platform) . 'Mapper';
                 break;
         }
 
