@@ -39,39 +39,88 @@ use Espo\ORM\{
 };
 
 use RuntimeException;
+use BadMethodCallException;
 
 /**
- * Builds select parameters for an RDB repository. Contains 'find' methods.
+ * Builds select parameters for related records for RDB repository.
  */
-class RDBSelectBuilder implements Findable
+class RDBRelatedSelectBuilder implements Findable
 {
     protected $entityManager;
 
-    protected $builder;
+    protected $entityType;
 
-    protected $repository = null;
+    protected $foreignEntityType = null;
 
-    protected $entityType = null;
+    protected $relationName;
 
-    public function __construct(EntityManager $entityManager, string $entityType, ?Select $query = null)
+    protected $relationType = null;
+
+    protected $builder = null;
+
+    protected $noBuilder = false;
+
+    private $isDirty = false;
+
+    protected $additionalSelect = [];
+
+    public function __construct(EntityManager $entityManager, string $entityType, string $relationName)
     {
         $this->entityManager = $entityManager;
 
         $this->entityType = $entityType;
-        $this->repository = $this->entityManager->getRepository($entityType);
 
-        if ($query && $query->getFrom() !== $entityType) {
-            throw new RuntimeException("SelectBuilder: Passed query doesn't match the entity type.");
+        $this->relationName = $relationName;
+
+        $this->relationType = $entity->getRelationType($relationName);
+
+        if ($this->relationType === Entity::BELONGS_TO_PARENT) {
+            $this->noBuilder = true;
         }
 
-        $this->builder = new SelectBuilder($entityManager->getQueryComposer());
+        if (!$this->noBuilder) {
+            $this->foreignEntityType = $entity->getRelationParam($relationName, 'entity');
 
-        if ($query) {
-            $this->builder->clone($query);
+            $this->builder = $this->createSelectBuilder()->from($this->foreignEntityType);
+        }
+    }
+
+    protected function createSelectBuilder() : SelectBuilder
+    {
+        return new SelectBuilder($this->entityManager->getQueryComposer());
+    }
+
+    /**
+     * Clone a query.
+     */
+    public function clone(Select $query) : self
+    {
+        $this->processBuilderCheck();
+
+        if ($query->getFrom() !== $this->foreignEntityType) {
+            throw new RuntimeException("RealtedSelectBuilder: Passed query doesn't match the entity type.");
         }
 
-        if (!$query) {
-            $this->builder->from($entityType);
+        $this->builder = $this->createSelectBuilder()->clone($query);
+
+        $this->setAsDirty();
+
+        return $this;
+    }
+
+    protected function setAsDirty()
+    {
+        $this->isDirty = true;
+    }
+
+    protected function processBuilderCheck()
+    {
+        if ($this->noBuilder) {
+            throw new RuntimeException("RealtedSelectBuilder: Can't use query builder for the '{$this->relationType}' relation type.");
+        }
+
+        if ($this->isDirty) {
+            throw new RuntimeException("RealtedSelectBuilder: Can't modify a query.");
         }
     }
 
@@ -81,33 +130,44 @@ class RDBSelectBuilder implements Findable
     }
 
     /**
-     * @param $params @deprecated. Omit it.
+     * Additional middle table columns. Only for many-to-many relationships.
+     *
+     * Usage:
+     * `['columnName' => 'attributeName']`
      */
-    public function find(?array $params = null) : Collection
+    public function columns(array $columns) : self
     {
-        $query = $this->getMergedParams($params);
+        if (!count($columns)) {
+            return $this;
+        }
 
-        return $this->getMapper()->select($query);
+        if ($this->relationType !== Entity::MANY_MANY) {
+            throw new RuntimeException("Can't select relation columns for not many-to-many relationship.");
+        }
+
+        $this->additionalColumns =
+
+
+        $middleName = lcfirst(
+            $this->entityManager->getMetadata()->get($this->entityType, ['relations', $this->relationName, 'relationName'])
+        );
+
+        foreach ($columns as $column => $alias) {
+            $this->additionalSelect[] = [
+                $middleName . '.' . $column,
+                $alias,
+            ];
+        }
+
+        return $this;
     }
 
     /**
      * @param $params @deprecated. Omit it.
+     * @return ?Collection|Entity
      */
-    public function findOne(?array $params = null) : ?Entity
+    public function find(?array $params = null)
     {
-        if ($params !== null) {
-            $query = $this->getMergedParams($params);
-
-            $collection = $this->repository->clone($query)->limit(0, 1)->find();
-        } else {
-            $collection = $this->limit(0, 1)->find();
-        }
-
-        foreach ($collection as $entity) {
-            return $entity;
-        }
-
-        return null;
     }
 
     /**
@@ -115,40 +175,9 @@ class RDBSelectBuilder implements Findable
      */
     public function count(?array $params = null) : int
     {
-        $query = $this->getMergedParams($params);
 
-        return $this->getMapper()->count($query);
     }
 
-    /**
-     * @return int|float
-     */
-    public function max(string $attribute)
-    {
-        $query = $this->builder->build();
-
-        return $this->getMapper()->max($query, $attribute);
-    }
-
-    /**
-     * @return int|float
-     */
-    public function min(string $attribute)
-    {
-        $query = $this->builder->build();;
-
-        return $this->getMapper()->min($query, $attribute);
-    }
-
-    /**
-     * @return int|float
-     */
-    public function sum(string $attribute)
-    {
-        $query = $this->builder->build();
-
-        return $this->getMapper()->sum($query, $attribute);
-    }
 
     /**
      * Add JOIN.
@@ -157,6 +186,10 @@ class RDBSelectBuilder implements Findable
      */
     public function join($relationName, ?string $alias = null, ?array $conditions = null) : self
     {
+        if (!$this->builder) {
+            throw new BadMethodCallException("Can't compose a query for a relation of '{$this->relationType}' type.");
+        }
+
         $this->builder->join($relationName, $alias, $conditions);
 
         return $this;

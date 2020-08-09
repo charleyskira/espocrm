@@ -660,9 +660,11 @@ class RDBRepository extends Repository implements Findable, Relatable, Removable
             throw new RuntimeException("Can't clone a query of a different entity type.");
         }
 
-        $builder = new RDBSelectBuilder($this->entityManager);
+        $builder = new RDBSelectBuilder($this->entityManager, $this->entityType, $query);
 
-        return $builder->clone($query);
+        return $builder;
+
+        //return $builder->clone($query);
     }
 
     /**
@@ -790,9 +792,7 @@ class RDBRepository extends Repository implements Findable, Relatable, Removable
 
     protected function createSelectBuilder() : RDBSelectBuilder
     {
-        $builder = new RDBSelectBuilder($this->entityManager);
-
-        $builder->from($this->getEntityType());
+        $builder = new RDBSelectBuilder($this->entityManager, $this->entityType);
 
         return $builder;
     }

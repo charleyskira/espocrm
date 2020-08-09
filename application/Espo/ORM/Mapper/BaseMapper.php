@@ -243,7 +243,7 @@ abstract class BaseMapper implements Mapper
 
         $relDefs = $entity->getRelations()[$relationName];
 
-        if (!isset($relDefs['type'])) {
+        if (!$entity->getRelationType($relationName)) {
             throw new LogicException(
                 "Missing 'type' in definition for relationship {$relationName} in {entityType} entity."
             );
@@ -256,7 +256,7 @@ abstract class BaseMapper implements Mapper
                 );
             }
 
-            $relEntityType = (!empty($relDefs['class'])) ? $relDefs['class'] : $relDefs['entity'];
+            $relEntityType = $entity->getRelationParam($relationName, 'entity');
             $relEntity = $this->entityFactory->create($relEntityType);
         }
 
