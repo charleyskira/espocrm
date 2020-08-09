@@ -769,7 +769,7 @@ class RDBRepository extends Repository implements Findable, Relatable, Removable
 
     protected function lockTable()
     {
-        $tableName = $this->entityManager->getQuery()->toDb($this->entityType);
+        $tableName = $this->entityManager->getQueryComposer()->toDb($this->entityType);
 
         // @todo Use Query to get SQL. Transaction query params.
         $this->getPDO()->query("LOCK TABLES `{$tableName}` WRITE");

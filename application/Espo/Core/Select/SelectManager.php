@@ -407,7 +407,7 @@ class SelectManager
             $idsValue = $idsValue[0];
         }
 
-        $query = $this->getEntityManager()->getQuery();
+        $query = $this->getEntityManager()->getQueryComposer();
 
         $seed = $this->getSeed();
 
@@ -445,7 +445,7 @@ class SelectManager
     {
         $relDefs = $this->getSeed()->getRelations();
 
-        $query = $this->getEntityManager()->getQuery();
+        $query = $this->getEntityManager()->getQueryComposer();
 
         $tableName = $query->toDb($this->getSeed()->getEntityType());
 
@@ -2347,7 +2347,7 @@ class SelectManager
             }
 
             $fullTextSearchColumnSanitizedList = [];
-            $query = $this->getEntityManager()->getQuery();
+            $query = $this->getEntityManager()->getQueryComposer();
             foreach ($fullTextSearchColumnList as $i => $field) {
                 $fullTextSearchColumnSanitizedList[$i] = $query->sanitize($query->toDb($field));
             }

@@ -452,7 +452,7 @@ class Cleanup implements Job
         $repository = $this->entityManager->getRepository($scope);
         $repository->deleteFromDb($entity->id);
 
-        $query = $this->entityManager->getQuery();
+        $query = $this->entityManager->getQueryComposer();
 
         foreach ($entity->getRelationList() as $relation) {
             if ($entity->getRelationType($relation) !== Entity::MANY_MANY) {

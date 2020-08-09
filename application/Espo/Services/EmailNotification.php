@@ -222,7 +222,7 @@ class EmailNotification
             $selectParams = $this->$methodName();
             $selectParams['whereClause'][] = $where;
 
-            $sqlArr[] = $this->entityManager->getQuery()->createSelectQuery('Notification', $selectParams);
+            $sqlArr[] = $this->entityManager->getQueryComposer()->createSelectQuery('Notification', $selectParams);
         }
 
         $maxCount = intval(self::PROCESS_MAX_COUNT);

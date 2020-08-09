@@ -167,7 +167,7 @@ class Activities implements
 
         $selectParams = $selectManager->mergeSelectParams($selectParams, $additinalSelectParams);
 
-        $sql = $this->getEntityManager()->getQuery()->createSelectQuery('Meeting', $selectParams);
+        $sql = $this->getEntityManager()->getQueryComposer()->createSelectQuery('Meeting', $selectParams);
 
         return $sql;
     }
@@ -222,7 +222,7 @@ class Activities implements
 
         $selectParams = $selectManager->mergeSelectParams($selectParams, $additinalSelectParams);
 
-        $sql = $this->getEntityManager()->getQuery()->createSelectQuery('Call', $selectParams);
+        $sql = $this->getEntityManager()->getQueryComposer()->createSelectQuery('Call', $selectParams);
 
         return $sql;
     }
@@ -272,7 +272,7 @@ class Activities implements
 
         $selectParams = $selectManager->mergeSelectParams($selectParams, $additinalSelectParams);
 
-        $sql = $this->getEntityManager()->getQuery()->createSelectQuery('Email', $selectParams);
+        $sql = $this->getEntityManager()->getQueryComposer()->createSelectQuery('Email', $selectParams);
 
         return $sql;
     }
@@ -351,7 +351,7 @@ class Activities implements
 
         $selectParams = $selectManager->mergeSelectParams($selectParams, $additinalSelectParams);
 
-        $sql = $this->getEntityManager()->getQuery()->createSelectQuery('Meeting', $selectParams);
+        $sql = $this->getEntityManager()->getQueryComposer()->createSelectQuery('Meeting', $selectParams);
 
         if ($this->isPerson($scope)) {
             $link = null;
@@ -383,7 +383,7 @@ class Activities implements
 
                 $selectParams = $selectManager->mergeSelectParams($selectParams, $additinalSelectParams);
 
-                $sql .= ' UNION ' . $this->getEntityManager()->getQuery()->createSelectQuery('Meeting', $selectParams);
+                $sql .= ' UNION ' . $this->getEntityManager()->getQueryComposer()->createSelectQuery('Meeting', $selectParams);
             }
         }
 
@@ -463,7 +463,7 @@ class Activities implements
 
         $selectParams = $selectManager->mergeSelectParams($selectParams, $additinalSelectParams);
 
-        $sql = $this->getEntityManager()->getQuery()->createSelectQuery('Call', $selectParams);
+        $sql = $this->getEntityManager()->getQueryComposer()->createSelectQuery('Call', $selectParams);
 
         if ($this->isPerson($scope)) {
             $link = null;
@@ -495,7 +495,7 @@ class Activities implements
 
                 $selectParams = $selectManager->mergeSelectParams($selectParams, $additinalSelectParams);
 
-                $sql .= ' UNION ' . $this->getEntityManager()->getQuery()->createSelectQuery('Call', $selectParams);
+                $sql .= ' UNION ' . $this->getEntityManager()->getQueryComposer()->createSelectQuery('Call', $selectParams);
             }
         }
 
@@ -576,7 +576,7 @@ class Activities implements
 
         $selectParams = $selectManager->mergeSelectParams($selectParams, $additinalSelectParams);
 
-        $sql = $this->getEntityManager()->getQuery()->createSelectQuery('Email', $selectParams);
+        $sql = $this->getEntityManager()->getQueryComposer()->createSelectQuery('Email', $selectParams);
 
         if ($this->isPerson($scope) || $this->isCompany($scope)) {
             $selectParams = $baseSelectParams;
@@ -600,7 +600,7 @@ class Activities implements
 
             $selectParams = $selectManager->mergeSelectParams($selectParams, $additinalSelectParams);
 
-            $sql .= "\n UNION \n" . $this->getEntityManager()->getQuery()->createSelectQuery('Email', $selectParams);
+            $sql .= "\n UNION \n" . $this->getEntityManager()->getQueryComposer()->createSelectQuery('Email', $selectParams);
 
             $selectParams = $baseSelectParams;
             $selectParams['customJoin'] .= "
@@ -626,7 +626,7 @@ class Activities implements
 
             $selectParams = $selectManager->mergeSelectParams($selectParams, $additinalSelectParams);
 
-            $sql .= "\n UNION \n" . $this->getEntityManager()->getQuery()->createSelectQuery('Email', $selectParams);
+            $sql .= "\n UNION \n" . $this->getEntityManager()->getQueryComposer()->createSelectQuery('Email', $selectParams);
         }
 
         return $sql;
@@ -804,7 +804,7 @@ class Activities implements
 
         $sql = $this->getActivitiesQuery($entity, $entityType, $statusList, $isHistory, $selectParams);
 
-        $query = $this->getEntityManager()->getQuery();
+        $query = $this->getEntityManager()->getQueryComposer();
 
         $seed = $this->getEntityManager()->getEntity($entityType);
 
@@ -969,7 +969,7 @@ class Activities implements
             $selectManager->applyAccess($selectParams);
         }
 
-        return $this->getEntityManager()->getQuery()->createSelectQuery('Meeting', $selectParams);
+        return $this->getEntityManager()->getQueryComposer()->createSelectQuery('Meeting', $selectParams);
     }
 
     protected function getCalendarCallQuery($userId, $from, $to, $skipAcl)
@@ -1025,7 +1025,7 @@ class Activities implements
             $selectManager->applyAccess($selectParams);
         }
 
-        return $this->getEntityManager()->getQuery()->createSelectQuery('Call', $selectParams);
+        return $this->getEntityManager()->getQueryComposer()->createSelectQuery('Call', $selectParams);
     }
 
     protected function getCalendarTaskQuery($userId, $from, $to, $skipAcl = false)
@@ -1088,7 +1088,7 @@ class Activities implements
             $selectManager->applyAccess($selectParams);
         }
 
-        return $this->getEntityManager()->getQuery()->createSelectQuery('Task', $selectParams);
+        return $this->getEntityManager()->getQueryComposer()->createSelectQuery('Task', $selectParams);
     }
 
     protected function getCalendarSelectParams($scope, $userId, $from, $to, $skipAcl = false)
@@ -1182,7 +1182,7 @@ class Activities implements
         $selectManager = $this->getSelectManagerFactory()->create($scope);
         if (method_exists($selectManager, 'getCalendarSelectParams')) {
             $selectParams = $selectManager->getCalendarSelectParams($userId, $from, $to, $skipAcl);
-            return $this->getEntityManager()->getQuery()->createSelectQuery($scope, $selectParams);
+            return $this->getEntityManager()->getQueryComposer()->createSelectQuery($scope, $selectParams);
         }
 
         $methodName = 'getCalendar' . $scope . 'Query';
@@ -1191,7 +1191,7 @@ class Activities implements
         }
 
         $selectParams = $this->getCalendarSelectParams($scope, $userId, $from, $to, $skipAcl);
-        return $this->getEntityManager()->getQuery()->createSelectQuery($scope, $selectParams);
+        return $this->getEntityManager()->getQueryComposer()->createSelectQuery($scope, $selectParams);
     }
 
     protected function getActivitiesQuery(Entity $entity, $scope, array $statusList = [], $isHistory = false, $additinalSelectParams = null)
@@ -1211,7 +1211,7 @@ class Activities implements
 
             $selectParams = $selectManager->mergeSelectParams($selectParams, $additinalSelectParams);
 
-            return $this->getEntityManager()->getQuery()->createSelectQuery($scope, $selectParams);
+            return $this->getEntityManager()->getQueryComposer()->createSelectQuery($scope, $selectParams);
         }
 
         $methodName = 'getActivities' . $scope . 'Query';
@@ -1223,7 +1223,7 @@ class Activities implements
 
         $selectParams = $selectManager->mergeSelectParams($selectParams, $additinalSelectParams);
 
-        return $this->getEntityManager()->getQuery()->createSelectQuery($scope, $selectParams);
+        return $this->getEntityManager()->getQueryComposer()->createSelectQuery($scope, $selectParams);
     }
 
     protected function getActivitiesSelectParams(Entity $entity, $scope, array $statusList = [], $isHistory)
@@ -1774,7 +1774,7 @@ class Activities implements
                     ]
                 ], $selectParams);
             }
-            $sql = $this->getEntityManager()->getQuery()->createSelectQuery($entityType, $selectParams);
+            $sql = $this->getEntityManager()->getQueryComposer()->createSelectQuery($entityType, $selectParams);
 
             $unionPartList[] = '' . $sql . '';
         }

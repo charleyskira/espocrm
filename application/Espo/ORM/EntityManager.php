@@ -66,7 +66,7 @@ class EntityManager
 
     protected $params = [];
 
-    protected $query;
+    protected $queryComposer;
 
     protected $defaultMapperName = 'RDB';
 
@@ -101,7 +101,7 @@ class EntityManager
 
         $this->repositoryFactory = $repositoryFactory;
 
-        $this->initQuery();
+        $this->initQueryComposer();
 
         $this->queryExecutor = new QueryExecutor($this);
 
@@ -110,13 +110,13 @@ class EntityManager
         $this->collectionFactory = new CollectionFactory($this);
     }
 
-    protected function initQuery()
+    protected function initQueryComposer()
     {
         $platform = $this->params['platform'];
 
         $className = 'Espo\\ORM\\DB\\Query\\' . ucfirst($platform) . 'Query';
 
-        $this->query = new $className($this->getPDO(), $this->entityFactory, $this->metadata);
+        $this->queryComposer = new $className($this->getPDO(), $this->entityFactory, $this->metadata);
     }
 
     /**
@@ -125,7 +125,12 @@ class EntityManager
      */
     public function getQuery() : QueryComposer
     {
-        return $this->query;
+        return $this->queryComposer;
+    }
+
+    public function getQueryComposer() : QueryComposer
+    {
+        return $this->queryComposer;
     }
 
     protected function getMapperClassName(string $name) : string
@@ -157,7 +162,7 @@ class EntityManager
 
         if (empty($this->mappers[$className])) {
             $this->mappers[$className] = new $className(
-                $this->getPDO(), $this->entityFactory, $this->collectionFactory, $this->getQuery(), $this->metadata
+                $this->getPDO(), $this->entityFactory, $this->collectionFactory, $this->getQueryComposer(), $this->metadata
             );
         }
 

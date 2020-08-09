@@ -727,14 +727,14 @@ class Stream
                 }
             }
 
-            $sqlPartList[] = "(\n" . $this->entityManager->getQuery()->createSelectQuery('Note', $selectParams) . "\n)";
+            $sqlPartList[] = "(\n" . $this->entityManager->getQueryComposer()->createSelectQuery('Note', $selectParams) . "\n)";
         }
 
         $sql = implode("\n UNION ALL \n", $sqlPartList) . "
             ORDER BY number DESC
         ";
 
-        $sql = $this->entityManager->getQuery()->limit($sql, $offset, $maxSize + 1);
+        $sql = $this->entityManager->getQueryComposer()->limit($sql, $offset, $maxSize + 1);
 
         $sthCollection = $this->entityManager->getRepository('Note')->findBySql($sql);
 
@@ -1093,7 +1093,7 @@ class Stream
 
         $select = Select::fromRaw($selectParams);
 
-        $sql = $this->entityManager->getQuery()->create($select);
+        $sql = $this->entityManager->getQueryComposer()->create($select);
 
         $sthCollection = $this->entityManager->getRepository('Note')->findBySql($sql);
 
@@ -1616,7 +1616,7 @@ class Stream
             $selectParams['select'] = $selectAttributeList;
         }
 
-        $query = $this->entityManager->getQuery();
+        $query = $this->entityManager->getQueryComposer();
         $selectParams['t'] = true;
 
         $collection = $this->entityManager->getRepository('User')->find($selectParams);

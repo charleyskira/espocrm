@@ -57,7 +57,7 @@ class RDBSelectBuilder implements Findable
     {
         $this->entityManager = $entityManager;
 
-        $this->builder = new SelectBuilder($entityManager->getQuery());
+        $this->builder = new SelectBuilder($entityManager->getQueryComposer());
     }
 
     public function from(string $entityType) : self

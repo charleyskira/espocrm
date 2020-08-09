@@ -377,7 +377,7 @@ class App
                 $orGroup[$attribute . '!='] = null;
             }
 
-            $sql = $this->entityManager->getQuery()->createSelectQuery($scope, [
+            $sql = $this->entityManager->getQueryComposer()->createSelectQuery($scope, [
                 'select' => $select,
                 'whereClause' => [
                     'OR' => $orGroup

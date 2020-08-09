@@ -66,7 +66,7 @@ class SthCollection implements Collection, IteratorAggregate, Countable
 
     protected function getQueryComposer() : QueryComposer
     {
-        return $this->entityManager->getQuery();
+        return $this->entityManager->getQueryComposer();
     }
 
     protected function getEntityFactory() : EntityFactory
@@ -98,13 +98,13 @@ class SthCollection implements Collection, IteratorAggregate, Countable
     protected function getSql() : string
     {
         if (!$this->sql) {
-            $this->sql = $this->getQueryComposer()->create($this->getQuery());
+            $this->sql = $this->getQueryComposer()->create($this->getQueryComposer());
         }
 
         return $this->sql;
     }
 
-    protected function getQuery() : Select
+    protected function getQueryComposer() : Select
     {
         return $this->query;
     }
