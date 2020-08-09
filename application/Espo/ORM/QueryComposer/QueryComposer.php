@@ -30,7 +30,7 @@
 namespace Espo\ORM\QueryComposer;
 
 use Espo\ORM\{
-    QueryParams\Query as Query
+    QueryParams\Query as Query,
 };
 
 interface QueryComposer
@@ -39,4 +39,19 @@ interface QueryComposer
      * Compose a SQL query by a given query parameters.
      */
     public function compose(Query $query) : string;
+
+    /**
+     * Convert a camelCase string to a corresponding representation for DB.
+     */
+    public function toDb(string $string) : string;
+
+    /**
+     * Sanitize a string.
+     */
+    public function sanitize(string $string) : string;
+
+    /**
+     * Sanitize an alias for a SELECT statement.
+     */
+    public function sanitizeSelectAlias(string $string);
 }

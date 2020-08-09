@@ -49,6 +49,7 @@ use LogicException;
  * Composes SQL queries.
  *
  * @todo Add method that wraps into ``.
+ * @todo Break into sub-classes. Put sub-classes into `\Parts` namespace.
  */
 abstract class BaseQueryComposer implements QueryComposer
 {
@@ -1568,6 +1569,7 @@ abstract class BaseQueryComposer implements QueryComposer
 
     /**
      * Quote a value.
+     * @todo Make protected.
      */
     public function quote($value) : string
     {
@@ -1581,16 +1583,16 @@ abstract class BaseQueryComposer implements QueryComposer
     }
 
     /**
-     * Convert a camelCase string to a corresponding representation for DB.
+     * {@inheritdoc)
      */
-    public function toDb(string $attribute) : string
+    public function toDb(string $string) : string
     {
-        if (!array_key_exists($attribute, $this->attributeDbMapCache)) {
-            $attribute[0] = strtolower($attribute[0]);
-            $this->attributeDbMapCache[$attribute] = preg_replace_callback('/([A-Z])/', [$this, 'toDbMatchConversion'], $attribute);
+        if (!array_key_exists($string, $this->attributeDbMapCache)) {
+            $string[0] = strtolower($string[0]);
+            $this->attributeDbMapCache[$string] = preg_replace_callback('/([A-Z])/', [$this, 'toDbMatchConversion'], $string);
         }
 
-        return $this->attributeDbMapCache[$attribute];
+        return $this->attributeDbMapCache[$string];
     }
 
     protected function toDbMatchConversion(array $matches) : string
@@ -1975,10 +1977,7 @@ abstract class BaseQueryComposer implements QueryComposer
         return $joinAlias;
     }
 
-    /**
-     * Convert a value to a string.
-     */
-    public function stringifyValue($value) : string
+    protected function stringifyValue($value) : string
     {
         if (is_array($value)) {
             $arr = [];
@@ -2003,6 +2002,7 @@ abstract class BaseQueryComposer implements QueryComposer
 
     /**
      * Sanitize an alias for a SELECT statement.
+     * @todo Make protected?
      */
     public function sanitizeSelectAlias(string $string) : string
     {
