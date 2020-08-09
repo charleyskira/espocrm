@@ -145,9 +145,6 @@ class RDBRelatedSelectBuilder implements Findable
             throw new RuntimeException("Can't select relation columns for not many-to-many relationship.");
         }
 
-        $this->additionalColumns =
-
-
         $middleName = lcfirst(
             $this->entityManager->getMetadata()->get($this->entityType, ['relations', $this->relationName, 'relationName'])
         );
