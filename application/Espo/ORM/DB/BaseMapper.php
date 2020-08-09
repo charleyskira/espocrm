@@ -54,7 +54,9 @@ use RuntimeException;
  */
 abstract class BaseMapper implements Mapper
 {
-    public $pdo;
+    const ATTRIBUTE_DELETED = 'deleted';
+
+    protected $pdo;
 
     protected $entityFactroy;
 
@@ -534,7 +536,7 @@ abstract class BaseMapper implements Mapper
                 $where = [
                     $nearKey => $entity->id,
                     $distantKey => $id,
-                    'deleted' => false,
+                    static::ATTRIBUTE_DELETED => false,
                 ];
 
                 $conditions = $entity->getRelationParam($relationName, 'conditions') ?? [];
@@ -594,7 +596,7 @@ abstract class BaseMapper implements Mapper
         $where = [
             $nearKey => $entity->id,
             $distantKey => $id,
-            'deleted' => false,
+            static::ATTRIBUTE_DELETED => false,
         ];
 
         $conditions = $entity->getRelationParam($relationName, 'conditions') ?? [];
@@ -706,7 +708,7 @@ abstract class BaseMapper implements Mapper
                         'columns' => $columns,
                         'valuesSelectParams' => $params,
                         'updateSet' => [
-                            'deleted' => false,
+                            static::ATTRIBUTE_DELETED => false,
                         ],
                     ])
                 );
@@ -784,7 +786,7 @@ abstract class BaseMapper implements Mapper
                             'whereClause' => [
                                 'id!=' => $entity->id,
                                 $key => $id,
-                                'deleted' => false,
+                                static::ATTRIBUTE_DELETED => false,
                             ],
                             'set' => [
                                 $key => null,
@@ -800,7 +802,7 @@ abstract class BaseMapper implements Mapper
                         'from' => $entityType,
                         'whereClause' => [
                             'id' => $entity->id,
-                            'deleted' => false,
+                            static::ATTRIBUTE_DELETED => false,
                         ],
                         'set' => [
                             $key => $relEntity->id,
@@ -821,7 +823,7 @@ abstract class BaseMapper implements Mapper
                         'from' => $entityType,
                         'whereClause' => [
                             'id' => $entity->id,
-                            'deleted' => false,
+                            static::ATTRIBUTE_DELETED => false,
                         ],
                         'set' => [
                             $key => $relEntity->id,
@@ -851,7 +853,7 @@ abstract class BaseMapper implements Mapper
                         'from' => $relEntity->getEntityType(),
                         'whereClause' => [
                             $foreignKey => $entity->id,
-                            'deleted' => false,
+                            static::ATTRIBUTE_DELETED => false,
                         ],
                         'set' => [
                             $foreignKey => NULL,
@@ -866,7 +868,7 @@ abstract class BaseMapper implements Mapper
                         'from' => $relEntity->getEntityType(),
                         'whereClause' => [
                             'id' => $id,
-                            'deleted' => false,
+                            static::ATTRIBUTE_DELETED => false,
                         ],
                         'set' => [
                             $foreignKey => $entity->id,
@@ -906,7 +908,7 @@ abstract class BaseMapper implements Mapper
                         'from' => $relEntity->getEntityType(),
                         'whereClause' => [
                             'id' => $id,
-                            'deleted' => false,
+                            static::ATTRIBUTE_DELETED => false,
                         ],
                         'set' => $set,
                     ])
@@ -965,7 +967,7 @@ abstract class BaseMapper implements Mapper
                     $columns = array_keys($values);
 
                     $update = [
-                        'deleted' => false,
+                        static::ATTRIBUTE_DELETED => false,
                     ];
 
                     foreach ($data as $column => $value) {
@@ -989,7 +991,7 @@ abstract class BaseMapper implements Mapper
                 }
 
                 $update = [
-                    'deleted' => false,
+                    static::ATTRIBUTE_DELETED => false,
                 ];
 
                 foreach ($data as $column => $value) {
@@ -1081,7 +1083,7 @@ abstract class BaseMapper implements Mapper
                     }
                 }
 
-                $where['deleted'] = false;
+                $where[static::ATTRIBUTE_DELETED] = false;
 
                 $sql = $this->query->create(
                     Update::fromRaw([
@@ -1118,7 +1120,7 @@ abstract class BaseMapper implements Mapper
                     $update[$foreignType] = null;
                 }
 
-                $where['deleted'] = false;
+                $where[static::ATTRIBUTE_DELETED] = false;
 
                 $sql = $this->query->create(
                     Update::fromRaw([
@@ -1161,7 +1163,7 @@ abstract class BaseMapper implements Mapper
                         'from' => $middleName,
                         'whereClause' => $where,
                         'set' => [
-                            'deleted' => true,
+                            static::ATTRIBUTE_DELETED => true,
                         ],
                     ])
                 );
@@ -1315,7 +1317,7 @@ abstract class BaseMapper implements Mapper
                 'from' => $entity->getEntityType(),
                 'whereClause' => [
                     'id' => $entity->id,
-                    'deleted' => false,
+                    static::ATTRIBUTE_DELETED => false,
                 ],
                 'set' => $valueMap,
             ])
@@ -1353,7 +1355,7 @@ abstract class BaseMapper implements Mapper
         ];
 
         if ($onlyDeleted) {
-            $whereClause['deleted'] = true;
+            $whereClause[static::ATTRIBUTE_DELETED] = true;
         }
 
         $sql = $this->query->create(Delete::fromRaw([
@@ -1381,7 +1383,7 @@ abstract class BaseMapper implements Mapper
             Update::fromRaw([
                 'from' => $entityType,
                 'whereClause' => $whereClause,
-                'set' => ['deleted' => false],
+                'set' => [static::ATTRIBUTE_DELETED => false],
             ])
         );
 
@@ -1393,7 +1395,7 @@ abstract class BaseMapper implements Mapper
      */
     public function delete(Entity $entity) : bool
     {
-        $entity->set('deleted', true);
+        $entity->set(static::ATTRIBUTE_DELETED, true);
 
         return (booL) $this->update($entity);
     }
@@ -1457,7 +1459,7 @@ abstract class BaseMapper implements Mapper
             [
                 "{$distantKey}:" => $foreignKey,
                 "{$nearKey}" => $entity->get($key),
-                "deleted" => false,
+                static::ATTRIBUTE_DELETED => false,
             ],
         ];
 
