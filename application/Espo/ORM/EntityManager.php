@@ -29,11 +29,9 @@
 
 namespace Espo\ORM;
 
-use Espo\Core\Exceptions\Error;
-
 use Espo\ORM\{
     Mapper\Mapper,
-    DB\Query\BaseQuery as QueryComposer,
+    QueryComposer\QueryComposer,
     Repository\RepositoryFactory,
     Repository\Repository,
 };
@@ -112,9 +110,16 @@ class EntityManager
 
     protected function initQueryComposer()
     {
-        $platform = $this->params['platform'];
+        $className = $this->params['queryComposerClassName'] ?? null;
 
-        $className = 'Espo\\ORM\\DB\\Query\\' . ucfirst($platform) . 'Query';
+        if (!$className) {
+            $platform = $this->params['platform'];
+            $className = 'Espo\\ORM\\QueryComposer\\' . ucfirst($platform) . 'QueryComposer';
+        }
+
+        if (!$className || !class_exists($className)) {
+            throw new RuntimeException("Query composer {$name} could not be created.");
+        }
 
         $this->queryComposer = new $className($this->getPDO(), $this->entityFactory, $this->metadata);
     }
@@ -145,7 +150,7 @@ class EntityManager
         }
 
         if (!$className || !class_exists($className)) {
-            throw new Error("Mapper {$name} does not exist.");
+            throw new RuntimeException("Mapper '{$name}' does not exist.");
         }
 
         return $className;
@@ -209,7 +214,7 @@ class EntityManager
     public function getEntity(string $entityType, ?string $id = null) : ?Entity
     {
         if (!$this->hasRepository($entityType)) {
-            throw new Error("ORM: Repository '{$entityType}' does not exist.");
+            throw new RuntimeException("ORM: Repository '{$entityType}' does not exist.");
         }
 
         return $this->getRepository($entityType)->get($id);
@@ -276,7 +281,7 @@ class EntityManager
     public function getRepository(string $entityType) : ?Repository
     {
         if (!$this->hasRepository($entityType)) {
-            throw new Error("Repository '{$entityType}' does not exist.");
+            throw new RuntimeException("Repository '{$entityType}' does not exist.");
         }
 
         if (empty($this->repositoryHash[$entityType])) {

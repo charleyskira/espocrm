@@ -35,7 +35,7 @@ use Espo\ORM\{
     EntityFactory,
     CollectionFactory,
     Metadata,
-    DB\Query\BaseQuery as QueryComposer,
+    QueryComposer\QueryComposer,
     EntityCollection,
     SthCollection,
     QueryParams\Select,

@@ -27,14 +27,13 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\ORM\DB\Query;
+namespace Espo\ORM\QueryComposer;
 
 use Espo\ORM\{
     Entity,
     EntityFactory,
     Metadata,
     Mapper\Helper,
-    DB\Query\Functions,
     QueryParams\Query as QueryParams,
     QueryParams\Select as SelectParams,
     QueryParams\Update as UpdateParams,
@@ -48,8 +47,10 @@ use LogicException;
 
 /**
  * Composes SQL queries.
+ *
+ * @todo Add method that wraps into ``.
  */
-abstract class BaseQuery
+abstract class BaseQueryComposer implements QueryComposer
 {
     protected static $paramList = [
         'select',

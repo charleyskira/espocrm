@@ -31,7 +31,7 @@ namespace Espo\ORM;
 
 use Espo\ORM\{
     QueryParams\Select,
-    DB\Query\BaseQuery as QueryComposer,
+    QueryComposer\QueryComposer as QueryComposer,
 };
 
 use IteratorAggregate;

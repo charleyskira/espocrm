@@ -33,7 +33,7 @@ use Espo\ORM\{
     EntityFactory,
     CollectionFactory,
     EntityCollection,
-    DB\Query\MysqlQuery as Query,
+    QueryComposer\MysqlQueryComposer as QueryComposer,
     Mapper\MysqlMapper,
     QueryParams\Select,
 };
@@ -109,7 +109,7 @@ class DBMapperTest extends \PHPUnit\Framework\TestCase
 
         $this->metadata = $this->getMockBuilder('Espo\\ORM\\Metadata')->disableOriginalConstructor()->getMock();
 
-        $this->query = new Query($this->pdo, $this->entityFactory, $this->metadata);
+        $this->query = new QueryComposer($this->pdo, $this->entityFactory, $this->metadata);
 
         $this->db = new MysqlMapper($this->pdo, $this->entityFactory, $this->collectionFactory, $this->query, $this->metadata);
 

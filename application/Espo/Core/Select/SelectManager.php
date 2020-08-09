@@ -44,7 +44,7 @@ use Espo\Core\{
     ORM\EntityManager,
 };
 
-use Espo\ORM\DB\Query\BaseQuery as Query;
+use Espo\ORM\QueryComposer\BaseQueryComposer as QueryComposer;
 
 use Espo\ORM\Entity;
 
@@ -987,7 +987,7 @@ class SelectManager
             }
 
             if ($attribute && $checkWherePermission) {
-                $argumentList = Query::getAllAttributesFromComplexExpression($attribute);
+                $argumentList = QueryComposer::getAllAttributesFromComplexExpression($attribute);
                 foreach ($argumentList as $argument) {
                     $this->checkWhereArgument($argument, $type);
                 }
@@ -2771,7 +2771,7 @@ class SelectManager
     protected function applyLeftJoinsFromAttribute(string $attribute, array &$result)
     {
         if (strpos($attribute, ':') !== false) {
-            $argumentList = Query::getAllAttributesFromComplexExpression($attribute);
+            $argumentList = QueryComposer::getAllAttributesFromComplexExpression($attribute);
             foreach ($argumentList as $argument) {
                 $this->applyLeftJoinsFromAttribute($argument, $result);
             }

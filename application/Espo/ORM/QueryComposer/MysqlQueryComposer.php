@@ -27,12 +27,25 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\ORM\DB\Query;
+namespace Espo\ORM\QueryComposer;
 
-/**
- * @deprecated
- */
-abstract class Base extends Espo\ORM\QueryComposer\BaseQueryComposer
+class MysqlQueryComposer extends BaseQueryComposer
 {
+    public function limit(string $sql, ?int $offset = null, ?int $limit = null) : string
+    {
+        if (!is_null($offset) && !is_null($limit)) {
+            $offset = intval($offset);
+            $limit = intval($limit);
+            $sql .= " LIMIT {$offset}, {$limit}";
+            return $sql;
+        }
 
+        if (!is_null($limit)) {
+            $limit = intval($limit);
+            $sql .= " LIMIT {$limit}";
+            return $sql;
+        }
+
+        return $sql;
+    }
 }

@@ -31,7 +31,7 @@
 use Espo\ORM\{
     EntityFactory,
     Metadata,
-    DB\Query\MysqlQuery as Query,
+    QueryComposer\MysqlQueryComposer as QueryComposer,
     QueryBuilder,
     EntityManager,
 };
@@ -55,7 +55,7 @@ require_once 'tests/unit/testData/DB/Entities.php';
 require_once 'tests/unit/testData/DB/MockPDO.php';
 require_once 'tests/unit/testData/DB/MockDBResult.php';
 
-class QueryTest extends \PHPUnit\Framework\TestCase
+class MysqlQueryComposerTest extends \PHPUnit\Framework\TestCase
 {
     protected $query;
 
@@ -95,7 +95,7 @@ class QueryTest extends \PHPUnit\Framework\TestCase
 
         $this->getMockBuilder('Espo\\ORM\\Metadata')->disableOriginalConstructor()->getMock();
 
-        $this->query = new Query($this->pdo, $this->entityFactory, $this->metadata);
+        $this->query = new QueryComposer($this->pdo, $this->entityFactory, $this->metadata);
 
         $entityFactory = $this->entityFactory;
 
