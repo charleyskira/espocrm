@@ -36,11 +36,9 @@ use Espo\ORM\{
     QueryParams\Select,
     QueryBuilder,
     Entity,
-};
-
-use Espo\Core\ORM\{
     EntityManager,
     EntityFactory,
+    CollectionFactory,
 };
 
 use tests\unit\testData\Entities\Test;
@@ -54,6 +52,8 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
         $entityManager = $this->entityManager = $this->getMockBuilder(EntityManager::class)->disableOriginalConstructor()->getMock();
         $entityFactory = $this->entityFactory = $this->getMockBuilder(EntityFactory::class)->disableOriginalConstructor()->getMock();
 
+        $this->collectionFactory = new CollectionFactory($this->entityManager);
+
         $this->mapper = $this->getMockBuilder(MysqlMapper::class)->disableOriginalConstructor()->getMock();
 
         $entityManager
@@ -65,6 +65,14 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
         $entityManager
             ->method('getQueryBuilder')
             ->will($this->returnValue($this->queryBuilder));
+
+        $entityManager
+            ->method('getQueryBuilder')
+            ->will($this->returnValue($this->queryBuilder));
+
+        $entityManager
+            ->method('getCollectionFactory')
+            ->will($this->returnValue($this->collectionFactory));
 
         $entity = $this->seed = $this->createEntity('Test', Test::class);
 

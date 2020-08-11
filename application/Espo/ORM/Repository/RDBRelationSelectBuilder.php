@@ -113,7 +113,7 @@ class RDBRelationSelectBuilder implements Findable
         }
 
         $middleName = lcfirst(
-            $this->entityManager->getMetadata()->get($this->entityType, ['relations', $this->relationName, 'relationName'])
+            $this->entity->getRelationParam($this->relationName, 'relationName')
         );
 
         foreach ($columns as $column => $alias) {
@@ -124,6 +124,11 @@ class RDBRelationSelectBuilder implements Findable
         }
 
         return $this;
+    }
+
+    public function columnsWhere(array) : self
+    {
+
     }
 
     protected function addAdditionalSelect()

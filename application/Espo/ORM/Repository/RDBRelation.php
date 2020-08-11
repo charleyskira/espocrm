@@ -64,12 +64,6 @@ class RDBRelation implements Findable
 
     protected $noBuilder = false;
 
-    private $isDirty = false;
-
-    protected $additionalSelect = [];
-
-    protected $selectIsAdded = false;
-
     public function __construct(EntityManager $entityManager, Entity $entity, string $relationName)
     {
         $this->entityManager = $entityManager;
