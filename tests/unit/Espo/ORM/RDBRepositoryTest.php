@@ -33,6 +33,7 @@ use Espo\ORM\{
     Mapper\MysqlMapper,
     Repository\RDBRepository as Repository,
     Repository\RDBRelation,
+    Repository\RDBRelationSelectBuilder,
     EntityCollection,
     QueryParams\Select,
     QueryBuilder,
@@ -41,6 +42,8 @@ use Espo\ORM\{
     EntityFactory,
     CollectionFactory,
 };
+
+use RuntimeException;
 
 use tests\unit\testData\Entities\Test;
 
@@ -681,15 +684,49 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
         $this->repository->getById('1');
     }
 
-    public function getRelation1()
+    public function testGetRelationInstance()
     {
         $repository = $this->createRepository('Account');
 
-        $account = $this->entityFactory->createEntity('Account');
+        $account = $this->entityFactory->create('Account');
         $account->id = 'accountId';
 
         $relation = $repository->getRelation($account, 'teams');
 
         $this->assertInstanceOf(RDBRelation::class, $relation);
+    }
+
+    public function testGetRelationCloneInstance()
+    {
+        $repository = $this->createRepository('Account');
+
+        $account = $this->entityFactory->create('Account');
+        $account->id = 'accountId';
+
+        $select = $this->queryBuilder
+            ->select()
+            ->from('Team')
+            ->build();
+
+        $relationSelectBuilder = $repository->getRelation($account, 'teams')->clone($select);
+
+        $this->assertInstanceOf(RDBRelationSelectBuilder::class, $relationSelectBuilder);
+    }
+
+    public function testGetRelationCloneBelongsToParentException()
+    {
+        $repository = $this->createRepository('Note');
+
+        $note = $this->entityFactory->create('Note');
+        $note->id = 'noteId';
+
+        $select = $this->queryBuilder
+            ->select()
+            ->from('Post')
+            ->build();
+
+        $this->expectException(RuntimeException::class);
+
+        $relationSelectBuilder = $repository->getRelation($note, 'parent')->clone($select);
     }
 }

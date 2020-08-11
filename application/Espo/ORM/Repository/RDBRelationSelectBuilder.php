@@ -126,9 +126,12 @@ class RDBRelationSelectBuilder implements HasFind
         return $this;
     }
 
-    public function columnsWhere(array) : self
+    /**
+     * @todo Add implementation.
+     */
+    public function columnsWhere(array $where) : self
     {
-
+        return $this;
     }
 
     protected function addAdditionalSelect()
@@ -166,7 +169,7 @@ class RDBRelationSelectBuilder implements HasFind
             $collection[] = $related;
         }
 
-        return $collection
+        return $collection;
     }
 
     /**

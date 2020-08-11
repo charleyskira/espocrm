@@ -82,6 +82,8 @@ class RDBRelation implements HasFind
 
         $this->relationType = $entity->getRelationType($relationName);
 
+        $this->foreignEntityType = $entity->getRelationParam($relationName, 'entity');
+
         $this->entityType = $entity->getEntityType();
 
         if ($this->isBelongsToParentType()) {
@@ -317,7 +319,7 @@ class RDBRelation implements HasFind
         return
             $fromEntity->get($idAttribute) === $entity->id
             &&
-            $fromEntity->get($typeAttribute) === $entity->getEntityType());
+            $fromEntity->get($typeAttribute) === $entity->getEntityType();
     }
 
     /**
