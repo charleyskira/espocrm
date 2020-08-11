@@ -32,6 +32,7 @@ require_once 'tests/unit/testData/DB/Entities.php';
 use Espo\ORM\{
     Mapper\MysqlMapper,
     Repository\RDBRepository as Repository,
+    Repository\RDBRelation,
     EntityCollection,
     QueryParams\Select,
     QueryBuilder,
@@ -49,8 +50,11 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
 {
     protected function setUp() : void
     {
-        $entityManager = $this->entityManager = $this->getMockBuilder(EntityManager::class)->disableOriginalConstructor()->getMock();
-        $entityFactory = $this->entityFactory = $this->getMockBuilder(EntityFactory::class)->disableOriginalConstructor()->getMock();
+        $entityManager = $this->entityManager =
+            $this->getMockBuilder(EntityManager::class)->disableOriginalConstructor()->getMock();
+
+        $entityFactory = $this->entityFactory =
+        $this->getMockBuilder(EntityFactory::class)->disableOriginalConstructor()->getMock();
 
         $this->collectionFactory = new CollectionFactory($this->entityManager);
 
@@ -83,7 +87,15 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
 
         $entityFactory
             ->method('create')
-            ->will($this->returnValue($entity));
+            ->will(
+                $this->returnCallback(
+                    function (string $entityType) {
+                        $className = 'Espo\\Entities\\' . ucfirst($entityType);
+
+                        return $this->createEntity($entityType, $className);
+                    }
+                )
+            );
 
         $this->repository = $this->createRepository('Test');
     }
@@ -667,5 +679,17 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
             ->with($select);
 
         $this->repository->getById('1');
+    }
+
+    public function getRelation1()
+    {
+        $repository = $this->createRepository('Account');
+
+        $account = $this->entityFactory->createEntity('Account');
+        $account->id = 'accountId';
+
+        $relation = $repository->getRelation($account, 'teams');
+
+        $this->assertInstanceOf(RDBRelation::class, $relation);
     }
 }
