@@ -63,24 +63,29 @@ trait SelectingBuilderTrait
      * Two usage options:
      * * `where(array $whereClause)`
      * * `where(string $key, string $value)`
+     *
+     * @param array|string $keyOrClause A key or where clause.
+     * @param ?array|string $value A value. If the first argument is an array, then should be omited.
      */
-    public function where($param1 = [], $param2 = null) : self
+    public function where($keyOrClause = [], $value = null) : self
     {
         $this->params['whereClause'] = $this->params['whereClause'] ?? [];
 
-        if (is_array($param1)) {
-            $this->params['whereClause'] = $param1 + $this->params['whereClause'];
+        if (is_array($keyOrClause)) {
+            $whereClause = $keyOrClause;
+            $this->params['whereClause'] = $whereClause + $this->params['whereClause'];
 
             return $this;
         }
 
-        if (!is_null($param2)) {
-            $this->params['whereClause'][] = [$param1 => $param2];
+        if (is_string($keyOrClause)) {
+            $key = $keyOrClause;
+            $this->params['whereClause'][] = [$key => $value];
 
             return $this;
         }
 
-        throw new BadMethodCallException();
+        throw new InvalidArgumentException();
     }
 
     /**
@@ -88,11 +93,12 @@ trait SelectingBuilderTrait
      *
      * @param string|array $orderBy An attribute to order by or order definitions as an array.
      * @param bool|string $direction 'ASC' or 'DESC'. TRUE for DESC order.
+     *                               If the first argument is an array then should be omitied.
      */
-    public function order($orderBy = null, $direction = Select::ORDER_ASC) : self
+    public function order($orderBy, $direction = Select::ORDER_ASC) : self
     {
         if (!$orderBy) {
-            throw BadMethodCallException();
+            throw InvalidArgumentException();
         }
 
         $this->params['orderBy'] = $orderBy;

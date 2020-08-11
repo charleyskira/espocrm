@@ -181,7 +181,7 @@ class RDBRelation implements HasFind
      *
      * @see Espo\ORM\QueryParams\SelectBuilder::join()
      */
-    public function join($relationName, ?string $alias = null, ?array $conditions = null) : RDBRelationSelectBuilder
+    public function join(string $relationName, ?string $alias = null, ?array $conditions = null) : RDBRelationSelectBuilder
     {
         return $this->createBuilder()->join($relationName, $alias, $conditions);
     }
@@ -191,7 +191,7 @@ class RDBRelation implements HasFind
      *
      * @see Espo\ORM\QueryParams\SelectBuilder::leftJoin()
      */
-    public function leftJoin($relationName, ?string $alias = null, ?array $conditions = null) : RDBRelationSelectBuilder
+    public function leftJoin(string $relationName, ?string $alias = null, ?array $conditions = null) : RDBRelationSelectBuilder
     {
         return $this->createBuilder()->leftJoin($relationName, $alias, $conditions);
     }

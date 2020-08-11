@@ -128,23 +128,25 @@ class SelectBuilder implements Builder
      * * `having(array $havingClause)`
      * * `having(string $key, string $value)`
      */
-    public function having($param1 = [], $param2 = null) : self
+    public function having($keyOrClause = [], $value = null) : self
     {
         $this->params['havingClause'] = $this->params['havingClause'] ?? [];
 
-        if (is_array($param1)) {
-            $this->params['havingClause'] = $param1 + $this->params['havingClause'];
+        if (is_array($keyOrClause)) {
+            $whereClause = $keyOrClause;
+            $this->params['havingClause'] = $whereClause + $this->params['havingClause'];
 
             return $this;
         }
 
-        if (!is_null($param2)) {
-            $this->params['havingClause'][] = [$param1 => $param2];
+        if (is_string($keyOrClause)) {
+            $key = $keyOrClause;
+            $this->params['havingClause'][] = [$key => $value];
 
             return $this;
         }
 
-        throw new BadMethodCallException();
+        throw new InvalidArgumentException();
     }
 
     /**

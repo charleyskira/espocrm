@@ -210,9 +210,9 @@ class RDBSelectBuilder implements HasFind
      *
      * @see Espo\ORM\QueryParams\SelectBuilder::where()
      */
-    public function where($param1 = [], $param2 = null) : self
+    public function where($keyOrClause = [], $value = null) : self
     {
-        $this->builder->where($param1, $param2);
+        $this->builder->where($keyOrClause, $value);
 
         return $this;
     }
@@ -222,9 +222,9 @@ class RDBSelectBuilder implements HasFind
      *
      * @see Espo\ORM\QueryParams\SelectBuilder::having()
      */
-    public function having($param1 = [], $param2 = null) : self
+    public function having($keyOrClause = [], $value = null) : self
     {
-        $this->builder->having($param1, $params2);
+        $this->builder->having($keyOrClause, $value);
 
         return $this;
     }

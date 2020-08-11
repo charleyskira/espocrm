@@ -101,6 +101,30 @@ class SelectBuilderTest extends \PHPUnit\Framework\TestCase
         $this->assertNotSame($selectCloned, $select);
     }
 
+    public function testWhereNull1()
+    {
+        $select = $this->builder
+            ->from('Test')
+            ->where(['test' => null])
+            ->build();
+
+        $raw = $select->getRawParams();
+
+        $this->assertEquals(['test' => null], $raw['whereClause']);
+    }
+
+    public function testWhereNull2()
+    {
+        $select = $this->builder
+            ->from('Test')
+            ->where('test', null)
+            ->build();
+
+        $raw = $select->getRawParams();
+
+        $this->assertEquals([['test' => null]], $raw['whereClause']);
+    }
+
     public function testClone()
     {
         $builder = new SelectBuilder();
@@ -145,5 +169,4 @@ class SelectBuilderTest extends \PHPUnit\Framework\TestCase
             ->from('Test')
             ->clone($select);
     }
-
 }
