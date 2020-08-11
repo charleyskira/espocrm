@@ -240,8 +240,6 @@ class RDBRelation implements Findable
     public function order($orderBy = 'id', $direction = 'ASC') : RDBRelationSelectBuilder
     {
         return $this->createBuilder()->order($orderBy, $direction);
-
-        return $this;
     }
 
     /**

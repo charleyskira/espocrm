@@ -58,6 +58,7 @@ class RDBSelectBuilder implements Findable
         $this->entityManager = $entityManager;
 
         $this->entityType = $entityType;
+
         $this->repository = $this->entityManager->getRepository($entityType);
 
         if ($query && $query->getFrom() !== $entityType) {

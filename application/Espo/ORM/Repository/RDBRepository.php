@@ -318,8 +318,9 @@ class RDBRepository extends Repository implements Findable, Relatable, Removable
         return (int) $this->getMapper()->countRelated($entity, $relationName, $select);
     }
 
-    protected function applyRelationAdditionalColumns(Entity $entity, string $relationName, array $columns, Select $select) : Select
-    {
+    protected function applyRelationAdditionalColumns(
+        Entity $entity, string $relationName, array $columns, Select $select
+    ) : Select {
         if (empty($columns)) {
             return $select;
         }
