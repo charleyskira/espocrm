@@ -86,7 +86,7 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
         $this->account = $this->createEntity('Account', Entities\Account::class);
         $this->team = $this->createEntity('Team', Entities\Team::class);
 
-        $this->collection = $this->getMockBuilder(EntityCollection::class)->disableOriginalConstructor()->getMock();
+        $this->collection = $this->createCollectionMock();
 
         $entityFactory
             ->method('create')
@@ -101,6 +101,11 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
             );
 
         $this->repository = $this->createRepository('Test');
+    }
+
+    protected function createCollectionMock() : EntityCollection
+    {
+        return $this->getMockBuilder(EntityCollection::class)->disableOriginalConstructor()->getMock();
     }
 
     protected function createRepository(string $entityType)
@@ -684,7 +689,7 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
         $this->repository->getById('1');
     }
 
-    public function testGetRelationInstance()
+    public function testRelationInstance()
     {
         $repository = $this->createRepository('Account');
 
@@ -696,7 +701,7 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
         $this->assertInstanceOf(RDBRelation::class, $relation);
     }
 
-    public function testGetRelationCloneInstance()
+    public function testRelationCloneInstance()
     {
         $repository = $this->createRepository('Account');
 
@@ -713,7 +718,7 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
         $this->assertInstanceOf(RDBRelationSelectBuilder::class, $relationSelectBuilder);
     }
 
-    public function testGetRelationCloneBelongsToParentException()
+    public function testRelationCloneBelongsToParentException()
     {
         $repository = $this->createRepository('Note');
 
@@ -728,5 +733,81 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
         $this->expectException(RuntimeException::class);
 
         $relationSelectBuilder = $repository->getRelation($note, 'parent')->clone($select);
+    }
+
+    public function testRelationSelectBuilderFind1()
+    {
+        $repository = $this->createRepository('Post');
+
+        $post = $this->entityFactory->create('Post');
+        $post->id = 'postId';
+
+        $collection = $this->createCollectionMock();
+
+        $select = $this->queryBuilder
+            ->select()
+            ->from('Comment')
+            ->select(['id'])
+            ->distinct()
+            ->where(['name' => 'test'])
+            ->join('Test', 'test', ['id:' => 'id'])
+            ->order('id', 'DESC')
+            ->build();
+
+        $this->mapper
+            ->expects($this->once())
+            ->method('selectRelated')
+            ->will($this->returnValue($collection))
+            ->with($post, 'comments', $select);
+
+        $repository->getRelation($post, 'comments')
+            ->select(['id'])
+            ->distinct()
+            ->where(['name' => 'test'])
+            ->join('Test', 'test', ['id:' => 'id'])
+            ->order('id', 'DESC')
+            ->find();
+    }
+
+    public function testRelationSelectBuilderFindOne1()
+    {
+        $repository = $this->createRepository('Post');
+
+        $post = $this->entityFactory->create('Post');
+        $post->id = 'postId';
+
+        $collection = $this->collectionFactory->create();
+
+        $comment = $this->entityFactory->create('Comment');
+        $comment->set('id', 'commentId');
+
+        $collection[] = $comment;
+
+        $select = $this->queryBuilder
+            ->select()
+            ->from('Comment')
+            ->select(['id'])
+            ->distinct()
+            ->where(['name' => 'test'])
+            ->join('Test', 'test', ['id:' => 'id'])
+            ->order('id', 'DESC')
+            ->limit(0, 1)
+            ->build();
+
+        $this->mapper
+            ->expects($this->once())
+            ->method('selectRelated')
+            ->will($this->returnValue($collection))
+            ->with($post, 'comments', $select);
+
+        $result = $repository->getRelation($post, 'comments')
+            ->select(['id'])
+            ->distinct()
+            ->where(['name' => 'test'])
+            ->join('Test', 'test', ['id:' => 'id'])
+            ->order('id', 'DESC')
+            ->findOne();
+
+        $this->assertEquals($comment, $result);
     }
 }

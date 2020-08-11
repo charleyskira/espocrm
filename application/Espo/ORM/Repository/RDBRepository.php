@@ -42,7 +42,7 @@ use StdClass;
 use RuntimeException;
 use InvalidArgumentException;
 
-class RDBRepository extends Repository implements HasFind, HasRelation
+class RDBRepository extends Repository
 {
     protected $mapper;
 

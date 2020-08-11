@@ -91,7 +91,7 @@ class RDBRelation implements HasFind
         }
     }
 
-    protected function createBuilder(?Select $query) : RDBRelationSelectBuilder
+    protected function createBuilder(?Select $query = null) : RDBRelationSelectBuilder
     {
         if ($this->noBuilder) {
             throw new RuntimeException("Can't use query builder for the '{$this->relationType}' relation type.");
@@ -246,7 +246,7 @@ class RDBRelation implements HasFind
      * @see Espo\ORM\QueryParams\SelectBuilder::order()
      *
      * @param string|array $orderBy
-     * @param bool|string $direction
+      * @param bool|string $direction
      */
     public function order($orderBy, $direction = 'ASC') : RDBRelationSelectBuilder
     {
