@@ -136,6 +136,10 @@ class RDBRelationSelectBuilder implements HasFind
 
     protected function addAdditionalSelect()
     {
+        if (!count($this->additionalSelect)) {
+            return;
+        }
+
         $select = $this->builder->build()->getSelect();
 
         if (!count($select)) {

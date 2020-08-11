@@ -735,7 +735,119 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
         $relationSelectBuilder = $repository->getRelation($note, 'parent')->clone($select);
     }
 
-    public function testRelationSelectBuilderFind1()
+    public function testRelationCount()
+    {
+        $post = $this->entityFactory->create('Post');
+        $post->id = 'postId';
+
+        $select = $this->queryBuilder
+            ->select()
+            ->from('Comment')
+            ->build();
+
+        $this->mapper
+            ->expects($this->once())
+            ->method('countRelated')
+            ->will($this->returnValue(1))
+            ->with($post, 'comments', $select);
+
+        $this->createRepository('Post')->getRelation($post, 'comments')->count();
+    }
+
+    public function testRelationFindHasMany()
+    {
+        $repository = $this->createRepository('Post');
+
+        $post = $this->entityFactory->create('Post');
+        $post->id = 'postId';
+
+        $collection = $this->collectionFactory->create();
+
+        $select = $this->queryBuilder
+            ->select()
+            ->from('Comment')
+            ->build();
+
+        $this->mapper
+            ->expects($this->once())
+            ->method('selectRelated')
+            ->will($this->returnValue($collection))
+            ->with($post, 'comments', $select);
+
+        $relationSelectBuilder = $repository->getRelation($post, 'comments')->find();
+    }
+
+    public function testRelationFindBelongsTo()
+    {
+        $comment = $this->entityFactory->create('Comment');
+        $comment->id = 'commentId';
+
+        $post = $this->entityFactory->create('Post');
+        $post->id = 'postId';
+
+        $collection = $this->collectionFactory->create();
+
+        $select = $this->queryBuilder
+            ->select()
+            ->from('Post')
+            ->build();
+
+        $this->mapper
+            ->expects($this->once())
+            ->method('selectRelated')
+            ->will($this->returnValue($post))
+            ->with($comment, 'post', $select);
+
+        $result = $this->createRepository('Comment')
+            ->getRelation($comment, 'post')
+            ->find();
+
+        $this->assertEquals(1, count($result));
+
+        $this->assertEquals($post, $result[0]);
+    }
+
+    public function testRelationFindBelongsToParent()
+    {
+        $note = $this->entityFactory->create('Note');
+        $note->id = 'noteId';
+
+        $post = $this->entityFactory->create('Post');
+        $post->id = 'noteId';
+
+        $this->mapper
+            ->expects($this->once())
+            ->method('selectRelated')
+            ->will($this->returnValue($post))
+            ->with($note, 'parent',);
+
+        $result = $this->createRepository('Note')->getRelation($note, 'parent')->find();
+
+        $this->assertEquals(1, count($result));
+
+        $this->assertEquals($post, $result[0]);
+    }
+
+    public function testRelationFindOneBelongsToParent()
+    {
+        $note = $this->entityFactory->create('Note');
+        $note->id = 'noteId';
+
+        $post = $this->entityFactory->create('Post');
+        $post->id = 'noteId';
+
+        $this->mapper
+            ->expects($this->once())
+            ->method('selectRelated')
+            ->will($this->returnValue($post))
+            ->with($note, 'parent',);
+
+        $result = $this->createRepository('Note')->getRelation($note, 'parent')->findOne();
+
+        $this->assertEquals($post, $result);
+    }
+
+    public function testRelationSelectBuilderFind()
     {
         $repository = $this->createRepository('Post');
 
@@ -769,7 +881,7 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
             ->find();
     }
 
-    public function testRelationSelectBuilderFindOne1()
+    public function testRelationSelectBuilderFindOne()
     {
         $repository = $this->createRepository('Post');
 

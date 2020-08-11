@@ -211,7 +211,7 @@ class RDBRelation implements HasFind
      */
     public function sth() : RDBRelationSelectBuilder
     {
-        return $$this->createBuilder()->sth();
+        return $this->createBuilder()->sth();
     }
 
     /**
@@ -224,7 +224,7 @@ class RDBRelation implements HasFind
      */
     public function where($keyOrClause = [], $value = null) : RDBRelationSelectBuilder
     {
-        return $$this->createBuilder()->where($keyOrClause, $value);
+        return $this->createBuilder()->where($keyOrClause, $value);
     }
 
     /**
