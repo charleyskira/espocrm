@@ -86,7 +86,7 @@ class RDBRelation implements Findable
 
         $this->entityType = $entity->getEntityType();
 
-        if ($this->relationType === Entity::BELONGS_TO_PARENT) {
+        if ($this->isBelongsToParentType()) {
             $this->noBuilder = true;
         }
     }
@@ -116,6 +116,11 @@ class RDBRelation implements Findable
         return $this->createBuilder($query);
     }
 
+    protected function isBelongsToParentType() : bool
+    {
+        return $this->relationType === Entity::BELONGS_TO_PARENT;
+    }
+
     protected function getMapper() : Mapper
     {
         return $this->entityManager->getMapper();
@@ -126,7 +131,7 @@ class RDBRelation implements Findable
      */
     public function find() : Collection
     {
-        if ($this->relationType === Entity::BELONGS_TO_PARENT) {
+        if ($this->isBelongsToParentType()) {
             $collection = $this->entityManager->getCollectionFactory()->create();
 
             $entity = $this->getMapper()->selectRelated($this->entity, $this->relationName);
@@ -148,7 +153,7 @@ class RDBRelation implements Findable
      */
     public function findOne() : ?Entity
     {
-        if ($this->relationType === Entity::BELONGS_TO_PARENT) {
+        if ($this->isBelongsToParentType()) {
             return $this->getMapper()->selectRelated($this->entity, $this->relationName);
         }
 
@@ -170,7 +175,6 @@ class RDBRelation implements Findable
     {
         return $this->createBuilder()->count();
     }
-
 
     /**
      * Add JOIN.
@@ -277,18 +281,47 @@ class RDBRelation implements Findable
         }
 
         if (!$entity->id) {
-            throw new RuntimeException("Can't relate an entity w/o ID.");
+            throw new RuntimeException("Can't use an entity w/o ID.");
         }
     }
 
     public function isRelated(Entity $entity) : bool
     {
+        if (!$entity->id) {
+            throw new RuntimeException("Can't use an entity w/o ID.");
+        }
+
+        if ($this->isBelongsToParentType()) {
+            return $this->isRelatedBelongsToParent();
+        }
+
         $this->processCheckForeignEntity($entity);
 
-        return (bool) $this
+        return (bool) $this->createBuilder()
             ->select(['id'])
             ->where(['id' => $entity->id])
             ->findOne();
+    }
+
+    protected function isRelatedBelongsToParent(Entity $entity) : bool
+    {
+        $fromEntity = $this->entity;
+
+        $idAttribute = $this->relationName . 'Id';
+        $typeAttribute = $this->relationName . 'Type';
+
+        if (!$fromEntity->has($idAttribute) || !$fromEntity->has($typeAttribute)) {
+            $fromEntity = $this->entityManager->getEntity($fromEntity->getEntityType(), $fromEntity->id);
+        }
+
+        if (!$fromEntity) {
+            return false;
+        }
+
+        return
+            $fromEntity->get($idAttribute) === $entity->id
+            &&
+            $fromEntity->get($typeAttribute) === $entity->getEntityType());
     }
 
     /**
