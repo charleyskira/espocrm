@@ -44,7 +44,7 @@ use BadMethodCallException;
 /**
  * Builds select parameters for related records for RDB repository.
  */
-class RDBRelationSelectBuilder implements Findable
+class RDBRelationSelectBuilder implements HasFind
 {
     protected $entityManager;
 

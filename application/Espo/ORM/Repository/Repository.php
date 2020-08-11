@@ -74,12 +74,12 @@ abstract class Repository
     }
 
     /**
-     * Get entity. If $id is NULL, a new entity is returned.
+     * Get an entity. If $id is NULL, a new entity is returned.
      */
     abstract public function get(?string $id = null) : ?Entity;
 
     /**
-     * Store entity.
+     * Store an entity.
      */
     abstract public function save(Entity $entity);
 }

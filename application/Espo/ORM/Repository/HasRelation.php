@@ -31,23 +31,12 @@ namespace Espo\ORM\Repository;
 
 use Espo\ORM\{
     Entity,
-    Collection,
 };
 
-interface Findable
+interface HasRelation
 {
     /**
-     * A number of records matching specific parameters.
+     * Get an access point for a specific relation of a record.
      */
-    public function count() : int;
-
-    /**
-     * Find records matching specific parameters.
-     */
-    public function find() : Collection;
-
-    /**
-     * Find the first record matching specific parameters.
-     */
-    public function findOne() : ?Entity;
+    public function getRelation(Entity $entity, string $relationName) : RDBRelation;
 }

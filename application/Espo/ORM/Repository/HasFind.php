@@ -31,12 +31,23 @@ namespace Espo\ORM\Repository;
 
 use Espo\ORM\{
     Entity,
+    Collection,
 };
 
-interface Removable
+interface HasFind
 {
     /**
-     * Remove a record (mark as deleted).
+     * A number of records matching specific parameters.
      */
-    public function remove(Entity $entity);
+    public function count() : int;
+
+    /**
+     * Find records matching specific parameters.
+     */
+    public function find() : Collection;
+
+    /**
+     * Find the first record matching specific parameters.
+     */
+    public function findOne() : ?Entity;
 }

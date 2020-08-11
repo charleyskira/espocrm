@@ -42,7 +42,7 @@ use StdClass;
 use RuntimeException;
 use InvalidArgumentException;
 
-class RDBRepository extends Repository implements Findable, Relatable, Removable
+class RDBRepository extends Repository implements HasFind, HasRelation
 {
     protected $mapper;
 
@@ -122,8 +122,17 @@ class RDBRepository extends Repository implements Findable, Relatable, Removable
     {
     }
 
+    protected function processCheckEntity(Entity $entity)
+    {
+        if ($entity->getEntityType() !== $this->entityType) {
+            throw new RuntimeException("An entity type doesn't match the repository.");
+        }
+    }
+
     public function save(Entity $entity, array $options = [])
     {
+        $this->processCheckEntity($entity);
+
         $entity->setAsBeingSaved();
 
         if (empty($options['skipBeforeSave']) && empty($options['skipAll'])) {
@@ -178,19 +187,31 @@ class RDBRepository extends Repository implements Findable, Relatable, Removable
         return new RDBRelation($this->entityManager, $entity, $relationName);
     }
 
+    /**
+     * Remove a record (mark as deleted).
+     */
     public function remove(Entity $entity, array $options = [])
     {
+        $this->processCheckEntity($entity);
+
         $this->beforeRemove($entity, $options);
+
         $this->getMapper()->delete($entity);
+
         $this->afterRemove($entity, $options);
     }
 
+    /**
+     * @deprecated
+     */
     public function deleteFromDb(string $id, bool $onlyDeleted = false)
     {
         $this->getMapper()->deleteFromDb($this->entityType, $id, $onlyDeleted);
     }
 
     /**
+     * Find records.
+     *
      * @param $params @deprecated Omit it.
      */
     public function find(?array $params = []) : Collection
@@ -204,6 +225,8 @@ class RDBRepository extends Repository implements Findable, Relatable, Removable
     }
 
     /**
+     * Find one record.
+     *
      * @param $params @deprecated Omit it.
      */
     public function findOne(?array $params = []) : ?Entity
