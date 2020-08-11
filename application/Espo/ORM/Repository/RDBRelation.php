@@ -218,28 +218,37 @@ class RDBRelation implements HasFind
      * Add a WHERE clause.
      *
      * @see Espo\ORM\QueryParams\SelectBuilder::where()
+     *
+     * @param array|string $keyOrClause
+     * @param ?array|string $value
      */
-    public function where($param1 = [], $param2 = null) : RDBRelationSelectBuilder
+    public function where($keyOrClause = [], $value = null) : RDBRelationSelectBuilder
     {
-        return $$this->createBuilder()->where($param1, $param2);
+        return $$this->createBuilder()->where($keyOrClause, $value);
     }
 
     /**
      * Add a HAVING clause.
      *
      * @see Espo\ORM\QueryParams\SelectBuilder::having()
+     *
+     * @param array|string $keyOrClause
+     * @param ?array|string $value
      */
-    public function having($param1 = [], $param2 = null) : RDBRelationSelectBuilder
+    public function having($keyOrClause = [], $value = null) : RDBRelationSelectBuilder
     {
-        return $this->createBuilder()->having($param1, $params2);
+        return $this->createBuilder()->having($keyOrClause, $params2);
     }
 
     /**
      * Apply ORDER.
      *
      * @see Espo\ORM\QueryParams\SelectBuilder::order()
+     *
+     * @param string|array $orderBy
+     * @param bool|string $direction
      */
-    public function order($orderBy = 'id', $direction = 'ASC') : RDBRelationSelectBuilder
+    public function order($orderBy, $direction = 'ASC') : RDBRelationSelectBuilder
     {
         return $this->createBuilder()->order($orderBy, $direction);
     }

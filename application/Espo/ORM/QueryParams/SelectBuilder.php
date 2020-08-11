@@ -127,6 +127,9 @@ class SelectBuilder implements Builder
      * Two usage options:
      * * `having(array $havingClause)`
      * * `having(string $key, string $value)`
+     *
+     * @param array|string $keyOrClause
+     * @param ?array|string $value
      */
     public function having($keyOrClause = [], $value = null) : self
     {
