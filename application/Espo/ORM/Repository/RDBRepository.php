@@ -661,27 +661,31 @@ class RDBRepository extends Repository implements HasFind, HasRelation
     }
 
     /**
-     * @todo Remove aggregation functions?
+     * Get a max value.
+     *
      * @return int|float
      */
     public function max(string $attribute)
     {
-
-         return $this->createSelectBuilder()->max($attribute);
+        return $this->createSelectBuilder()->max($attribute);
     }
 
     /**
+     * Get a min value.
+     *
      * @return int|float
      */
-    public function min(string $attribute, Select $query = null)
+    public function min(string $attribute)
     {
         return $this->createSelectBuilder()->min($attribute);
     }
 
     /**
+     * Get a sum value.
+     *
      * @return int|float
      */
-    public function sum(string $attribute, Select $query = null)
+    public function sum(string $attributel)
     {
         return $this->createSelectBuilder()->sum($attribute);
     }

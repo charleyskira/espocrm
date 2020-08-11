@@ -112,6 +112,8 @@ class RDBSelectBuilder implements Findable
     }
 
     /**
+     * Get a number of records.
+     *
      * @param $params @deprecated. Omit it.
      */
     public function count(?array $params = null) : int
@@ -122,6 +124,8 @@ class RDBSelectBuilder implements Findable
     }
 
     /**
+     * Get a max value.
+     *
      * @return int|float
      */
     public function max(string $attribute)
@@ -132,16 +136,20 @@ class RDBSelectBuilder implements Findable
     }
 
     /**
+     * Get a min value.
+     *
      * @return int|float
      */
     public function min(string $attribute)
     {
-        $query = $this->builder->build();;
+        $query = $this->builder->build();
 
         return $this->getMapper()->min($query, $attribute);
     }
 
     /**
+     * Get a sum value.
+     *
      * @return int|float
      */
     public function sum(string $attribute)
