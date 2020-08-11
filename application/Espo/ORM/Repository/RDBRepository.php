@@ -170,6 +170,14 @@ class RDBRepository extends Repository implements Findable, Relatable, Removable
     {
     }
 
+    /**
+     * Get an access point for a specific relation of a record.
+     */
+    public function getRelation(Entity $entity, string $relationName) : RDBRelation
+    {
+        return new RDBRelation($this->entityManager, $entity, $relationName);
+    }
+
     public function remove(Entity $entity, array $options = [])
     {
         $this->beforeRemove($entity, $options);

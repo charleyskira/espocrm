@@ -71,7 +71,11 @@ class RDBRelation implements Findable
         $this->entity = $entity;
 
         if (!$entity->get('id')) {
-            throw new RuntimeException("Can't use entity w/o ID.");
+            throw new RuntimeException("Can't use an entity w/o ID.");
+        }
+
+        if (!$entity->hasRelation($relationName)) {
+            throw new RuntimeException("Entity does not have a relation '{$relationName}'.");
         }
 
         $this->relationName = $relationName;
