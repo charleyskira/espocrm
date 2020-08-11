@@ -968,7 +968,7 @@ class DBMapperTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals('test', $result);
     }
 
-    public function testUpdateRelation()
+    public function testUpdateRelationColumns()
     {
         $this->post->id = 'postId';
         $this->tag->id = 'tagId';
@@ -979,7 +979,7 @@ class DBMapperTest extends \PHPUnit\Framework\TestCase
 
         $this->mockQuery($query);
 
-        $this->db->updateRelation($this->post, 'tags', 'tagId', [
+        $this->db->updateRelationColumns($this->post, 'tags', 'tagId', [
             'role' => 'test'
         ]);
     }

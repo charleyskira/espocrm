@@ -501,7 +501,7 @@ abstract class BaseMapper implements Mapper
     /**
      * Update relationship columns.
      */
-    public function updateRelation(Entity $entity, string $relationName, ?string $id = null, array $columnData) : bool
+    public function updateRelationColumns(Entity $entity, string $relationName, ?string $id = null, array $columnData) : bool
     {
         if (empty($id) || empty($relationName)) {
             throw new RuntimeException("Can't update relation, empty ID or relation name.");

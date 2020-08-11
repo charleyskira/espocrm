@@ -44,13 +44,15 @@ use BadMethodCallException;
 /**
  * Builds select parameters for related records for RDB repository.
  */
-class RDBRelatedSelectBuilder implements Findable
+class RDBRelationSelectBuilder implements Findable
 {
     protected $entityManager;
 
+    protected $entity;
+
     protected $entityType;
 
-    protected $foreignEntityType = null;
+    protected $foreignEntityType;
 
     protected $relationName;
 
@@ -58,31 +60,27 @@ class RDBRelatedSelectBuilder implements Findable
 
     protected $builder = null;
 
-    protected $noBuilder = false;
-
-    private $isDirty = false;
-
     protected $additionalSelect = [];
 
     protected $selectIsAdded = false;
 
-    public function __construct(EntityManager $entityManager, string $entityType, string $relationName)
+    public function __construct(EntityManager $entityManager, Entity $entity, string $relationName, ?Select $query = null)
     {
         $this->entityManager = $entityManager;
 
-        $this->entityType = $entityType;
+        $this->entity = $entity;
 
         $this->relationName = $relationName;
 
         $this->relationType = $entity->getRelationType($relationName);
 
-        if ($this->relationType === Entity::BELONGS_TO_PARENT) {
-            $this->noBuilder = true;
-        }
+        $this->entityType = $entity->getEntityType();
 
-        if (!$this->noBuilder) {
-            $this->foreignEntityType = $entity->getRelationParam($relationName, 'entity');
+        $this->foreignEntityType = $entity->getRelationParam($relationName, 'entity');
 
+        if ($query) {
+            $this->builder = $this->createSelectBuilder()->clone($query);
+        } else {
             $this->builder = $this->createSelectBuilder()->from($this->foreignEntityType);
         }
     }
@@ -90,40 +88,6 @@ class RDBRelatedSelectBuilder implements Findable
     protected function createSelectBuilder() : SelectBuilder
     {
         return new SelectBuilder($this->entityManager->getQueryComposer());
-    }
-
-    /**
-     * Clone a query.
-     */
-    public function clone(Select $query) : self
-    {
-        $this->processBuilderCheck();
-
-        if ($query->getFrom() !== $this->foreignEntityType) {
-            throw new RuntimeException("RealtedSelectBuilder: Passed query doesn't match the entity type.");
-        }
-
-        $this->builder = $this->createSelectBuilder()->clone($query);
-
-        $this->setAsDirty();
-
-        return $this;
-    }
-
-    protected function setAsDirty()
-    {
-        $this->isDirty = true;
-    }
-
-    protected function processBuilderCheck()
-    {
-        if ($this->noBuilder) {
-            throw new RuntimeException("RealtedSelectBuilder: Can't use query builder for the '{$this->relationType}' relation type.");
-        }
-
-        if ($this->isDirty) {
-            throw new RuntimeException("RealtedSelectBuilder: Can't modify a query.");
-        }
     }
 
     protected function getMapper() : Mapper
@@ -136,6 +100,7 @@ class RDBRelatedSelectBuilder implements Findable
      *
      * Usage:
      * `['columnName' => 'attributeName']`
+     * @todo Remove?
      */
     public function columns(array $columns) : self
     {
@@ -175,20 +140,54 @@ class RDBRelatedSelectBuilder implements Findable
     }
 
     /**
-     * @param $params @deprecated. Omit it.
-     * @return ?Collection|Entity
+     * Find related records by a criteria.
      */
-    public function find(?array $params = null)
+    public function find() : Collection
     {
         $this->addAdditionalSelect();
+
+        $query = $this->builder->build();
+
+        $related = $this->getMapper()->selectRelated($this->entity, $this->relationName, $query);
+
+        if ($related instanceof Collection) {
+            return $related;
+        }
+
+        $collection = $this->entityManager->getCollectionFactory()->create($this->foreignEntityType);
+        $collection->setAsFetched();
+
+        if ($related instanceof Entity) {
+            $collection[] = $related;
+        }
+
+        return $collection
     }
 
     /**
-     * @param $params @deprecated. Omit it.
+     * Find a first related records by a criteria.
      */
-    public function count(?array $params = null) : int
+    public function findOne() : ?Entity
     {
+        $collection = $this->limit(0, 1)->find();
 
+        if (!count($collection)) {
+            return null;
+        }
+
+        foreach ($collection as $entity) {
+            return $entity;
+        }
+    }
+
+    /**
+     * Get a number of related records that meet criteria.
+     */
+    public function count() : int
+    {
+        $query = $this->builder->build();
+
+        return $this->getMapper()->countRelated($this->entity, $this->relationName, $query);
     }
 
 
@@ -199,10 +198,6 @@ class RDBRelatedSelectBuilder implements Findable
      */
     public function join($relationName, ?string $alias = null, ?array $conditions = null) : self
     {
-        if (!$this->builder) {
-            throw new BadMethodCallException("Can't compose a query for a relation of '{$this->relationType}' type.");
-        }
-
         $this->builder->join($relationName, $alias, $conditions);
 
         return $this;
@@ -269,8 +264,7 @@ class RDBRelatedSelectBuilder implements Findable
     /**
      * Apply ORDER.
      *
-     * @param string|array $orderBy An attribute to order by or order definitions as an array.
-     * @param bool|string $direction TRUE for DESC order.
+     * @see Espo\ORM\QueryParams\SelectBuilder::order()
      */
     public function order($orderBy = 'id', $direction = 'ASC') : self
     {
@@ -311,63 +305,5 @@ class RDBRelatedSelectBuilder implements Findable
         $this->builder->groupBy($groupBy);
 
         return $this;
-    }
-
-    /**
-     * For backward compatibility.
-     * @todo Remove.
-     */
-    protected function getMergedParams(?array $params = null) : Select
-    {
-        if (!$params || empty($params)) {
-            return $this->builder->build();
-        }
-
-        $params = $params ?? [];
-
-        $builtParams = $this->builder->build()->getRawParams();
-
-        $whereClause = $builtParams['whereClause'] ?? [];
-        $havingClause = $builtParams['havingClause'] ?? [];
-        $joins = $builtParams['joins'] ?? [];
-        $leftJoins = $builtParams['leftJoins'] ?? [];
-
-        if (!empty($params['whereClause'])) {
-            unset($builtParams['whereClause']);
-            if (count($whereClause)) {
-                $params['whereClause'][] = $whereClause;
-            }
-        }
-
-        if (!empty($params['havingClause'])) {
-            unset($builtParams['havingClause']);
-            if (count($havingClause)) {
-                $params['havingClause'][] = $havingClause;
-            }
-        }
-
-        if (empty($params['whereClause'])) {
-            unset($params['whereClause']);
-        }
-
-        if (empty($params['havingClause'])) {
-            unset($params['havingClause']);
-        }
-
-        if (!empty($params['leftJoins']) && !empty($leftJoins)) {
-            foreach ($leftJoins as $j) {
-                $params['leftJoins'][] = $j;
-            }
-        }
-
-        if (!empty($params['joins']) && !empty($joins)) {
-            foreach ($joins as $j) {
-                $params['joins'][] = $j;
-            }
-        }
-
-        $params = array_replace_recursive($builtParams, $params);
-
-        return Select::fromRaw($params);
     }
 }

@@ -1,0 +1,392 @@
+<?php
+/************************************************************************
+ * This file is part of EspoCRM.
+ *
+ * EspoCRM - Open Source CRM application.
+ * Copyright (C) 2014-2020 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
+ *
+ * EspoCRM is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * EspoCRM is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with EspoCRM. If not, see http://www.gnu.org/licenses/.
+ *
+ * The interactive user interfaces in modified source and object code versions
+ * of this program must display Appropriate Legal Notices, as required under
+ * Section 5 of the GNU General Public License version 3.
+ *
+ * In accordance with Section 7(b) of the GNU General Public License version 3,
+ * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
+ ************************************************************************/
+
+namespace Espo\ORM\Repository;
+
+use Espo\ORM\{
+    Collection,
+    Entity,
+    EntityManager,
+    QueryParams\Select,
+    QueryParams\SelectBuilder,
+    Mapper\Mapper,
+};
+
+use RuntimeException;
+use BadMethodCallException;
+
+use StdClass;
+
+/**
+ * An access point for a specific relation of a record.
+ */
+class RDBRelation implements Findable
+{
+    protected $entityManager;
+
+    protected $entity;
+
+    protected $entityType;
+
+    protected $foreignEntityType = null;
+
+    protected $relationName;
+
+    protected $relationType = null;
+
+    protected $builder = null;
+
+    protected $noBuilder = false;
+
+    private $isDirty = false;
+
+    protected $additionalSelect = [];
+
+    protected $selectIsAdded = false;
+
+    public function __construct(EntityManager $entityManager, Entity $entity, string $relationName)
+    {
+        $this->entityManager = $entityManager;
+
+        $this->entity = $entity;
+
+        if (!$entity->get('id')) {
+            throw new RuntimeException("Can't use entity w/o ID.");
+        }
+
+        $this->relationName = $relationName;
+
+        $this->relationType = $entity->getRelationType($relationName);
+
+        $this->entityType = $entity->getEntityType();
+
+        if ($this->relationType === Entity::BELONGS_TO_PARENT) {
+            $this->noBuilder = true;
+        }
+    }
+
+    protected function createBuilder(?Select $query) : RDBRelationSelectBuilder
+    {
+        if ($this->noBuilder) {
+            throw new RuntimeException("Can't use query builder for the '{$this->relationType}' relation type.");
+        }
+
+        return new RDBRelationSelectBuilder($this->entityManager, $this->entity, $this->relationName, $query);
+    }
+
+    /**
+     * Clone a query.
+     */
+    public function clone(Select $query) : RDBRelationSelectBuilder
+    {
+        if ($this->noBuilder) {
+            throw new RuntimeException("Can't use clone for the '{$this->relationType}' relation type.");
+        }
+
+        if ($query->getFrom() !== $this->foreignEntityType) {
+            throw new RuntimeException("Passed query doesn't match the entity type.");
+        }
+
+        return $this->createBuilder($query);
+    }
+
+    protected function getMapper() : Mapper
+    {
+        return $this->entityManager->getMapper();
+    }
+
+    /**
+     * Find related records.
+     */
+    public function find() : Collection
+    {
+        if ($this->relationType === Entity::BELONGS_TO_PARENT) {
+            $collection = $this->entityManager->getCollectionFactory()->create();
+
+            $entity = $this->getMapper()->selectRelated($this->entity, $this->relationName);
+
+            if ($entity) {
+                $collection[] = $entity;
+            }
+
+            $collection->setAsFetched();
+
+            return $collection;
+        }
+
+        return $this->createBuilder()->find();
+    }
+
+    /**
+     * Find a first record.
+     */
+    public function findOne() : ?Entity
+    {
+        if ($this->relationType === Entity::BELONGS_TO_PARENT) {
+            return $this->getMapper()->selectRelated($this->entity, $this->relationName);
+        }
+
+        $collection = $this->limit(0, 1)->find();
+
+        if (!count($collection)) {
+            return null;
+        }
+
+        foreach ($collection as $entity) {
+            return $entity;
+        }
+    }
+
+    /**
+     * Get a number of related records.
+     */
+    public function count() : int
+    {
+        return $this->createBuilder()->count();
+    }
+
+
+    /**
+     * Add JOIN.
+     *
+     * @see Espo\ORM\QueryParams\SelectBuilder::join()
+     */
+    public function join($relationName, ?string $alias = null, ?array $conditions = null) : RDBRelationSelectBuilder
+    {
+        return $this->createBuilder()->join($relationName, $alias, $conditions);
+    }
+
+    /**
+     * Add LEFT JOIN.
+     *
+     * @see Espo\ORM\QueryParams\SelectBuilder::leftJoin()
+     */
+    public function leftJoin($relationName, ?string $alias = null, ?array $conditions = null) : RDBRelationSelectBuilder
+    {
+        return $this->createBuilder()->leftJoin($relationName, $alias, $conditions);
+    }
+
+    /**
+     * Set DISTINCT parameter.
+     */
+    public function distinct() : RDBRelationSelectBuilder
+    {
+        return $this->createBuilder()->distinct();
+    }
+
+    /**
+     * Set to return STH collection. Recommended for fetching large number of records.
+     *
+     * @todo Remove.
+     */
+    public function sth() : RDBRelationSelectBuilder
+    {
+        return $$this->createBuilder()->sth();
+    }
+
+    /**
+     * Add a WHERE clause.
+     *
+     * @see Espo\ORM\QueryParams\SelectBuilder::where()
+     */
+    public function where($param1 = [], $param2 = null) : RDBRelationSelectBuilder
+    {
+        return $$this->createBuilder()->where($param1, $param2);
+    }
+
+    /**
+     * Add a HAVING clause.
+     *
+     * @see Espo\ORM\QueryParams\SelectBuilder::having()
+     */
+    public function having($param1 = [], $param2 = null) : RDBRelationSelectBuilder
+    {
+        return $this->createBuilder()->having($param1, $params2);
+    }
+
+    /**
+     * Apply ORDER.
+     *
+     * @see Espo\ORM\QueryParams\SelectBuilder::order()
+     */
+    public function order($orderBy = 'id', $direction = 'ASC') : RDBRelationSelectBuilder
+    {
+        return $this->createBuilder()->order($orderBy, $direction);
+
+        return $this;
+    }
+
+    /**
+     * Apply OFFSET and LIMIT.
+     */
+    public function limit(?int $offset = null, ?int $limit = null) : RDBRelationSelectBuilder
+    {
+        return $this->createBuilder()->limit($offset, $limit);
+    }
+
+    /**
+     * Specify SELECT. Which attributes to select. All attributes are selected by default.
+     *
+     * @see Espo\ORM\QueryParams\SelectBuilder::select()
+     *
+     * @param array|string $select
+     */
+    public function select($select, ?string $alias = null) : RDBRelationSelectBuilder
+    {
+        return $this->createBuilder()->select($select, $alias);
+    }
+
+    /**
+     * Specify GROUP BY.
+     */
+    public function groupBy(array $groupBy) : RDBRelationSelectBuilder
+    {
+        return $this->createBuilder()->groupBy($groupBy);
+    }
+
+    protected function processCheckForeignEntity(Entity $entity)
+    {
+        if ($this->foreignEntityType && $this->foreignEntityType !== $entity->getEntityType()) {
+            throw new InvalidArgumentException("Entity type doesn't match an entity type of the relation.");
+        }
+
+        if (!$entity->id) {
+            throw new RuntimeException("Can't relate an entity w/o ID.");
+        }
+    }
+
+    public function isRelated(Entity $entity) : bool
+    {
+        $this->processCheckForeignEntity($entity);
+
+        return (bool) $this
+            ->select(['id'])
+            ->where(['id' => $entity->id])
+            ->findOne();
+    }
+
+    /**
+     * Relate with an entity.
+     */
+    public function relate(Entity $entity, ?array $columnData = null, array $options = [])
+    {
+        $this->processCheckForeignEntity($entity);
+
+        $this->beforeRelate($entity, $columnData, $options);
+
+        $result = $this->getMapper()->relateById($this->entity, $this->relationName, $entity->id, $columnData);
+
+        if (!$result) {
+            return;
+        }
+
+        $this->afterRelate($entity, $columnData, $options);
+    }
+
+    /**
+     * Unrelate from an entity.
+     */
+    public function unrelate(Entity $entity, array $options = [])
+    {
+        $this->processCheckForeignEntity($entity);
+
+        $this->beforeUnrelate($entity, $options);
+
+        $result = $this->getMapper()->unrelateById($this->entity, $this->relationName, $entity->id);
+
+        if (!$result) {
+            return;
+        }
+
+        $this->afterUnrelate($entity, $options);
+    }
+
+    public function massRelate(Select $query, array $options = [])
+    {
+        $this->beforeMassRelate($query, $options);
+
+        $this->getMapper()->massRelate($this->entity, $this->relationName, $query);
+
+        $this->afterMassRelate($query, $options);
+    }
+
+    /**
+     * Update relationship columns. For many-to-many relationships.
+     */
+    public function updateColumns(Entity $entity, array $columnData)
+    {
+        $this->processCheckForeignEntity($entity);
+
+        if ($this->relationType !== Entity::MANY_MANY) {
+            throw new RuntimeException("Can't update not many-to-many relation.");
+        }
+
+        $this->getMapper()->updateRelationColumns($this->entity, $this->relationName, $entity->id, $columnData);
+    }
+
+    /**
+     * Get a relationship column value. For many-to-many relationships.
+     *
+     * @return mixed
+     */
+    public function getColumn(Entity $entity, string $column)
+    {
+        $this->processCheckForeignEntity($entity);
+
+        if ($this->relationType !== Entity::MANY_MANY) {
+            throw new RuntimeException("Can't get a column of not many-to-many relation.");
+        }
+
+        return $this->getMapper()->getRelationColumn($this->entity, $this->relationName, $entity->id, $column);
+    }
+
+    protected function beforeRelate(Entity $entity, array $columnData, array $options)
+    {
+    }
+
+    protected function afterRelate(Entity $entity, array $columnData, array $options)
+    {
+    }
+
+    protected function beforeUnrelate(Entity $entity, array $options)
+    {
+    }
+
+    protected function afterUnrelate(Entity $entity, array $options)
+    {
+    }
+
+    protected function beforeMassRelate(Select $query, array $options)
+    {
+    }
+
+    protected function afterMassRelate(Select $query, array $options)
+    {
+    }
+}

@@ -223,7 +223,7 @@ class RDBRepository extends Repository implements Findable, Relatable, Removable
     }
 
     /**
-     * @todo Write RDBRelatedSelectBuilder
+     * @deprecated
      */
     public function findRelated(Entity $entity, string $relationName, ?array $params = null)
     {
@@ -272,7 +272,7 @@ class RDBRepository extends Repository implements Findable, Relatable, Removable
     }
 
     /**
-     * @todo Write RDBRelatedSelectBuilder
+     * @deprecated
      */
     public function countRelated(Entity $entity, string $relationName, ?array $params = null) : int
     {
@@ -361,7 +361,7 @@ class RDBRepository extends Repository implements Findable, Relatable, Removable
     }
 
     /**
-     * @todo Write RDBRelatedSelectBuilder
+     * @deprecated
      */
     public function isRelated(Entity $entity, string $relationName, $foreign) : bool
     {
@@ -426,10 +426,11 @@ class RDBRepository extends Repository implements Findable, Relatable, Removable
     }
 
     /**
-     * @todo Write RDBRelatedSelectBuilder
+     * @deprecated
      */
     public function relate(Entity $entity, string $relationName, $foreign, $columnData = null, array $options = [])
     {
+
         if (!$entity->id) {
             throw new RuntimeException("Can't relate an entity w/o ID.");
         }
@@ -483,7 +484,7 @@ class RDBRepository extends Repository implements Findable, Relatable, Removable
     }
 
     /**
-     * @todo Write RDBRelatedSelectBuilder
+     * @deprecated
      */
     public function unrelate(Entity $entity, string $relationName, $foreign, array $options = [])
     {
@@ -534,6 +535,9 @@ class RDBRepository extends Repository implements Findable, Relatable, Removable
         return $result;
     }
 
+    /**
+     * @deprecated
+     */
     public function getRelationColumn(Entity $entity, string $relationName, string $foreignId, string $column)
     {
         return $this->getMapper()->getRelationColumn($entity, $relationName, $foreignId, $column);
@@ -564,8 +568,7 @@ class RDBRepository extends Repository implements Findable, Relatable, Removable
     }
 
     /**
-     * Update relationship columns.
-     * @todo Write RDBRelatedSelectBuilder
+     * @deprecated
      */
     public function updateRelation(Entity $entity, string $relationName, $foreign, $columnData)
     {
@@ -591,11 +594,11 @@ class RDBRepository extends Repository implements Findable, Relatable, Removable
             throw new RuntimeException("Bad foreign value.");
         }
 
-        return $this->getMapper()->updateRelation($entity, $relationName, $id, $columnData);
+        return $this->getMapper()->updateRelationColumns($entity, $relationName, $id, $columnData);
     }
 
     /**
-     * @todo Write RDBRelatedSelectBuilder
+     * @deprecated
      */
     public function massRelate(Entity $entity, string $relationName, array $params = [], array $options = [])
     {
