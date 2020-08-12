@@ -32,6 +32,7 @@ namespace Espo\Core\ORM\Repository;
 use Espo\ORM\{
     Entity,
     Repository\EmptyHookMediator,
+    QueryParams\Select,
 };
 
 use Espo\Core\HookManager;
@@ -45,5 +46,53 @@ class HookMediator extends EmptyHookMediator
         $this->hookManager = $hookManager;
     }
 
+    public function afterRelate(Entity $entity, string $relationName, Entity $foreignEntity, ?array $columnData, array $options)
+    {
+        if (!empty($options['skipHooks'])) {
+            return;
+        }
 
+        $hookData = [
+            'relationName' => $relationName,
+            'relationData' => $columnData,
+            'foreignEntity' => $foreignEntity,
+            'foreignId' => $foreignEntity->id,
+        ];
+
+        $this->hookManager->process(
+            $entity->getEntityType(), 'afterRelate', $entity, $options, $hookData
+        );
+    }
+    public function afterUnrelate(Entity $entity, string $relationName, Entity $foreignEntity, array $options)
+    {
+        if (!empty($options['skipHooks'])) {
+            return;
+        }
+
+        $hookData = [
+            'relationName' => $relationName,
+            'foreignEntity' => $foreignEntity,
+            'foreignId' => $foreignEntity->id,
+        ];
+
+        $this->hookManager->process(
+            $entity->getEntityType(), 'afterUnrelate', $entity, $options, $hookData
+        );
+    }
+
+    public function afterMassRelate(Entity $entity, string $relationName, Select $query, array $options)
+    {
+        if (!empty($options['skipHooks'])) {
+            return;
+        }
+
+        $hookData = [
+            'relationName' => $relationName,
+            'query' => $query,
+        ];
+
+        $this->hookManager->process(
+            $entity->getEntityType(), 'afterMassRelate', $entity, $options, $hookData
+        );
+    }
 }
