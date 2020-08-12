@@ -50,6 +50,8 @@ class RDBRelation
 {
     protected $entityManager;
 
+    protected $hookMediator;
+
     protected $entity;
 
     protected $entityType;
@@ -64,11 +66,11 @@ class RDBRelation
 
     protected $noBuilder = false;
 
-    public function __construct(EntityManager $entityManager, Entity $entity, string $relationName)
+    public function __construct(EntityManager $entityManager, Entity $entity, string $relationName, HookMediator $hookMediator)
     {
         $this->entityManager = $entityManager;
-
         $this->entity = $entity;
+        $this->hookMediator = $hookMediator;
 
         if (!$entity->get('id')) {
             throw new RuntimeException("Can't use an entity w/o ID.");
@@ -426,25 +428,31 @@ class RDBRelation
 
     protected function beforeRelate(Entity $entity, ?array $columnData, array $options)
     {
+        $this->hookMediator->beforeRelate($this->entity, $this->relationName, $entity, $columnData, $options);
     }
 
     protected function afterRelate(Entity $entity, ?array $columnData, array $options)
     {
+        $this->hookMediator->afterRelate($this->entity, $this->relationName, $entity, $columnData, $options);
     }
 
     protected function beforeUnrelate(Entity $entity, array $options)
     {
+        $this->hookMediator->beforeUnrelate($this->entity, $this->relationName, $entity, $options);
     }
 
     protected function afterUnrelate(Entity $entity, array $options)
     {
+        $this->hookMediator->afterUnrelate($this->entity, $this->relationName, $entity, $options);
     }
 
     protected function beforeMassRelate(Select $query, array $options)
     {
+        $this->hookMediator->beforeMassRelate($this->entity, $this->relationName, $query, $options);
     }
 
     protected function afterMassRelate(Select $query, array $options)
     {
+        $this->hookMediator->afterMassRelate($this->entity, $this->relationName, $query, $options);
     }
 }

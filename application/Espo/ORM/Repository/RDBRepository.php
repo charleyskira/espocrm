@@ -48,8 +48,11 @@ class RDBRepository extends Repository
 
     private $isTableLocked = false;
 
-    public function __construct(string $entityType, EntityManager $entityManager, EntityFactory $entityFactory)
-    {
+    protected $hookMediator;
+
+    public function __construct(
+        string $entityType, EntityManager $entityManager, EntityFactory $entityFactory, ?HookMediatoer $hookMediator = null
+    ) {
         $this->entityType = $entityType;
         $this->entityName = $entityType;
 
@@ -57,6 +60,8 @@ class RDBRepository extends Repository
         $this->entityManager = $entityManager;
 
         $this->seed = $this->entityFactory->create($entityType);
+
+        $this->hookMediator = $hookMediator ?? (new EmptyHookMediator());
     }
 
     protected function getMapper() : Mapper
@@ -114,14 +119,6 @@ class RDBRepository extends Repository
         return $this->getById($id);
     }
 
-    protected function beforeSave(Entity $entity, array $options = [])
-    {
-    }
-
-    protected function afterSave(Entity $entity, array $options = [])
-    {
-    }
-
     protected function processCheckEntity(Entity $entity)
     {
         if ($entity->getEntityType() !== $this->entityType) {
@@ -171,20 +168,12 @@ class RDBRepository extends Repository
         return $this->getMapper()->restoreDeleted($this->entityType, $id);
     }
 
-    protected function beforeRemove(Entity $entity, array $options = [])
-    {
-    }
-
-    protected function afterRemove(Entity $entity, array $options = [])
-    {
-    }
-
     /**
      * Get an access point for a specific relation of a record.
      */
     public function getRelation(Entity $entity, string $relationName) : RDBRelation
     {
-        return new RDBRelation($this->entityManager, $entity, $relationName);
+        return new RDBRelation($this->entityManager, $entity, $relationName, $this->hookMediator);
     }
 
     /**
@@ -202,7 +191,7 @@ class RDBRepository extends Repository
     }
 
     /**
-     * @deprecated
+     * @deprecated Use QueryBuilder instead.
      */
     public function deleteFromDb(string $id, bool $onlyDeleted = false)
     {
@@ -462,7 +451,6 @@ class RDBRepository extends Repository
      */
     public function relate(Entity $entity, string $relationName, $foreign, $columnData = null, array $options = [])
     {
-
         if (!$entity->id) {
             throw new RuntimeException("Can't relate an entity w/o ID.");
         }
@@ -834,5 +822,25 @@ class RDBRepository extends Repository
         $builder = new RDBSelectBuilder($this->entityManager, $this->entityType);
 
         return $builder;
+    }
+
+    protected function beforeSave(Entity $entity, array $options = [])
+    {
+        $this->hookMediator->beforeSave($entity, $options);
+    }
+
+    protected function afterSave(Entity $entity, array $options = [])
+    {
+        $this->hookMediator->afterSave($entity, $options);
+    }
+
+    protected function beforeRemove(Entity $entity, array $options = [])
+    {
+        $this->hookMediator->beforeRemove($entity, $options);
+    }
+
+    protected function afterRemove(Entity $entity, array $options = [])
+    {
+        $this->hookMediator->afterRemove($entity, $options);
     }
 }
