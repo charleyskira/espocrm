@@ -299,7 +299,7 @@ class RDBRelation implements HasFind
         }
 
         if ($this->isBelongsToParentType()) {
-            return $this->isRelatedBelongsToParent();
+            return $this->isRelatedBelongsToParent($entity);
         }
 
         $this->processCheckForeignEntity($entity);
@@ -406,11 +406,11 @@ class RDBRelation implements HasFind
         return $this->getMapper()->getRelationColumn($this->entity, $this->relationName, $entity->id, $column);
     }
 
-    protected function beforeRelate(Entity $entity, array $columnData, array $options)
+    protected function beforeRelate(Entity $entity, ?array $columnData, array $options)
     {
     }
 
-    protected function afterRelate(Entity $entity, array $columnData, array $options)
+    protected function afterRelate(Entity $entity, ?array $columnData, array $options)
     {
     }
 

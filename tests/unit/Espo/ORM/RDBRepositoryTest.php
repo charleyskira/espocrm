@@ -834,17 +834,184 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
         $note->id = 'noteId';
 
         $post = $this->entityFactory->create('Post');
-        $post->id = 'noteId';
+        $post->id = 'postId';
 
         $this->mapper
             ->expects($this->once())
             ->method('selectRelated')
             ->will($this->returnValue($post))
-            ->with($note, 'parent',);
+            ->with($note, 'parent');
 
         $result = $this->createRepository('Note')->getRelation($note, 'parent')->findOne();
 
         $this->assertEquals($post, $result);
+    }
+
+    public function testRelationIsRelated1()
+    {
+        $note = $this->entityFactory->create('Note');
+        $note->set('id', 'noteId');
+
+        $post = $this->entityFactory->create('Post');
+        $post->set('id', 'postId');
+
+        $note->set('parentId', $post->id);
+        $note->set('parentType', 'Post');
+
+        $result = $this->createRepository('Note')->getRelation($note, 'parent')->isRelated($post);
+
+        $this->assertTrue($result);
+
+        $note->set('parentId', 'anotherId');
+        $note->set('parentType', 'Post');
+
+        $result = $this->createRepository('Note')->getRelation($note, 'parent')->isRelated($post);
+
+        $this->assertFalse($result);
+    }
+
+    public function testRelationIsRelated2()
+    {
+        $post = $this->entityFactory->create('Post');
+        $post->set('id', 'postId');
+
+        $note = $this->entityFactory->create('Note');
+        $note->set('id', 'noteId');
+
+        $collection = $this->collectionFactory->create('Note', [$note]);
+
+        $select = $this->queryBuilder
+            ->select()
+            ->from('Note')
+            ->select(['id'])
+            ->where(['id' => $note->id])
+            ->limit(0, 1)
+            ->build();
+
+        $this->mapper
+            ->expects($this->once())
+            ->method('selectRelated')
+            ->will($this->returnValue($collection))
+            ->with($post, 'notes', $select);
+
+        $result = $this->createRepository('Post')->getRelation($post, 'notes')->isRelated($note);
+
+        $this->assertTrue($result);
+    }
+
+    public function testRelationIsRelated3()
+    {
+        $post = $this->entityFactory->create('Post');
+        $post->set('id', 'postId');
+
+        $note = $this->entityFactory->create('Note');
+        $note->set('id', 'noteId');
+
+        $collection = $this->collectionFactory->create('Note', []);
+
+        $select = $this->queryBuilder
+            ->select()
+            ->from('Note')
+            ->select(['id'])
+            ->where(['id' => $note->id])
+            ->limit(0, 1)
+            ->build();
+
+        $this->mapper
+            ->expects($this->once())
+            ->method('selectRelated')
+            ->will($this->returnValue($collection))
+            ->with($post, 'notes', $select);
+
+        $result = $this->createRepository('Post')->getRelation($post, 'notes')->isRelated($note);
+
+        $this->assertFalse($result);
+    }
+
+    public function testRelate1()
+    {
+        $post = $this->entityFactory->create('Post');
+        $post->set('id', 'postId');
+
+        $note = $this->entityFactory->create('Note');
+        $note->set('id', 'noteId');
+
+        $this->mapper
+            ->expects($this->once())
+            ->method('relateById')
+            ->with($post, 'notes', $note->id);
+
+        $this->createRepository('Post')->getRelation($post, 'notes')->relate($note);
+    }
+
+    public function testUnrelate1()
+    {
+        $post = $this->entityFactory->create('Post');
+        $post->set('id', 'postId');
+
+        $note = $this->entityFactory->create('Note');
+        $note->set('id', 'noteId');
+
+        $this->mapper
+            ->expects($this->once())
+            ->method('unrelateById')
+            ->with($post, 'notes', $note->id);
+
+        $this->createRepository('Post')->getRelation($post, 'notes')->unrelate($note);
+    }
+
+    public function testMassRelate()
+    {
+        $post = $this->entityFactory->create('Post');
+        $post->set('id', 'postId');
+
+        $select = $this->queryBuilder
+            ->select()
+            ->from('Note')
+            ->build();
+
+        $this->mapper
+            ->expects($this->once())
+            ->method('massRelate')
+            ->with($post, 'notes', $select);
+
+        $this->createRepository('Post')->getRelation($post, 'notes')->massRelate($select);
+    }
+
+    public function testGetColumn()
+    {
+        $account = $this->entityFactory->create('Account');
+        $account->set('id', 'accountId');
+
+        $team = $this->entityFactory->create('Team');
+        $team->set('id', 'teamId');
+
+        $this->mapper
+            ->expects($this->once())
+            ->method('getRelationColumn')
+            ->with($account, 'teams', $team->id, 'test');
+
+        $this->createRepository('Post')->getRelation($account, 'teams')->getColumn($team, 'test');
+    }
+
+    public function testUpdateColumns()
+    {
+        $account = $this->entityFactory->create('Account');
+        $account->set('id', 'accountId');
+
+        $team = $this->entityFactory->create('Team');
+        $team->set('id', 'teamId');
+
+        $columns = [
+            'column' => 'test',
+        ];
+
+        $this->mapper
+            ->expects($this->once())
+            ->method('updateRelationColumns')
+            ->with($account, 'teams', $team->id, $columns);
+
+        $this->createRepository('Post')->getRelation($account, 'teams')->updateColumns($team, $columns);
     }
 
     public function testRelationSelectBuilderFind()
