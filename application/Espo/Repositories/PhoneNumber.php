@@ -92,13 +92,13 @@ class PhoneNumber extends \Espo\Core\Repositories\Database implements
 
         $numberList = $this
             ->select(['name', 'type', 'invalid', 'optOut', ['en.primary', 'primary']])
-            ->join([[
+            ->join(
                 'EntityPhoneNumber',
                 'en',
                 [
                     'en.phoneNumberId:' => 'id',
                 ]
-            ]])
+            )
             ->where([
                 'en.entityId' => $entity->id,
                 'en.entityType' => $entity->getEntityType(),

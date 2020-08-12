@@ -111,7 +111,7 @@ class TargetList extends \Espo\Services\Record
 
         foreach ($this->targetsLinkList as $link) {
             $foreignEntityType = $entity->getRelationParam($link, 'entity');
-            $count += $this->getEntityManager()->getRepository($foreignEntityType)->join(['targetLists'])->where([
+            $count += $this->getEntityManager()->getRepository($foreignEntityType)->join('targetLists')->where([
                 'targetListsMiddle.targetListId' => $entity->id,
                 'targetListsMiddle.optedOut' => 1,
             ])->count();

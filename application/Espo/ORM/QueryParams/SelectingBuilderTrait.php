@@ -132,20 +132,8 @@ trait SelectingBuilderTrait
     /**
      * Add JOIN.
      *
-     * @param string|array $relationName A relationName or table. A relationName is in camelCase, a table is in CamelCase.
+     * @param string $relationName A relationName or table. A relationName is in camelCase, a table is in CamelCase.
      *
-     * Usage options:
-     * * `join(string $relationName)`
-     * * `join(array $joinDefinitionList)`
-     *
-     * Usage examples:
-     * ```
-     * ->join($relationName)
-     * ->join($relationName, $alias, $conditions)
-     * ->join([$relationName1, $relationName2, ...])
-     * ->join([[$relationName, $alias], ...])
-     * ->join([[$relationName, $alias, $conditions], ...])
-     * ```
      */
     public function join($relationName, ?string $alias = null, ?array $conditions = null) : self
     {
@@ -183,9 +171,7 @@ trait SelectingBuilderTrait
     /**
      * Add LEFT JOIN.
      *
-     * @param string|array $relationName A relationName or table. A relationName is in camelCase, a table is in CamelCase.
-     *
-     * This method works the same way as `join` method.
+     * @param string $relationName A relationName or table. A relationName is in camelCase, a table is in CamelCase.
      */
     public function leftJoin($relationName, ?string $alias = null, ?array $conditions = null) : self
     {

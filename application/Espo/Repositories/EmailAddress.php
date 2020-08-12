@@ -94,13 +94,13 @@ class EmailAddress extends \Espo\Core\Repositories\Database implements
 
         $emailAddressList = $this
             ->select(['name', 'lower', 'invalid', 'optOut', ['ee.primary', 'primary']])
-            ->join([[
+            ->join(
                 'EntityEmailAddress',
                 'ee',
                 [
                     'ee.emailAddressId:' => 'id',
                 ]
-            ]])
+            )
             ->where([
                 'ee.entityId' => $entity->id,
                 'ee.entityType' => $entity->getEntityType(),

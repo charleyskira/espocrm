@@ -1403,10 +1403,15 @@ class Activities implements
 
         $userIdList = [];
 
-        $userList = $this->getEntityManager()->getRepository('User')->select(['id', 'name'])->leftJoin([['teams', 'teams']])->where([
-            'isActive' => true,
-            'teamsMiddle.teamId' => $teamIdList
-        ])->distinct()->find([], true);
+        $userList = $this->getEntityManager()->getRepository('User')
+            ->select(['id', 'name'])
+            ->leftJoin('teams')
+            ->where([
+                'isActive' => true,
+                'teamsMiddle.teamId' => $teamIdList
+            ])
+            ->distinct()
+            ->find();
 
         $userNames = (object) [];
 
