@@ -600,7 +600,7 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
         $select = $this->queryBuilder
             ->select()
             ->from('Team')
-            ->select(['*', ['teamsMiddle.deleted', 'teamDeleted']])
+            ->select(['*', ['entityTeam.deleted', 'teamDeleted']])
             ->build();
 
         $this->account->id = 'accountId';
@@ -624,7 +624,7 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
             ->select()
             ->from('Team')
             ->where([
-                'teamsMiddle.teamId' => 'testId',
+                'entityTeam.teamId' => 'testId',
             ])
             ->build();
 
@@ -1098,7 +1098,7 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
         $select = $this->queryBuilder
             ->select()
             ->from('Team')
-            ->select(['*', ['teamsMiddle.deleted', 'test']])
+            ->select(['*', ['entityTeam.deleted', 'test']])
             ->build();
 
         $this->mapper
@@ -1122,7 +1122,7 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
         $select = $this->queryBuilder
             ->select()
             ->from('Team')
-            ->select(['id', ['teamsMiddle.deleted', 'test']])
+            ->select(['id', ['entityTeam.deleted', 'test']])
             ->build();
 
         $this->mapper
@@ -1147,7 +1147,7 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
         $select = $this->queryBuilder
             ->select()
             ->from('Team')
-            ->where(['teamsMiddle.deleted' => false])
+            ->where(['entityTeam.deleted' => false])
             ->build();
 
         $this->mapper
@@ -1174,8 +1174,8 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
             ->from('Team')
             ->where([
                 'OR' => [
-                    ['teamsMiddle.deleted' => false],
-                    ['teamsMiddle.deleted' => null],
+                    ['entityTeam.deleted' => false],
+                    ['entityTeam.deleted' => null],
                 ]
             ])
             ->build();

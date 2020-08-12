@@ -37,6 +37,7 @@ use Espo\ORM\{
 use Espo\Core\ORM\{
     EntityManager,
     EntityFactory,
+    Repository\HookMediator,
 };
 
 use Espo\Core\{
@@ -72,7 +73,7 @@ class Database extends RDBRepository
         $this->hookManager = $hookManager;
         $this->applicationState = $applicationState;
 
-        // create mediator
+        $this->hookMediator = new HookMediator($hookManager);
 
         parent::__construct($entityType, $entityManager, $entityFactory);
     }

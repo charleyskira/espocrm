@@ -103,7 +103,7 @@ class RDBRelationSelectBuilder
      * Where `attributeName` is a non storable attribute that will be set with a column value.
      *
      * @todo Remove? Use attribute definitions to detect a proper select expression (in QueryComposer).
-     * @deprecated Use `->select('linkNameMiddle', 'attributeName')` instead.
+     * @deprecated Use `->select('middleTable', 'attributeName')` instead.
      */
     public function columns(array $columns) : self
     {
@@ -115,7 +115,9 @@ class RDBRelationSelectBuilder
             throw new RuntimeException("Can't select relation columns for not many-to-many relationship.");
         }
 
-        $middleName = $this->relationName . 'Middle';
+        $middleName = lcfirst(
+            $this->entity->getRelationParam($this->relationName, 'relationName')
+        );
 
         foreach ($columns as $column => $alias) {
             $this->additionalSelect[] = [
@@ -150,7 +152,9 @@ class RDBRelationSelectBuilder
     {
         $transformedWhere = [];
 
-        $middleName = $this->relationName . 'Middle';
+        $middleName = lcfirst(
+            $this->entity->getRelationParam($this->relationName, 'relationName')
+        );
 
         foreach ($where as $key => $value) {
             $transformedKey = $key;

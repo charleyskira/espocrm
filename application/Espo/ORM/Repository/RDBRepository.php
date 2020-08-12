@@ -283,7 +283,9 @@ class RDBRepository extends Repository
 
         // @todo Get rid of 'additionalColumnsConditions' usage. Use 'whereClause' instead.
         if ($type === Entity::MANY_MANY && count($additionalColumnsConditions)) {
-            $select = $this->applyRelationAdditionalColumnsConditions($entity, $relationName, $additionalColumnsConditions, $select);
+            $select = $this->applyRelationAdditionalColumnsConditions(
+                $entity, $relationName, $additionalColumnsConditions, $select
+            );
         }
 
         $result = $this->getMapper()->selectRelated($entity, $relationName, $select);
@@ -337,7 +339,7 @@ class RDBRepository extends Repository
             return $select;
         }
 
-        $middleName = $relationName . 'Middle';
+        $middleName = lcfirst($entity->getRelationParam($relationName, 'relationName'));
 
         $selectItemList = $select->getSelect();
 
@@ -348,7 +350,7 @@ class RDBRepository extends Repository
         foreach ($columns as $column => $alias) {
             $selectItemList[] = [
                 $middleName . '.' . $column,
-                $alias,
+                $alias
             ];
         }
 
@@ -367,7 +369,7 @@ class RDBRepository extends Repository
             return $select;
         }
 
-        $middleName = $relationName . 'Middle';
+        $middleName = lcfirst($entity->getRelationParam($relationName, 'relationName'));
 
         $builder = $this->entityManager->getQueryBuilder()->clone($select);
 
