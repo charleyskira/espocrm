@@ -133,23 +133,9 @@ class SelectBuilder implements Builder
      */
     public function having($keyOrClause = [], $value = null) : self
     {
-        $this->params['havingClause'] = $this->params['havingClause'] ?? [];
+        $this->applyWhereClause('havingClause', $keyOrClause, $value);
 
-        if (is_array($keyOrClause)) {
-            $whereClause = $keyOrClause;
-            $this->params['havingClause'] = $whereClause + $this->params['havingClause'];
-
-            return $this;
-        }
-
-        if (is_string($keyOrClause)) {
-            $key = $keyOrClause;
-            $this->params['havingClause'][] = [$key => $value];
-
-            return $this;
-        }
-
-        throw new InvalidArgumentException();
+        return $this;
     }
 
     /**

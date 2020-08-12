@@ -98,9 +98,12 @@ class RDBRelationSelectBuilder implements HasFind
     /**
      * Additional middle table columns. Only for many-to-many relationships.
      *
-     * Usage:
+     * Usage example:
      * `['columnName' => 'attributeName']`
-     * @todo Remove?
+     * Where `attributeName` is a non storable attribute that will be set with a column value.
+     *
+     * @todo Remove? Use attribute definitions to detect a proper select expression (in QueryComposer).
+     * @deprecated Use `->select('linkNameMiddle', 'attributeName')` instead.
      */
     public function columns(array $columns) : self
     {
@@ -112,9 +115,7 @@ class RDBRelationSelectBuilder implements HasFind
             throw new RuntimeException("Can't select relation columns for not many-to-many relationship.");
         }
 
-        $middleName = lcfirst(
-            $this->entity->getRelationParam($this->relationName, 'relationName')
-        );
+        $middleName = $this->relationName . 'Middle';
 
         foreach ($columns as $column => $alias) {
             $this->additionalSelect[] = [
@@ -127,11 +128,55 @@ class RDBRelationSelectBuilder implements HasFind
     }
 
     /**
-     * @todo Add implementation.
+     * Apply middle table conditions for a many-to-many relationship.
+     *
+     * Usage example:
+     * `->columnsWhere(['column' => $value])`
      */
     public function columnsWhere(array $where) : self
     {
+        if ($this->relationType !== Entity::MANY_MANY) {
+            throw new RuntimeException("Can't add columns where for not many-to-many relationship.");
+        }
+
+        $transformedWhere = $this->applyMiddleAliasToWhere($where);
+
+        $this->where($transformedWhere);
+
         return $this;
+    }
+
+    protected function applyMiddleAliasToWhere(array $where) : array
+    {
+        $transformedWhere = [];
+
+        $middleName = $this->relationName . 'Middle';
+
+        foreach ($where as $key => $value) {
+            $transformedKey = $key;
+            $transformedValue = $value;
+
+            if (is_int($key)) {
+                $transformedKey = $key;
+            }
+
+            if (
+                is_string($key) &&
+                strlen($key) &&
+                strpos($key, '.') === false &&
+                $key[0] === strtolower($key[0])
+            ) {
+                $transformedKey = $middleName . '.' . $key;
+            }
+
+            if (is_array($value)) {
+                $transformedValue = $this->applyMiddleAliasToWhere($value);
+            }
+
+            $transformedWhere[$transformedKey] = $transformedValue;
+        }
+
+        return $transformedWhere;
     }
 
     protected function addAdditionalSelect()

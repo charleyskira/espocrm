@@ -122,7 +122,22 @@ class SelectBuilderTest extends \PHPUnit\Framework\TestCase
 
         $raw = $select->getRawParams();
 
-        $this->assertEquals([['test' => null]], $raw['whereClause']);
+        $this->assertEquals(['test' => null], $raw['whereClause']);
+    }
+
+    public function testGroupBy()
+    {
+        $select = $this->builder
+            ->from('Test')
+            ->having(['test' => null])
+            ->groupBy(['test'])
+            ->build();
+
+        $raw = $select->getRawParams();
+
+        $this->assertEquals(['test' => null], $raw['havingClause']);
+
+        $this->assertEquals(['test'], $raw['groupBy']);
     }
 
     public function testClone()
@@ -148,8 +163,8 @@ class SelectBuilderTest extends \PHPUnit\Framework\TestCase
         $this->assertTrue($paramsCloned['distinct']);
         $this->assertFalse($params['distinct'] ?? false);
 
-        $this->assertEquals([['test1' =>'1']], $params['whereClause']);
-        $this->assertEquals([['test1' => '1'], ['test2' => '2']], $paramsCloned['whereClause']);
+        $this->assertEquals(['test1' =>'1'], $params['whereClause']);
+        $this->assertEquals(['test1' => '1', 'test2' => '2'], $paramsCloned['whereClause']);
     }
 
     public function testCloneException()
@@ -168,5 +183,59 @@ class SelectBuilderTest extends \PHPUnit\Framework\TestCase
         $builder
             ->from('Test')
             ->clone($select);
+    }
+
+    public function testWhereSameKeys1()
+    {
+        $builder = new SelectBuilder();
+
+        $select = $builder
+            ->from('Test')
+            ->where(['test' => '1'])
+            ->where(['test' => '2'])
+            ->build();
+
+        $raw = $select->getRawParams();
+
+        $expected = [
+            'test' => '1',
+            ['test' => '2'],
+        ];
+
+        $this->assertEquals($expected, $raw['whereClause']);
+    }
+
+    public function testWhereSameKeys2()
+    {
+        $builder = new SelectBuilder();
+
+        $select = $builder
+            ->from('Test')
+            ->where([
+                'OR' => [
+                    'test' => '1'
+                ],
+            ])
+            ->where([
+                'OR' => [
+                    'test' => '2'
+                ],
+            ])
+            ->build();
+
+        $raw = $select->getRawParams();
+
+        $expected = [
+            'OR' => [
+                'test' => '1'
+            ],
+            [
+                'OR' => [
+                    'test' => '2'
+                ],
+            ]
+        ];
+
+        $this->assertEquals($expected, $raw['whereClause']);
     }
 }

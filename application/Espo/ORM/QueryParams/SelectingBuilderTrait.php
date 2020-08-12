@@ -69,23 +69,45 @@ trait SelectingBuilderTrait
      */
     public function where($keyOrClause = [], $value = null) : self
     {
-        $this->params['whereClause'] = $this->params['whereClause'] ?? [];
+        $this->applyWhereClause('whereClause', $keyOrClause, $value);
+
+        return $this;
+    }
+
+    protected function applyWhereClause(string $type, $keyOrClause, $value)
+    {
+        $this->params[$type] = $this->params[$type] ?? [];
+
+        $original = $this->params[$type];
+
+        if (!is_string($keyOrClause) && !is_array($keyOrClause)) {
+            throw new InvalidArgumentException();
+        }
 
         if (is_array($keyOrClause)) {
-            $whereClause = $keyOrClause;
-            $this->params['whereClause'] = $whereClause + $this->params['whereClause'];
-
-            return $this;
+            $new = $keyOrClause;
         }
 
         if (is_string($keyOrClause)) {
-            $key = $keyOrClause;
-            $this->params['whereClause'][] = [$key => $value];
+            $new = [$keyOrClause => $value];
+        }
+
+        $containsSameKeys = (bool) count(
+            array_intersect(
+                array_keys($new),
+                array_keys($original)
+            )
+        );
+
+        if ($containsSameKeys) {
+            $this->params[$type][] = $new;
 
             return $this;
         }
 
-        throw new InvalidArgumentException();
+        $this->params[$type] = $new + $original;
+
+        return $this;
     }
 
     /**

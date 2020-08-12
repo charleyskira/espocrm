@@ -348,7 +348,7 @@ class RDBRepository extends Repository
             return $select;
         }
 
-        $middleName = lcfirst($entity->getRelationParam($relationName, 'relationName'));
+        $middleName = $relationName . 'Middle';
 
         $selectItemList = $select->getSelect();
 
@@ -378,7 +378,7 @@ class RDBRepository extends Repository
             return $select;
         }
 
-        $middleName = lcfirst($entity->getRelationParam($relationName, 'relationName'));
+        $middleName = $relationName . 'Middle';
 
         $builder = $this->entityManager->getQueryBuilder()->clone($select);
 

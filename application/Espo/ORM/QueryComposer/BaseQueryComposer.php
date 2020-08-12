@@ -2154,8 +2154,9 @@ abstract class BaseQueryComposer implements QueryComposer
         }
     }
 
-    protected function getJoinItemPart(Entity $entity, $name, $isLeft = false, $conditions = [], $alias = null, array $params = [])
-    {
+    protected function getJoinItemPart(
+        Entity $entity, string $name, bool $isLeft = false, array $conditions = [], ?string $alias = null, array $params = []
+    ) : string {
         $prefix = ($isLeft) ? 'LEFT ' : '';
 
         if (!$entity->hasRelation($name)) {

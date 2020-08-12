@@ -281,6 +281,24 @@ class RDBRelation implements HasFind
         return $this->createBuilder()->groupBy($groupBy);
     }
 
+    /**
+     * @deprecated Use `->select('linkNameMiddle', 'attributeName')` instead.
+     */
+    public function columns(array $columns) : RDBRelationSelectBuilder
+    {
+        return $this->createBuilder()->columns($columns);
+    }
+
+    /**
+     * Apply middle table conditions for a many-to-many relationship.
+     *
+     * @see Espo\ORM\Repository\RDBRelationSelectBuilder::columnsWhere()
+     */
+    public function columnsWhere(array $where) : RDBRelationSelectBuilder
+    {
+        return $this->createBuilder()->columnsWhere($where);
+    }
+
     protected function processCheckForeignEntity(Entity $entity)
     {
         if ($this->foreignEntityType && $this->foreignEntityType !== $entity->getEntityType()) {

@@ -43,8 +43,6 @@ use Espo\ORM\{
     CollectionFactory,
 };
 
-use RuntimeException;
-
 use tests\unit\testData\Entities\Test;
 
 use Espo\Entities;
@@ -310,7 +308,7 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
         $paramsExpected = Select::fromRaw([
             'from' => 'Test',
             'whereClause' => [
-                ['name' => 'test'],
+                'name' => 'test',
             ],
         ]);
 
@@ -351,7 +349,7 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
         $paramsExpected = Select::fromRaw([
             'from' => 'Test',
             'whereClause' => [
-                ['name' => 'test'],
+                'name' => 'test',
             ],
             'offset' => 0,
             'limit' => 1,
@@ -602,7 +600,7 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
         $select = $this->queryBuilder
             ->select()
             ->from('Team')
-            ->select(['*', ['entityTeam.deleted', 'teamDeleted']])
+            ->select(['*', ['teamsMiddle.deleted', 'teamDeleted']])
             ->build();
 
         $this->account->id = 'accountId';
@@ -626,7 +624,7 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
             ->select()
             ->from('Team')
             ->where([
-                ['entityTeam.teamId' => 'testId'],
+                'teamsMiddle.teamId' => 'testId',
             ])
             ->build();
 
@@ -1088,5 +1086,114 @@ class RDBRepositoryTest extends \PHPUnit\Framework\TestCase
             ->findOne();
 
         $this->assertEquals($comment, $result);
+    }
+
+    public function testRelationSelectBuilderColumns1()
+    {
+        $account = $this->entityFactory->create('Account');
+        $account->set('id', 'accountId');
+
+        $collection = $this->collectionFactory->create();
+
+        $select = $this->queryBuilder
+            ->select()
+            ->from('Team')
+            ->select(['*', ['teamsMiddle.deleted', 'test']])
+            ->build();
+
+        $this->mapper
+            ->expects($this->once())
+            ->method('selectRelated')
+            ->will($this->returnValue($collection))
+            ->with($account, 'teams', $select);
+
+        $this->createRepository('Account')->getRelation($account, 'teams')
+            ->columns(['deleted' => 'test'])
+            ->find();
+    }
+
+    public function testRelationSelectBuilderColumns2()
+    {
+        $account = $this->entityFactory->create('Account');
+        $account->set('id', 'accountId');
+
+        $collection = $this->collectionFactory->create();
+
+        $select = $this->queryBuilder
+            ->select()
+            ->from('Team')
+            ->select(['id', ['teamsMiddle.deleted', 'test']])
+            ->build();
+
+        $this->mapper
+            ->expects($this->once())
+            ->method('selectRelated')
+            ->will($this->returnValue($collection))
+            ->with($account, 'teams', $select);
+
+        $this->createRepository('Account')->getRelation($account, 'teams')
+            ->select(['id'])
+            ->columns(['deleted' => 'test'])
+            ->find();
+    }
+
+    public function testRelationSelectBuilderColumnsWhere1()
+    {
+        $account = $this->entityFactory->create('Account');
+        $account->set('id', 'accountId');
+
+        $collection = $this->collectionFactory->create();
+
+        $select = $this->queryBuilder
+            ->select()
+            ->from('Team')
+            ->where(['teamsMiddle.deleted' => false])
+            ->build();
+
+        $this->mapper
+            ->expects($this->once())
+            ->method('selectRelated')
+            ->will($this->returnValue($collection))
+            ->with($account, 'teams', $select);
+
+
+        $this->createRepository('Account')->getRelation($account, 'teams')
+            ->columnsWhere(['deleted' => false])
+            ->find();
+    }
+
+    public function testRelationSelectBuilderColumnsWhere2()
+    {
+        $account = $this->entityFactory->create('Account');
+        $account->set('id', 'accountId');
+
+        $collection = $this->collectionFactory->create();
+
+        $select = $this->queryBuilder
+            ->select()
+            ->from('Team')
+            ->where([
+                'OR' => [
+                    ['teamsMiddle.deleted' => false],
+                    ['teamsMiddle.deleted' => null],
+                ]
+            ])
+            ->build();
+
+        $this->mapper
+            ->expects($this->once())
+            ->method('selectRelated')
+            ->will($this->returnValue($collection))
+            ->with($account, 'teams', $select);
+
+
+        $this->createRepository('Account')->getRelation($account, 'teams')
+            ->columnsWhere([
+                'OR' => [
+                    ['deleted' => false],
+                    ['deleted' => null],
+                ]
+            ])
+            ->find();
     }
 }
