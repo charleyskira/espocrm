@@ -46,7 +46,7 @@ use StdClass;
 /**
  * An access point for a specific relation of a record.
  */
-class RDBRelation implements HasFind
+class RDBRelation
 {
     protected $entityManager;
 

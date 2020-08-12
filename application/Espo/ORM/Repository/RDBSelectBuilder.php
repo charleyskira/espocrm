@@ -43,7 +43,7 @@ use RuntimeException;
 /**
  * Builds select parameters for an RDB repository. Contains 'find' methods.
  */
-class RDBSelectBuilder implements HasFind
+class RDBSelectBuilder
 {
     protected $entityManager;
 
