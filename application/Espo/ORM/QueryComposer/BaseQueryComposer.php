@@ -741,10 +741,12 @@ abstract class BaseQueryComposer implements QueryComposer
             case 'DAY':
                 return "DATE_FORMAT({$part}, '%Y-%m-%d')";
             case 'WEEK_0':
-                return "CONCAT(SUBSTRING(YEARWEEK({$part}, 6), 1, 4), '/', TRIM(LEADING '0' FROM SUBSTRING(YEARWEEK({$part}, 6), 5, 2)))";
+                return "CONCAT(SUBSTRING(YEARWEEK({$part}, 6), 1, 4), '/', ".
+                "TRIM(LEADING '0' FROM SUBSTRING(YEARWEEK({$part}, 6), 5, 2)))";
             case 'WEEK':
             case 'WEEK_1':
-                return "CONCAT(SUBSTRING(YEARWEEK({$part}, 3), 1, 4), '/', TRIM(LEADING '0' FROM SUBSTRING(YEARWEEK({$part}, 3), 5, 2)))";
+                return "CONCAT(SUBSTRING(YEARWEEK({$part}, 3), 1, 4), '/', ".
+                "TRIM(LEADING '0' FROM SUBSTRING(YEARWEEK({$part}, 3), 5, 2)))";
             case 'QUARTER':
                 return "CONCAT(YEAR({$part}), '_', QUARTER({$part}))";
             case 'MONTH_NUMBER':
@@ -914,7 +916,7 @@ abstract class BaseQueryComposer implements QueryComposer
         if ($function && in_array($function, Functions::$multipleArgumentsFunctionList)) {
             $arguments = $attribute;
 
-            $argumentList = $this->parseArgumentListFromFunctionContent($arguments);
+            $argumentList = self::parseArgumentListFromFunctionContent($arguments);
 
             $argumentPartList = [];
             foreach ($argumentList as $argument) {
@@ -939,8 +941,9 @@ abstract class BaseQueryComposer implements QueryComposer
         return self::getAllAttributesFromComplexExpressionImplementation($expression);
     }
 
-    protected static function getAllAttributesFromComplexExpressionImplementation(string $expression, ?array &$list = null) : array
-    {
+    protected static function getAllAttributesFromComplexExpressionImplementation(
+        string $expression, ?array &$list = null
+    ) : array {
         if (!$list) $list = [];
 
         $arguments = $expression;
@@ -1384,7 +1387,8 @@ abstract class BaseQueryComposer implements QueryComposer
 
         if ($alias) {
             return "JOIN `" . $this->toDb($r['entity']) . "` AS `" . $alias . "` ON ".
-                   $this->toDb($entity->getEntityType()) . "." . $this->toDb($key) . " = " . $alias . "." . $this->toDb($foreignKey);
+                   $this->toDb($entity->getEntityType()) . "." . $this->toDb($key) . " = " .
+                   $alias . "." . $this->toDb($foreignKey);
         }
     }
 

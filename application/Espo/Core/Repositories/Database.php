@@ -72,7 +72,9 @@ class Database extends RDBRepository
         $this->hookManager = $hookManager;
         $this->applicationState = $applicationState;
 
-        parent::__construct($entityType, $entityManager, $entityFactory, $metadata);
+        // create mediator
+
+        parent::__construct($entityType, $entityManager, $entityFactory);
     }
 
     protected function getMetadata()

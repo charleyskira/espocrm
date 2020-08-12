@@ -51,7 +51,7 @@ class RDBRepository extends Repository
     protected $hookMediator;
 
     public function __construct(
-        string $entityType, EntityManager $entityManager, EntityFactory $entityFactory, ?HookMediatoer $hookMediator = null
+        string $entityType, EntityManager $entityManager, EntityFactory $entityFactory, ?HookMediator $hookMediator = null
     ) {
         $this->entityType = $entityType;
         $this->entityName = $entityType;

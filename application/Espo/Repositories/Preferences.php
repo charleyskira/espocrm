@@ -30,18 +30,14 @@
 namespace Espo\Repositories;
 
 use Espo\ORM\Entity;
-use Espo\ORM\Repository;
+use Espo\ORM\Repository\Repository;
 use Espo\Core\Utils\Json;
-
-use Espo\ORM\Repositories\{
-    Removable,
-};
 
 use PDO;
 
 use Espo\Core\Di;
 
-class Preferences extends Repository implements Removable,
+class Preferences extends Repository implements
     Di\MetadataAware,
     Di\ConfigAware,
     Di\EntityManagerAware
